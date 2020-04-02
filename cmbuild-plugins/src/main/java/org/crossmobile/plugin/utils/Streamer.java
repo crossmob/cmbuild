@@ -34,6 +34,8 @@ public interface Streamer {
     }
 
     boolean isEmpty();
+
+    void close();
 }
 
 abstract class BaseStreamer implements Streamer {
@@ -108,6 +110,16 @@ class FileStreamer extends BaseStreamer {
     public boolean isEmpty() {
         return false;
     }
+
+    @Override
+    public void close() {
+        if (writer != null) {
+            try {
+                writer.close();
+            } catch (IOException ignored) {
+            }
+        }
+    }
 }
 
 class StringStreamer extends BaseStreamer {
@@ -132,5 +144,9 @@ class StringStreamer extends BaseStreamer {
     @Override
     public boolean isEmpty() {
         return builder.length() == 0;
+    }
+
+    @Override
+    public void close() {
     }
 }

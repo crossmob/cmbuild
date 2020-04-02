@@ -130,7 +130,7 @@ public abstract class CreateLib {
             if (plugin != null) {
                 Streamer swiftStreamer = swift.computeIfAbsent(plugin, o -> Streamer.asString());
                 File pluginRoot = prodResolv.apply(plugin + (headersOnly ? separator + "uwpinclude" : ""));
-                out.emit(asHeader(pluginRoot, name), headersOnly ? null : asBody(pluginRoot, name), swiftStreamer, headersOnly, PluginRegistry.getPluginData(plugin).getImports());
+                out.emitAndTerminate(asHeader(pluginRoot, name), headersOnly ? null : asBody(pluginRoot, name), swiftStreamer, headersOnly, PluginRegistry.getPluginData(plugin).getImports());
                 if (!swiftStreamer.isEmpty())
                     hasSwift.set(true);
             }

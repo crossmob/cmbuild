@@ -17,8 +17,14 @@ public class ObjectEmitter {
         this.obj = obj;
     }
 
-    public void emit(Streamer header, Streamer body, Streamer swift, boolean asImportHeaders, String... imports) throws IOException {
+    public void emitAndTerminate(Streamer header, Streamer body, Streamer swift, boolean asImportHeaders, String... imports) throws IOException {
         emit(header, body, swift, null, asImportHeaders, imports);
+        if (header != null)
+            header.close();
+        if (body != null)
+            body.close();
+        if (swift != null)
+            swift.close();
     }
 
     public void emit(Streamer header, Streamer body, Streamer swift, String[] filter, boolean asImportHeaders, String... imports) throws IOException {
