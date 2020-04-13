@@ -18,7 +18,7 @@ public class XMLVMLauncher {
         Log.info("Start XMLVM conversion");
         delete(output);
         output.mkdirs();
-        // <!-- Run XMLVM -->
+        // Run XMLVM
         String[] command = new String[]{SystemDependent.getJavaExec(),
                 "-Xmx1G", "-Dfile.encoding=UTF-8", "-jar",
                 xmlvm.getAbsolutePath(),

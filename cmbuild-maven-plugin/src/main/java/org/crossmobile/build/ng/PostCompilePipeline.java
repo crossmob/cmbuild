@@ -64,7 +64,7 @@ public class PostCompilePipeline implements Runnable {
         // Copy external Java plugins
         CopyLibClasses.exec(classesDir, env.root());
 
-        GenerateSreenSizeSettings.exec(xcodeSource, env.getProperties());
+        GenerateScreenSizeSettings.exec(xcodeSource, env.getProperties());
 
         // Gather targets early, in order to know which are valid
         Map<String, AnnotationHelpers.CodeAnnotations> annotations = XcodeTargetRegistry.gatherTargets(env, new File(env.getBuilddir(), ANN_LOCATION));

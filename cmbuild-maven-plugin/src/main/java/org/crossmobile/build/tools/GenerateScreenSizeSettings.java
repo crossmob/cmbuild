@@ -8,7 +8,7 @@ import org.crossmobile.utils.FileUtils;
 import java.io.File;
 import java.util.Properties;
 
-public class GenerateSreenSizeSettings {
+public class GenerateScreenSizeSettings {
 
     private final static String SIZE_PROPERTIES = "SIZE_PROPERTIES";
     private final static String TAB = "    ";
