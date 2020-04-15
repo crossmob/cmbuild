@@ -14,6 +14,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.*;
 
+import static org.crossmobile.bridge.system.BaseUtils.listFiles;
 import static org.crossmobile.build.AnnotationConfig.*;
 
 public class AnnotationHelpers {
@@ -23,6 +24,7 @@ public class AnnotationHelpers {
             Log.warning("Unable to locate null annotations directory");
             return Collections.emptyMap();
         }
+        //noinspection ResultOfMethodCallIgnored
         annotationsDir.mkdirs();
         if (!annotationsDir.isDirectory()) {
             Log.warning("Annotations directory " + annotationsDir.getAbsolutePath() + " should be a folder");
@@ -30,11 +32,7 @@ public class AnnotationHelpers {
         }
 
         Map<String, CodeAnnotations> result = new HashMap<>();
-        File[] list = annotationsDir.listFiles();
-        if (list == null || list.length < 1)
-            return Collections.emptyMap();
-
-        for (File f : list) {
+        for (File f : listFiles(annotationsDir)) {
             if (!f.getName().toLowerCase().endsWith(OBJECTS_EXT))
                 continue;
             String name = f.getName().substring(0, f.getName().length() - OBJECTS_EXT.length());
@@ -43,9 +41,9 @@ public class AnnotationHelpers {
             try {
                 FileUtils.read(new FileInputStream(f), f.getName(), line -> parseLine(ann, name, line));
             } catch (IOException ex1) {
-                BaseUtils.throwException(ex1);
+                return BaseUtils.throwException(ex1);
             } catch (ProjectException ex2) {
-                BaseUtils.throwException(ex2.getCause());
+                return BaseUtils.throwException(ex2.getCause());
             }
         }
         return result;

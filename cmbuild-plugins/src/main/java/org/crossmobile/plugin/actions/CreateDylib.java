@@ -28,6 +28,7 @@ import java.util.function.Function;
 
 import static java.io.File.separator;
 import static java.util.Collections.singletonList;
+import static org.crossmobile.bridge.system.BaseUtils.listFiles;
 import static org.crossmobile.build.utils.PlistUtils.*;
 import static org.crossmobile.utils.CollectionUtils.asList;
 import static org.crossmobile.utils.FileUtils.readResourceSafe;
@@ -122,7 +123,7 @@ public class CreateDylib extends CreateLib {
         String bridge = "";
         for (File file : filelist) {
             if (file.isDirectory())
-                bridge = getSwiftBridge(asList(file.listFiles()), plugin);
+                bridge = getSwiftBridge(listFiles(file), plugin);
             else if (file.getName().endsWith(plugin + "-Bridging-Header.h"))
                 bridge = file.getAbsolutePath();
             if (!bridge.isEmpty())
@@ -135,7 +136,7 @@ public class CreateDylib extends CreateLib {
         int count = 0;
         for (File file : filelist)
             if (file.isDirectory() && !file.getName().equals("uwpinclude"))
-                count += addRefs(asList(file.listFiles()), objRef, filerefs, buildrefs);
+                count += addRefs(listFiles(file), objRef, filerefs, buildrefs);
             else if (isCompilable(file.getName()) || isInclude(file.getName())) {
                 String fileref = addFile(file, objRef);
                 filerefs.add(new NSString(fileref));

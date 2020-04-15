@@ -16,19 +16,19 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 
 import static org.crossmobile.build.AnnotationConfig.GENERATED_EXT;
-import static org.crossmobile.utils.FileUtils.*;
 import static org.crossmobile.utils.FileUtils.Predicates.extensions;
 import static org.crossmobile.utils.FileUtils.Predicates.noHidden;
+import static org.crossmobile.utils.FileUtils.forAllFiles;
+import static org.crossmobile.utils.FileUtils.sync;
 import static org.crossmobile.utils.TextUtils.plural;
-import static org.crossmobile.utils.TextUtils.trim;
 
 public class IBObjectsCreator {
 
     public static XIBList parse(File materials, File ann) {
         ann.mkdirs();
-        forAllRecursively(ann, f -> f.getName().equals(GENERATED_EXT), (path, file) -> file.delete());
+        forAllFiles(ann, f -> f.getName().equals(GENERATED_EXT), (path, file) -> file.delete());
         XIBList root = new XIBList(new IBParserMeta(ann));
-        forAllRecursively(materials, noHidden().and(extensions(".xib", ".storyboard")), (path, file) -> {
+        forAllFiles(materials, noHidden().and(extensions(".xib", ".storyboard")), (path, file) -> {
             root.getMeta().beginFile(file, materials);
             XMLWalker walker = XMLWalker.load(file).node("document");
             String type = walker.attribute("type").toLowerCase();
@@ -72,7 +72,7 @@ public class IBObjectsCreator {
             }
         }
         if (cache.exists())
-            sync(cache, destination, false);
+            sync(cache, destination, null, false, null);
     }
 
     private static String toFilename(File baseDir, File currentFile) {

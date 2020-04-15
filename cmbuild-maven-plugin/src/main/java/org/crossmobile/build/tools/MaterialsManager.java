@@ -19,14 +19,14 @@ import java.util.jar.JarFile;
 import static org.crossmobile.bridge.system.MaterialsCommon.MATERIALS_TAG;
 import static org.crossmobile.build.tools.StringsToPropertiesConverter.parseStrings;
 import static org.crossmobile.build.tools.StringsToPropertiesConverter.parseStringsDict;
-import static org.crossmobile.utils.FileUtils.forAllRecursively;
+import static org.crossmobile.utils.FileUtils.forAllFiles;
 
 public class MaterialsManager {
 
     //   private static final BufferedImage shape = ImageUtils.getImage("/buildres/layers/shape.png");
 
     public static void parseMaterials(IBParserMeta meta, File materialsDir, File outputDir) {
-        forAllRecursively(materialsDir, null, (path, file) -> {
+        forAllFiles(materialsDir, null, (path, file) -> {
             String name = file.getName();
             File output = outputDir == null ? null : new File(new File(outputDir, path), name); // could be null, no copy required
             if (name.startsWith("."))  // handle hidden files

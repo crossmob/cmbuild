@@ -29,13 +29,14 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.io.File.separator;
+import static org.crossmobile.bridge.system.BaseUtils.listFiles;
 import static org.crossmobile.build.utils.PlistUtils.isInclude;
 import static org.crossmobile.plugin.reg.PluginRegistry.getPlugin;
 import static org.crossmobile.plugin.reg.TypeRegistry.isReference;
 import static org.crossmobile.plugin.utils.Templates.LIB_DEF;
-import static org.crossmobile.utils.NamingUtils.toObjC;
 import static org.crossmobile.plugin.utils.Texters.toObjCTypeForLibDef;
 import static org.crossmobile.utils.FileUtils.*;
+import static org.crossmobile.utils.NamingUtils.toObjC;
 import static org.crossmobile.utils.TimeUtils.time;
 
 public class CreateDll extends CreateLib {
@@ -53,7 +54,7 @@ public class CreateDll extends CreateLib {
 
     private static Collection<File> getHeaders(Collection<File> includes) {
         Collection<File> headers = new LinkedHashSet<>();
-        includes.forEach(include -> forAll(include, f -> (isInclude(f.getName()) && !f.getParent().contains("uwpinclude")), (p, f) -> headers.add(f)));
+        includes.forEach(include -> listFiles(include).stream().filter(f -> (isInclude(f.getName()) && !f.getParent().contains("uwpinclude"))).forEach(headers::add));
         return headers;
     }
 
@@ -66,7 +67,7 @@ public class CreateDll extends CreateLib {
                     || include.getName().endsWith(plugin)))
                 headerpaths.add(include.getPath());
             else if (include.isDirectory())
-                Arrays.stream(include.listFiles())
+                listFiles(include).stream()
                         .filter(p -> p.isDirectory() && p.getName().endsWith("uwpinclude"))
                         .forEach(i -> headerpaths.add(i.getPath()));
         });
@@ -368,13 +369,7 @@ public class CreateDll extends CreateLib {
 
 
     private static void applyPatches(File dir, File packages) {
-        if (dir.listFiles() == null || dir.listFiles().length == 0)
-            return;
-        File patchDir = new File(dir, "patches");
-        if (patchDir.listFiles() == null || patchDir.listFiles().length == 0)
-            return;
-        Map<String, File> patchMap = new HashMap<>();
-        for (File patch : patchDir.listFiles())
+        for (File patch : listFiles(new File(dir, "patches")))
             if (patch.getName().endsWith(".diff")) {
                 Patch p = DiffUtils.parseUnifiedDiff(fileToLines(patch));
                 try {

@@ -10,6 +10,8 @@ import java.io.File;
 import java.util.Set;
 import java.util.TreeSet;
 
+import static org.crossmobile.bridge.system.BaseUtils.listFiles;
+
 public class ResourceItem {
 
     private final String name;
@@ -39,11 +41,9 @@ public class ResourceItem {
 
             FileUtils.fixLastModified(fpath);
             if (FileUtils.endsWithPathSeparator(path)) {   // File.separator - get children of this file
-                File[] contents = fpath.listFiles();
-                if (contents != null)
-                    for (File item : contents)
-                        if (!item.getName().equals(".DS_Store"))
-                            files.add(item);
+                for (File item : listFiles(fpath))
+                    if (!item.getName().equals(".DS_Store"))
+                        files.add(item);
             } else
                 files.add(fpath);
         }

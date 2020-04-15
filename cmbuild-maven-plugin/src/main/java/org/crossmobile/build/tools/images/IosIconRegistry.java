@@ -10,20 +10,25 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
+import static org.crossmobile.bridge.system.BaseUtils.listFiles;
 
 public class IosIconRegistry {
     private static final String TYPE = "images";
 
     public static void exec(File path) {
         List<JsonImage> jsonImages = new ArrayList<>();
-        for (File icon : Objects.requireNonNull(path.listFiles((dir, name) -> name.startsWith("icon") && name.endsWith(".png"))))
-            jsonImages.add(new JsonImage(icon));
+        listFiles(path).stream().filter(file -> file.getName().startsWith("icon") && file.getName().endsWith(".png"))
+                .forEach(icon -> jsonImages.add(new JsonImage(icon)));
 
         try {
             Writer fileWriter = new OutputStreamWriter(new FileOutputStream(new File(path, "Contents.json")), StandardCharsets.UTF_8);
             fileWriter.write(getJson(jsonImages));
             fileWriter.flush();
         } catch (IOException ex) {
+            //noinspection ResultOfMethodCallIgnored
             BaseUtils.throwException(ex);
         }
     }

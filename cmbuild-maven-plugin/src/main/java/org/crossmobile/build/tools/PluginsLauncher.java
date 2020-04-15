@@ -47,7 +47,7 @@ public class PluginsLauncher {
         );
         if (size > 0)
             Log.info("Recognized " + size + " plugin initializer" + plural(size));
-        FileUtils.sync(cache, generated, true);
+        FileUtils.sync(cache, generated, null, true, null);
     }
 
     private int getCode(String methodName, String argType, StringBuilder result) {

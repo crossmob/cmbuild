@@ -13,6 +13,7 @@ import org.crossmobile.utils.Log;
 import java.io.File;
 import java.util.function.Function;
 
+import static org.crossmobile.bridge.system.BaseUtils.listFiles;
 import static org.crossmobile.utils.FileUtils.copy;
 
 public class CreateBundles {
@@ -45,12 +46,10 @@ public class CreateBundles {
     }
 
     private static void bundleFiles(File source, Function<String, File> filedest, BundleResolver resolver, BaseTarget filter, final boolean shouldInform, String packg, boolean is_root) {
-        if (source.isDirectory()) {
-            File[] children = source.listFiles();
-            if (children != null && children.length > 0)
-                for (File child : children)
-                    bundleFiles(child, filedest, resolver, filter, shouldInform, packageToJavaPackage(packg) + (is_root ? "" : source.getName()), false);
-        } else if (source.isFile()) {
+        if (source.isDirectory())
+            for (File child : listFiles(source))
+                bundleFiles(child, filedest, resolver, filter, shouldInform, packageToJavaPackage(packg) + (is_root ? "" : source.getName()), false);
+        else if (source.isFile()) {
             PluginAndTarget pt = resolver.resolve(source.getName(), packg);
             if (pt.target == CMLibTarget.UNKNOWN && shouldInform)
                 Log.warning("Unable to match file " + source.getAbsolutePath());

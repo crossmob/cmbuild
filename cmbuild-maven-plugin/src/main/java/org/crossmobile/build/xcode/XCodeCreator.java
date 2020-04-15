@@ -15,8 +15,9 @@ import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static org.crossmobile.bridge.system.BaseUtils.listFiles;
 import static org.crossmobile.build.tools.InfoPListCreator.getPlist;
-import static org.crossmobile.utils.FileUtils.*;
+import static org.crossmobile.utils.FileUtils.getRelative;
 
 public class XCodeCreator {
 
@@ -55,7 +56,7 @@ public class XCodeCreator {
     private void addResources(Collection<File> sources, File projectPath) {
         sources.forEach(source -> {
             if (source.isDirectory() && source.getName().endsWith(".lproj"))
-                addResources(list(source), projectPath);
+                addResources(listFiles(source), projectPath);
             else
                 resources.add(new FileResource(source.getName(), source, wrapper.getNextID(), projectPath));
         });

@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.crossmobile.bridge.system.BaseUtils.listFiles;
 import static org.crossmobile.utils.TextUtils.plural;
 
 public class ObjCPostProcess {
@@ -32,23 +33,21 @@ public class ObjCPostProcess {
         int h_files = 0;
         int m_files = 0;
         AtomicInteger ignoredIncludeCount = new AtomicInteger(0);
-        File[] objCFiles = objcSourceDir.listFiles();
-        if (objCFiles != null)
-            for (File f : objCFiles) {
-                String content = FileUtils.read(f);
-                if (f.getName().endsWith(".h")) {
-                    h_files++;
-                    content = parseConstructors(content);
-                } else {
-                    m_files++;
-                    content = parseIgnoreIncludes(content, ignoreInclPatterns, ignoredIncludeCount);
-                }
-                content = parseUnicode(content).
-                        replaceAll("isKindOfClass: objc_getClass\\(\"crossmobile_ios_", "isKindOfClass: objc_getClass(\"").
-                        replaceAll("conformsToProtocol: objc_getProtocol\\(\"crossmobile_ios_", "conformsToProtocol: objc_getProtocol(\"");
-
-                FileUtils.write(f, content);
+        for (File f : listFiles(objcSourceDir)) {
+            String content = FileUtils.read(f);
+            if (f.getName().endsWith(".h")) {
+                h_files++;
+                content = parseConstructors(content);
+            } else {
+                m_files++;
+                content = parseIgnoreIncludes(content, ignoreInclPatterns, ignoredIncludeCount);
             }
+            content = parseUnicode(content).
+                    replaceAll("isKindOfClass: objc_getClass\\(\"crossmobile_ios_", "isKindOfClass: objc_getClass(\"").
+                    replaceAll("conformsToProtocol: objc_getProtocol\\(\"crossmobile_ios_", "conformsToProtocol: objc_getProtocol(\"");
+
+            FileUtils.write(f, content);
+        }
         if (ignoredIncludeCount.get() > 0)
             Log.info("Ignoring importing of " + ignoredIncludeCount.get() + " class" + plural(ignoredIncludeCount.get(), "es"));
         Log.info("Parsed " + h_files + " header file" + plural(h_files) + " and " + m_files + " implementation file" + plural(m_files));

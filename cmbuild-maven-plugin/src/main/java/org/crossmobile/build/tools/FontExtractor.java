@@ -10,15 +10,15 @@ import java.io.File;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static java.util.stream.Collectors.toMap;
+import static org.crossmobile.bridge.system.BaseUtils.listFiles;
 import static org.crossmobile.utils.FileUtils.Predicates.extensions;
-import static org.crossmobile.utils.FileUtils.forAll;
 import static org.crossmobile.utils.TextUtils.*;
 
 public class FontExtractor {
 
     public static Map<String, File> findFonts(File materialPath) {
-        Map<String, File> fonts = new LinkedHashMap<>();
-        forAll(materialPath, extensions(".ttf", ".otf"), (path, file) -> fonts.put(path + (path.isEmpty() ? "" : "/") + file.getName(), file));
+        Map<String, File> fonts = listFiles(materialPath).stream().filter(extensions(".ttf", ".otf")).collect(toMap(File::getName, f -> f));
         if (!fonts.isEmpty())
             Log.info("Project contains " + fonts.size() + " font" + plural(fonts.size()));
         return fonts;

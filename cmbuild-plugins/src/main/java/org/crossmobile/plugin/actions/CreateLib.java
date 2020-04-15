@@ -20,8 +20,11 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.jar.JarFile;
+import java.util.stream.Collectors;
 
 import static java.io.File.separator;
+import static java.util.stream.Collectors.toCollection;
+import static org.crossmobile.bridge.system.BaseUtils.listFiles;
 import static org.crossmobile.build.utils.PlistUtils.isCompilable;
 import static org.crossmobile.build.utils.PlistUtils.isInclude;
 import static org.crossmobile.plugin.reg.PluginRegistry.*;
@@ -65,16 +68,13 @@ public abstract class CreateLib {
                 String plugin = pData.getName();
                 File prod = prodResolv.apply(plugin);
                 if (!prod.exists())
+                    //noinspection ResultOfMethodCallIgnored
                     prod.mkdirs();
                 File cached = new File(cache, plugin + separator + PLATFORM.apply(asIOS));
                 File lib = new File(cache, "lib" + separator + LIBNAME.apply(plugin));
                 File vendorFiles = new File(vendor, plugin);
-                int howmany = sync(prod, cached, true, "patches");
-
-                if (howmany > 0)
-                    Log.info("Updated " + howmany + " file" + plural(howmany) + " for plugin " + plugin);
-                else
-                    Log.debug("All source files are in sync for plugin " + plugin);
+                int howMany = sync(prod, cached, null, true, f -> !f.getName().equals("patches"));
+                Log.info(howMany == 0 ? "All source files are in sync for plugin " + plugin : "Updated " + howMany + " file" + plural(howMany) + " for plugin " + plugin);
 
                 // Need to define these anyways, so that dependencies will work
                 Collection<File> compiled = getCompiled(cached, vendorFiles, prod);
@@ -92,7 +92,7 @@ public abstract class CreateLib {
                 pluginIncludes.put(plugin, Arrays.asList(cached, vendorFiles));  // store include paths for possible future usage
 
                 if ((!lib.exists() || getLastModified(cached) > lib.lastModified() || getLastModified(vendorFiles) > lib.lastModified())
-                        && prod.listFiles(pathname -> pathname.getName().endsWith(".h")).length > 0) {
+                        && listFiles(prod).stream().anyMatch(f -> f.getName().endsWith(".h"))) {
                     Log.debug("Compiling native plugin " + plugin);
                     Collection<String> requirements = new HashSet<>();
                     pData.getRootRequirement().listRequirements().stream()
@@ -176,9 +176,8 @@ public abstract class CreateLib {
     }
 
     protected Collection<File> getCompiled(File cached, File vendorFiles, File src) {
-        Collection<File> compiled = new LinkedHashSet<>();
-        forAll(cached, f -> isCompilable(f.getName()), (p, f) -> compiled.add(f));
-        forAll(vendorFiles, f -> isCompilable(f.getName()), (p, f) -> compiled.add(f));
+        Collection<File> compiled = listFiles(cached).stream().filter(f -> isCompilable(f.getName())).collect(toCollection(LinkedHashSet::new));
+        listFiles(vendorFiles).stream().filter(f -> isCompilable(f.getName())).forEach(compiled::add);
         return compiled;
     }
 
