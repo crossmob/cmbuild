@@ -26,7 +26,7 @@ public class ResourcesPipeline implements Runnable {
 
     @Override
     public void run() {
-        new PID().exec();
+        PID.displayPID();
         switch (environment().getFlavour()) {
             case IOS:
                 resourcesIOS();

@@ -17,9 +17,14 @@ public class AnnConnXcode {
 
     private static final Pattern depack = Pattern.compile("crossmobile_ios_([a-zA-Z]*)_([a-zA-Z]*)");
 
-    public static void exec(Map<String, CodeAnnotations> annotations, File objcBase) {
+    /**
+     *
+     * @param objcSourceDir  The directory location of the objective C file to process
+     * @param annotations
+     */
+    public static void exec(File objcSourceDir, Map<String, CodeAnnotations> annotations) {
         for (String objectName : annotations.keySet())
-            parseAnnotation(objectName, annotations.get(objectName), objcBase);
+            parseAnnotation(objectName, annotations.get(objectName), objcSourceDir);
         if (!annotations.isEmpty())
             Log.info("Found " + annotations.size() + " annotated objects");
     }
@@ -29,11 +34,11 @@ public class AnnConnXcode {
         File mfileRef = new File(objcBase, name + ".m");
 
         if (!hfileRef.exists()) {
-            Log.warning("Generated header file " + hfileRef.getName() + " does not exist, skipping " + name + " annotations");
+            Log.debug("Generated header file " + hfileRef.getName() + " does not exist, skipping " + name + " annotations");
             return;
         }
         if (!mfileRef.exists()) {
-            Log.warning("Generated source file " + mfileRef.getName() + " does not exist, skipping " + name + " annotations");
+            Log.debug("Generated source file " + mfileRef.getName() + " does not exist, skipping " + name + " annotations");
             return;
         }
         String hfile = FileUtils.read(hfileRef);

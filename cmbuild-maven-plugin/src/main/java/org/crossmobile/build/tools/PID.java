@@ -9,7 +9,7 @@ import java.lang.management.ManagementFactory;
 
 public class PID {
 
-    public void exec() {
+    public static void displayPID() {
         Log.debug("Runtime Name: " + ManagementFactory.getRuntimeMXBean().getName());
     }
 

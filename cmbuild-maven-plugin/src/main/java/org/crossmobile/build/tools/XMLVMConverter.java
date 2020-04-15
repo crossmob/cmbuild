@@ -12,9 +12,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.crossmobile.utils.FileUtils.delete;
 
-public class XMLVMLauncher {
+public class XMLVMConverter {
 
-    public static void exec(File input, File output, File xmlvm, boolean safe) {
+    public static void convertJavaToObjC(File input, File output, File xmlvm, boolean safe) {
         Log.info("Start XMLVM conversion");
         delete(output);
         output.mkdirs();

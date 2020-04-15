@@ -4,7 +4,6 @@
 package org.crossmobile.build.ng;
 
 import org.crossmobile.build.AnnotationConfig;
-import org.crossmobile.build.ib.AnnotationHelpers;
 import org.crossmobile.build.ib.helper.XIBList;
 import org.crossmobile.build.tools.*;
 import org.crossmobile.build.tools.images.IosIconRegistry;
@@ -23,9 +22,12 @@ import static java.io.File.separator;
 import static org.crossmobile.build.AnnotationConfig.ANN_LOCATION;
 import static org.crossmobile.build.ng.CMBuildEnvironment.environment;
 import static org.crossmobile.build.tools.InfoPListCreator.getPlist;
+import static org.crossmobile.build.tools.SynchronizeFiles.*;
+import static org.crossmobile.build.tools.XMLVMConverter.convertJavaToObjC;
 import static org.crossmobile.build.utils.Config.*;
 import static org.crossmobile.build.utils.DependencyJarResolver.gatherLibs;
-import static org.crossmobile.build.utils.JavaVersionDowngrader.convertToJava7;
+import static org.crossmobile.build.utils.JavaPostProcess.convertToJava7;
+import static org.crossmobile.build.utils.JavaPostProcess.extractLibClassesFromPlugins;
 import static org.crossmobile.prefs.Config.MATERIALS_PATH;
 import static org.crossmobile.utils.CollectionUtils.asList;
 import static org.crossmobile.utils.ParamsCommon.*;
@@ -36,15 +38,15 @@ public class PostCompilePipeline implements Runnable {
     public void run() {
         switch (environment().getFlavour()) {
             case IOS:
-                postcompileIOS();
+                postCompileIOS();
                 break;
             case UWP:
-                postcompileUwp();
+                postCompileUwp();
                 break;
         }
     }
 
-    private void postcompileUwp() {
+    private void postCompileUwp() {
         CMBuildEnvironment env = environment();
         File ann = new File(env.getBuilddir(), AnnotationConfig.ANN_LOCATION);
         String projectName = env.getProperties().getProperty(ARTIFACT_ID.tag().name);
@@ -58,28 +60,23 @@ public class PostCompilePipeline implements Runnable {
         File cacheBase = new File(env.getBuilddir(), PROJECT_CACHES);
         File cacheClasses = new File(cacheBase, "classes");
         File cacheDiffClasses = new File(cacheBase, "diff");
+        File cacheSource = new File(cacheBase, XCODE_EXT_APP);
 
+        // Post process Java classes
         convertToJava7(env.getRetroLambda(), classesDir, gatherLibs(env.root(), false), false);
-
-        // Copy external Java plugins
-        CopyLibClasses.exec(classesDir, env.root());
+        extractLibClassesFromPlugins(classesDir, env.root());
 
         GenerateScreenSizeSettings.exec(xcodeSource, env.getProperties());
 
-        // Gather targets early, in order to know which are valid
-        Map<String, AnnotationHelpers.CodeAnnotations> annotations = XcodeTargetRegistry.gatherTargets(env, new File(env.getBuilddir(), ANN_LOCATION));
-
-        // Construct ObjC files
-        if (DiffSync.exec(classesDir, cacheClasses, cacheDiffClasses)) {
-            File cacheSource = new File(cacheBase, XCODE_EXT_APP);
-            XMLVMLauncher.exec(cacheDiffClasses, cacheSource, env.getXMLVM(), true);
+        if (synchronizeChangedFiles(classesDir, cacheClasses, cacheDiffClasses)) {
+            convertJavaToObjC(cacheDiffClasses, cacheSource, env.getXMLVM(), true);
 
             // Post-process ObjC files
-            AnnConnXcode.exec(annotations, cacheSource);
+            AnnConnXcode.exec(cacheSource, XcodeTargetRegistry.gatherTargets(env, new File(env.getBuilddir(), ANN_LOCATION)));
             ObjCPostProcess.exec(cacheSource, env.getProperties().getProperty(OBJC_IGNORE_INCLUDES.tag().name));
-            ReverseCodeInjector.exec(classesDir, asList(env.root().getCompileOnlyDependencies(true), DependencyItem::getFile), cacheSource);
+            ReverseCodeInjector.exec(cacheSource, classesDir, asList(env.root().getCompileOnlyDependencies(true), DependencyItem::getFile));
 
-            SyncObjCFiles.exec(classesDir, cacheSource, xcodeSource);
+            syncChangedObjCFiles(classesDir, cacheSource, xcodeSource);
         }
 
         // Extract binary libraries and include files
@@ -87,7 +84,7 @@ public class PostCompilePipeline implements Runnable {
         Log.debug("Xcode Lib List : " + objCLibrary.getLibraries());
 
         //        <!-- Update needed source files -->
-        new JavaCleanFiles(classesDir, xcodeSource).execute();
+        cleanUpJavaFiles(classesDir, xcodeSource);
 
         //        <!-- create Xcode project -->
         Map<String, File> xmfontsValue = FontExtractor.findFonts(env.getMaterialsDir());
@@ -116,10 +113,8 @@ public class PostCompilePipeline implements Runnable {
         cmd.setErrListener(Log::warning);
         cmd.exec();
         cmd.waitFor();
-        tweakProject(env, xcodeLibs);
-    }
 
-    private void tweakProject(CMBuildEnvironment env, File xcodeLibs) {
+        // tweak project
         File project = new File(env.getArtifactId() + ".vsimporter" + separator
                 + env.getArtifactId() + "-WinStore10" + separator
                 + env.getArtifactId() + ".vcxproj");
@@ -133,7 +128,7 @@ public class PostCompilePipeline implements Runnable {
         walker.store(project, true);
     }
 
-    private void postcompileIOS() {
+    private void postCompileIOS() {
         CMBuildEnvironment env = environment();
         File ann = new File(env.getBuilddir(), AnnotationConfig.ANN_LOCATION);
         String projectName = env.getProperties().getProperty(ARTIFACT_ID.tag().name);
@@ -145,29 +140,28 @@ public class PostCompilePipeline implements Runnable {
         File plistDir = new File(env.getBuilddir(), XCODE_BASE + separator + XCODE_EXT_PLIST);
 
         File classesDir = new File(env.getBuilddir(), CLASSES);
+
         File cacheBase = new File(env.getBuilddir(), PROJECT_CACHES);
+        FileUtils.delete(cacheBase);
         File cacheClasses = new File(cacheBase, "classes");
         File cacheDiffClasses = new File(cacheBase, "diff");
+        File cacheSource = new File(cacheBase, XCODE_EXT_APP);
 
+        // Post process Java classes
         convertToJava7(env.getRetroLambda(), classesDir, gatherLibs(env.root(), false), false);
-
-        // Copy external Java plugins
-        CopyLibClasses.exec(classesDir, env.root());
-
-        // Gather targets early, in order to know which are valid
-        Map<String, AnnotationHelpers.CodeAnnotations> annotations = XcodeTargetRegistry.gatherTargets(env, new File(env.getBuilddir(), ANN_LOCATION));
+        extractLibClassesFromPlugins(classesDir, env.root());
 
         // Construct ObjC files
-        if (DiffSync.exec(classesDir, cacheClasses, cacheDiffClasses)) {
-            File cacheSource = new File(cacheBase, XCODE_EXT_APP);
-            XMLVMLauncher.exec(cacheDiffClasses, cacheSource, env.getXMLVM(), Boolean.parseBoolean(env.getProperties().getProperty("cm.objc.safemembers", "true")));
-            SyncObjCFiles.exec(classesDir, cacheSource, xcodeSource);
-            new JavaCleanFiles(classesDir, xcodeSource).execute();
+        if (synchronizeChangedFiles(classesDir, cacheClasses, cacheDiffClasses)) {
+            convertJavaToObjC(cacheDiffClasses, cacheSource, env.getXMLVM(), Boolean.parseBoolean(env.getProperties().getProperty("cm.objc.safemembers", "true")));
 
             // Post-process ObjC files
-            ObjCPostProcess.exec(xcodeSource, env.getProperties().getProperty(OBJC_IGNORE_INCLUDES.tag().name));
-            AnnConnXcode.exec(annotations, xcodeSource);
-            ReverseCodeInjector.exec(classesDir, asList(env.root().getCompileOnlyDependencies(true), DependencyItem::getFile), xcodeSource);
+            ObjCPostProcess.exec(cacheSource, env.getProperties().getProperty(OBJC_IGNORE_INCLUDES.tag().name));
+            AnnConnXcode.exec(cacheSource, XcodeTargetRegistry.gatherTargets(env, new File(env.getBuilddir(), ANN_LOCATION)));
+            ReverseCodeInjector.exec(cacheSource, cacheDiffClasses, asList(env.root().getCompileOnlyDependencies(true), DependencyItem::getFile));
+
+            syncChangedObjCFiles(classesDir, cacheSource, xcodeSource);
+            cleanUpJavaFiles(classesDir, xcodeSource);
         }
 
         // Extract binary libraries and include files

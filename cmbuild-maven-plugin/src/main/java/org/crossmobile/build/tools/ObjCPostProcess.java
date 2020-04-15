@@ -23,18 +23,18 @@ public class ObjCPostProcess {
     private static final Pattern javaclass = Pattern.compile("[a-zA-Z][a-zA-Z_0-9$]*(\\.[a-zA-Z][a-zA-Z_0-9$]*)*");
 
     /**
-     * @param objc           The objective C file to process
+     * @param objcSourceDir  The directory location of the objective C file to process
      * @param ignoreIncludes a semicolon separated list of canonical class names,  used to remove dependencies in
      *                       external libraries that are not implemented yet.
      */
-    public static void exec(File objc, String ignoreIncludes) {
+    public static void exec(File objcSourceDir, String ignoreIncludes) {
         List<Pattern> ignoreInclPatterns = retrieveIgnoreIncludePattern(ignoreIncludes);
         int h_files = 0;
         int m_files = 0;
         AtomicInteger ignoredIncludeCount = new AtomicInteger(0);
-        File[] objcfiles = objc.listFiles();
-        if (objcfiles != null)
-            for (File f : objcfiles) {
+        File[] objCFiles = objcSourceDir.listFiles();
+        if (objCFiles != null)
+            for (File f : objCFiles) {
                 String content = FileUtils.read(f);
                 if (f.getName().endsWith(".h")) {
                     h_files++;

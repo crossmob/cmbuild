@@ -3,7 +3,6 @@
 
 package org.crossmobile.build.xcode;
 
-import com.google.common.collect.ArrayListMultimap;
 import org.crossmobile.bridge.ann.CMLibParam;
 import org.crossmobile.build.ib.AnnotationHelpers;
 import org.crossmobile.build.ng.CMBuildEnvironment;
@@ -16,7 +15,6 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 import static org.crossmobile.build.ib.AnnotationHelpers.getAnnotations;
-import static org.crossmobile.utils.ReflectionUtils.getTopLevelClass;
 
 public class XcodeTargetRegistry {
     private static Map<String, Collection<XcodeTarget>> targetsOfClass = new HashMap<>();

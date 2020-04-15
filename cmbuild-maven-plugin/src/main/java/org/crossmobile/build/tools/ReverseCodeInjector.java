@@ -28,7 +28,7 @@ import static org.crossmobile.utils.TextUtils.plural;
 
 public class ReverseCodeInjector {
 
-    public static void exec(File selfClassPath, Collection<File> libJarPaths, File destinationDir) {
+    public static void exec(File objcSourceDir, File selfClassPath, Collection<File> libJarPaths) {
         Collection<File> classPaths = new ArrayList<>();
         Map<String, String> codeInjections = new HashMap<>();
         Map<String, String> importsInjections = new HashMap<>();
@@ -54,7 +54,7 @@ public class ReverseCodeInjector {
 
         int countOverride = 0;
         for (String name : codeInjections.keySet()) {
-            File mfileRef = new File(destinationDir, name + ".m");
+            File mfileRef = new File(objcSourceDir, name + ".m");
             String mfile = read(mfileRef);
             if (mfile == null)
                 Log.error("Reverse connections for " + mfileRef.getName() + " not applied, file missing (maybe due to incremental compiling)");
@@ -85,7 +85,7 @@ public class ReverseCodeInjector {
                 }
                 out.append("@end\n");
             }
-            FileUtils.write(new File(destinationDir, "crossmobilesuperimpl.m"), out.toString());
+            FileUtils.write(new File(objcSourceDir, "crossmobilesuperimpl.m"), out.toString());
         }
 
         Log.info("Injected " + countOverride + " class" + plural(countOverride, "es")
