@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.util.*;
 
 import static org.crossmobile.bridge.system.BaseUtils.listFiles;
+import static org.crossmobile.bridge.system.BaseUtils.throwExceptionAndReturn;
 import static org.crossmobile.build.AnnotationConfig.*;
 
 public class AnnotationHelpers {
@@ -41,9 +42,9 @@ public class AnnotationHelpers {
             try {
                 FileUtils.read(new FileInputStream(f), f.getName(), line -> parseLine(ann, name, line));
             } catch (IOException ex1) {
-                return BaseUtils.throwException(ex1);
+                return throwExceptionAndReturn(ex1);
             } catch (ProjectException ex2) {
-                return BaseUtils.throwException(ex2.getCause());
+                return throwExceptionAndReturn(ex2.getCause());
             }
         }
         return result;

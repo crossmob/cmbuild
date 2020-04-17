@@ -16,6 +16,8 @@ import org.crossmobile.utils.*;
 import org.crossmobile.utils.plugin.DependencyItem;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
 
 import static java.io.File.separator;
@@ -23,7 +25,9 @@ import static org.crossmobile.bridge.system.BaseUtils.listFiles;
 import static org.crossmobile.build.AnnotationConfig.ANN_LOCATION;
 import static org.crossmobile.build.ng.CMBuildEnvironment.environment;
 import static org.crossmobile.build.tools.InfoPListCreator.getPlist;
-import static org.crossmobile.build.tools.SynchronizeFiles.*;
+import static org.crossmobile.build.tools.ObjCPostProcess.updateObjCFiles;
+import static org.crossmobile.build.tools.SynchronizeFiles.syncChangedObjCFiles;
+import static org.crossmobile.build.tools.SynchronizeFiles.synchronizeChangedJavaFiles;
 import static org.crossmobile.build.tools.XMLVMConverter.convertJavaToObjC;
 import static org.crossmobile.build.utils.Config.*;
 import static org.crossmobile.build.utils.DependencyJarResolver.gatherLibs;
@@ -61,6 +65,7 @@ public class PostCompilePipeline implements Runnable {
         File cacheBase = new File(env.getBuilddir(), PROJECT_CACHES);
         File cachedClasses = new File(cacheBase, "classes");
         File diffClasses = new File(cacheBase, "diff");
+        File cacheSuper = new File(cacheBase, "super");
         File cacheSource = new File(cacheBase, XCODE_EXT_APP);
 
         // Post process Java classes
@@ -69,23 +74,19 @@ public class PostCompilePipeline implements Runnable {
 
         GenerateScreenSizeSettings.exec(xcodeSource, env.getProperties());
 
+        // Construct ObjC files
         if (synchronizeChangedJavaFiles(classesDir, cachedClasses, diffClasses)) {
-            convertJavaToObjC(diffClasses, cacheSource, env.getXMLVM(), true);
-
-            // Post-process ObjC files
-            AnnConnXcode.exec(cacheSource, XcodeTargetRegistry.gatherTargets(env, new File(env.getBuilddir(), ANN_LOCATION)));
-            ObjCPostProcess.exec(cacheSource, env.getProperties().getProperty(OBJC_IGNORE_INCLUDES.tag().name));
-            ReverseCodeInjector.exec(cacheSource, classesDir, asList(env.root().getCompileOnlyDependencies(true), DependencyItem::getFile));
-
-            syncChangedObjCFiles(classesDir, cacheSource, xcodeSource);
+            convertJavaToObjC(diffClasses, cacheSource, env.getXMLVM(), Boolean.parseBoolean(env.getProperties().getProperty("cm.objc.safemembers", "true")));
+            Collection<String> allObjCFiles = updateObjCFiles(cacheSource, cacheSuper, diffClasses, classesDir,
+                    getReverseCodeCollection(env, cachedClasses),
+                    XcodeTargetRegistry.gatherTargets(env, new File(env.getBuilddir(), ANN_LOCATION)),
+                    env.getProperties().getProperty(OBJC_IGNORE_INCLUDES.tag().name));
+            syncChangedObjCFiles(allObjCFiles, cacheSource, xcodeSource);
         }
 
         // Extract binary libraries and include files
         ObjCLibrary objCLibrary = ObjCLibrary.extract(env.root(), xcodeLibs, xcodeInclude, env.getRelativeBuildToBase());
         Log.debug("Xcode Lib List : " + objCLibrary.getLibraries());
-
-        //        <!-- Update needed source files -->
-        cleanUpJavaFiles(classesDir, xcodeSource);
 
         //        <!-- create Xcode project -->
         Map<String, File> xmfontsValue = FontExtractor.findFonts(env.getMaterialsDir());
@@ -120,6 +121,8 @@ public class PostCompilePipeline implements Runnable {
                 + env.getArtifactId() + "-WinStore10" + separator
                 + env.getArtifactId() + ".vcxproj");
         XMLWalker walker = XMLWalker.load(project);
+        if (walker == null)
+            throw new NullPointerException("Unable to locate project at location " + project.getAbsolutePath());
         walker.path("/Project").tag("root").node("ItemGroup").exec(ig -> {
             for (File lib : listFiles(xcodeLibs))
                 if (lib.getName().endsWith(".dll"))
@@ -128,6 +131,7 @@ public class PostCompilePipeline implements Runnable {
                 idg -> idg.node("Link").add("AdditionalLibraryDirectories").setText(".." + separator + ".." + separator + "target" + separator + "xcode" + separator + "plugins" + separator + "lib"));
         walker.store(project, true);
     }
+
 
     private void postCompileIOS() {
         CMBuildEnvironment env = environment();
@@ -145,6 +149,7 @@ public class PostCompilePipeline implements Runnable {
         File cacheBase = new File(env.getBuilddir(), PROJECT_CACHES);
         File cachedClasses = new File(cacheBase, "classes");
         File diffClasses = new File(cacheBase, "diff");
+        File cacheSuper = new File(cacheBase, "super");
         File cacheSource = new File(cacheBase, XCODE_EXT_APP);
 
         // Post process Java classes
@@ -154,14 +159,11 @@ public class PostCompilePipeline implements Runnable {
         // Construct ObjC files
         if (synchronizeChangedJavaFiles(allClasses, cachedClasses, diffClasses)) {
             convertJavaToObjC(diffClasses, cacheSource, env.getXMLVM(), Boolean.parseBoolean(env.getProperties().getProperty("cm.objc.safemembers", "true")));
-
-            // Post-process ObjC files
-            ObjCPostProcess.exec(cacheSource, env.getProperties().getProperty(OBJC_IGNORE_INCLUDES.tag().name));
-            AnnConnXcode.exec(cacheSource, XcodeTargetRegistry.gatherTargets(env, new File(env.getBuilddir(), ANN_LOCATION)));
-            ReverseCodeInjector.exec(cacheSource, diffClasses, asList(env.root().getCompileOnlyDependencies(true), DependencyItem::getFile));
-
-            syncChangedObjCFiles(cachedClasses, cacheSource, xcodeSource);
-            cleanUpJavaFiles(cachedClasses, xcodeSource);
+            Collection<String> allObjCFiles = updateObjCFiles(cacheSource, cacheSuper, diffClasses, allClasses,
+                    getReverseCodeCollection(env, cachedClasses),
+                    XcodeTargetRegistry.gatherTargets(env, new File(env.getBuilddir(), ANN_LOCATION)),
+                    env.getProperties().getProperty(OBJC_IGNORE_INCLUDES.tag().name));
+            syncChangedObjCFiles(allObjCFiles, cacheSource, xcodeSource);
         }
 
         // Extract binary libraries and include files
@@ -195,5 +197,12 @@ public class PostCompilePipeline implements Runnable {
 
         if (!objCLibrary.getPods().isEmpty())
             PluginPod.create(env.getBasedir(), projectName, XcodeTargetRegistry.getAllTargets(), objCLibrary.getPods());
+    }
+
+    private ReverseCodeCollection getReverseCodeCollection(CMBuildEnvironment env, File diffClasses) {
+        Collection<File> classPaths = new ArrayList<>();
+        classPaths.add(diffClasses);
+        classPaths.addAll(asList(env.root().getCompileOnlyDependencies(true), DependencyItem::getFile));
+        return new ReverseCodeCollection(classPaths);
     }
 }

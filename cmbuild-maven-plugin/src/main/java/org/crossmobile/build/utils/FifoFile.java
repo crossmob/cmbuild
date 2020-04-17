@@ -10,6 +10,8 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Consumer;
 
+import static org.crossmobile.bridge.system.BaseUtils.throwExceptionAndReturn;
+
 public class FifoFile {
 
     private File fifo;
@@ -38,7 +40,7 @@ public class FifoFile {
             try {
                 out = new OutputStreamWriter(new FileOutputStream(fifo), StandardCharsets.UTF_8);
             } catch (IOException ex) {
-                return BaseUtils.throwException(ex);
+                return throwExceptionAndReturn(ex);
             }
         return out;
     }
@@ -50,7 +52,7 @@ public class FifoFile {
             try {
                 in = new InputStreamReader(new FileInputStream(fifo), StandardCharsets.UTF_8);
             } catch (IOException ex) {
-                return BaseUtils.throwException(ex);
+                return throwExceptionAndReturn(ex);
             }
         return in;
     }

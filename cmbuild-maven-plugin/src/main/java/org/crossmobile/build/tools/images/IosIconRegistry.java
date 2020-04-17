@@ -28,7 +28,6 @@ public class IosIconRegistry {
             fileWriter.write(getJson(jsonImages));
             fileWriter.flush();
         } catch (IOException ex) {
-            //noinspection ResultOfMethodCallIgnored
             BaseUtils.throwException(ex);
         }
     }

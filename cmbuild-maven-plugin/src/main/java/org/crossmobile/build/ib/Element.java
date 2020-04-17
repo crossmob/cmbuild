@@ -10,6 +10,7 @@ import org.crossmobile.utils.Log;
 
 import java.util.*;
 
+import static org.crossmobile.bridge.system.BaseUtils.throwExceptionAndReturn;
 import static org.crossmobile.build.ib.Elements.*;
 import static org.crossmobile.build.ib.i18n.TranslationElement.toKey;
 
@@ -114,7 +115,7 @@ public abstract class Element {
             child.meta = meta;
             return child;
         } catch (InstantiationException | IllegalAccessException ex) {
-            return BaseUtils.throwException(ex);
+            return throwExceptionAndReturn(ex);
         }
     }
 

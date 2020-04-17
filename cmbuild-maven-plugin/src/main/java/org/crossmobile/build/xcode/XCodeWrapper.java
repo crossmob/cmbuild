@@ -19,6 +19,7 @@ import java.text.ParseException;
 import java.util.*;
 import java.util.function.BiFunction;
 
+import static org.crossmobile.bridge.system.BaseUtils.throwExceptionAndReturn;
 import static org.crossmobile.build.utils.PlistUtils.filterObjects;
 import static org.crossmobile.build.utils.PlistUtils.getPath;
 
@@ -55,7 +56,7 @@ public class XCodeWrapper {
             if (obj instanceof NSDictionary)
                 return new XCodeWrapper((NSDictionary) obj);
         } catch (IOException | PropertyListFormatException | ParseException | ParserConfigurationException | SAXException ex) {
-            return BaseUtils.throwException(ex);
+            return throwExceptionAndReturn(ex);
         }
         return null;
     }

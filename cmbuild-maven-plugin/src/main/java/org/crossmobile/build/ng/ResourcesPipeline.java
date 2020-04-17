@@ -9,10 +9,12 @@ import org.crossmobile.build.ib.helper.XIBList;
 import org.crossmobile.build.tools.*;
 import org.crossmobile.build.tools.images.IconBuilder;
 import org.crossmobile.build.tools.images.IconBuilder.IconType;
+import org.crossmobile.utils.Log;
 import org.crossmobile.utils.images.ImageHound;
 import org.crossmobile.utils.plugin.DependencyItem;
 
 import java.io.File;
+import java.lang.management.ManagementFactory;
 
 import static org.crossmobile.build.ng.CMBuildEnvironment.environment;
 import static org.crossmobile.build.utils.Config.*;
@@ -26,7 +28,7 @@ public class ResourcesPipeline implements Runnable {
 
     @Override
     public void run() {
-        PID.displayPID();
+        Log.debug("Runtime Name: " + ManagementFactory.getRuntimeMXBean().getName());
         switch (environment().getFlavour()) {
             case IOS:
                 resourcesIOS();
