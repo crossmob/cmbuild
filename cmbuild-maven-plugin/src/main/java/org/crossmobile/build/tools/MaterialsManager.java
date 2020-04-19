@@ -26,7 +26,7 @@ public class MaterialsManager {
     //   private static final BufferedImage shape = ImageUtils.getImage("/buildres/layers/shape.png");
 
     public static void parseMaterials(IBParserMeta meta, File materialsDir, File outputDir) {
-        forAllFiles(materialsDir, null, (path, file) -> {
+        forAllFiles(materialsDir, (path, file) -> {
             String name = file.getName();
             File output = outputDir == null ? null : new File(new File(outputDir, path), name); // could be null, no copy required
             if (name.startsWith("."))  // handle hidden files

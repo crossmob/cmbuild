@@ -10,19 +10,34 @@ import org.crossmobile.utils.ReverseCodeCollection;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static java.io.File.separator;
 import static java.util.Collections.singleton;
-import static org.crossmobile.build.tools.SynchronizeFiles.OBJC_COMPATIBLE_CLASSES;
+import static org.crossmobile.bridge.system.MaterialsCommon.MATERIALS_TAG;
 
 class ObjCSourceFile {
     private static final Pattern depack = Pattern.compile("crossmobile_ios_([a-zA-Z]*)_([a-zA-Z]*)");
+
+    private final static Collection<String> BLACK_LIST = Arrays.asList(
+            "org" + separator + "crossmobile" + separator + "sys",
+            "org" + separator + "crossmobile" + separator + MATERIALS_TAG);
+
+    public static final BiPredicate<String, File> OBJC_COMPATIBLE_CLASSES = (path, file) -> {
+        if (!file.getName().endsWith(".class"))
+            return false;
+        for (String bl : BLACK_LIST)
+            if (path.startsWith(bl))
+                return false;
+        return true;
+    };
 
     final String objCName;
     final CtClass cls;

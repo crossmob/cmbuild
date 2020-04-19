@@ -9,33 +9,17 @@ import org.crossmobile.utils.Log;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.function.Predicate;
 
-import static java.io.File.separator;
 import static org.crossmobile.bridge.system.BaseUtils.listFiles;
 import static org.crossmobile.bridge.system.BaseUtils.throwException;
-import static org.crossmobile.bridge.system.MaterialsCommon.MATERIALS_TAG;
 import static org.crossmobile.utils.FileUtils.*;
 import static org.crossmobile.utils.TextUtils.plural;
 
 public class SynchronizeFiles {
 
-    private final static String[] BLACK_LIST =
-            {"org" + separator + "crossmobile" + separator + "sys",
-                    "org" + separator + "crossmobile" + separator + MATERIALS_TAG};
-
-    public static final Predicate<File> OBJC_COMPATIBLE_CLASSES = base -> {
-        if (base.isFile() && !base.getName().endsWith(".class"))
-            return false;
-        for (String blackListed : BLACK_LIST)
-            if (base.getPath().endsWith(blackListed))
-                return false;
-        return true;
-    };
-
     public static boolean synchronizeChangedJavaFiles(File classesDir, File current, File diff) {
         delete(diff);
-        int changedFiles = sync(classesDir, current, diff, true, OBJC_COMPATIBLE_CLASSES);
+        int changedFiles = sync(classesDir, current, diff, true, f -> f.isDirectory() || f.getName().endsWith(".class"));
         trimEmptyDirs(current);
         trimEmptyDirs(diff);
         Log.info(changedFiles == 0 ? "Source files are in sync" : "Found " + changedFiles + " new class" + plural(changedFiles, "es"));
