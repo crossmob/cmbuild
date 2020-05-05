@@ -11,6 +11,8 @@ import java.io.File;
 import java.util.regex.Pattern;
 
 import static org.crossmobile.build.utils.Config.GRADLE;
+import static org.crossmobile.build.utils.Config.GRADLE_PROPERTIES;
+import static org.crossmobile.utils.SystemDependent.is64Bit;
 import static org.crossmobile.utils.TemplateUtils.copyTemplateIfMissing;
 
 public class GradleManager {
@@ -49,7 +51,8 @@ public class GradleManager {
 
     private static void createAndUpdateProperties(File basedir) {
         try {
-            copyTemplateIfMissing("gradle.properties", new File(basedir, "gradle.properties"), "Creating missing gradle.properties file", null);
+            copyTemplateIfMissing(GRADLE_PROPERTIES + (is64Bit() ? "" : ".32"),
+                    new File(basedir, GRADLE_PROPERTIES), "Creating missing gradle.properties file", null);
         } catch (ProjectException ex) {
             BaseUtils.throwException(ex);
         }

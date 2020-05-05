@@ -3,6 +3,8 @@
 
 package org.crossmobile.build.utils;
 
+import org.crossmobile.utils.SystemDependent;
+
 import java.io.File;
 
 import static org.crossmobile.bridge.system.MaterialsCommon.MATERIALS_TAG;
@@ -37,6 +39,8 @@ public class Config {
     public final static String ANDROID_FONTLIST = ANDROID_RES + File.separator + "xml" + File.separator + "fontlist.xml";
     public final static String ANDROID_BASEPATH = ANDROID_RES + File.separator + "xml" + File.separator + "base_path.xml";
     public final static String GRADLE = "build.gradle";
+    public final static String GRADLE_PROPERTIES = "gradle.properties";
+
     public final static String CROSSMOBILE_GRADLE = ANDROID_APP + File.separator + "crossmobile.gradle";
     public final static String ANDROID_GENERATED_CMSOURCES = ANDROID_APP + File.separator + "gen" + File.separator + "main";
 }
