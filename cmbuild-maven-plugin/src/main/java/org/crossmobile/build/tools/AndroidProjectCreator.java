@@ -37,7 +37,7 @@ public class AndroidProjectCreator {
         SynchronizeHelpers.createActivityAndApplication(bundleID, generated);
         SynchronizeHelpers.createAndroidManifest(manifestfile, bundleID, displayname, version, numversion,
                 getApplicationExtras(env, metaData), getPermissions(env, metaData),
-                debuggable);
+                !env.isRelease());
         SynchronizeHelpers.createBasePathAndroid(new File(env.getBuilddir(), ANDROID_BASEPATH), bundleID);
     }
 

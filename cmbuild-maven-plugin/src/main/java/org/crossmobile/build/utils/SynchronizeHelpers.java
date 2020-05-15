@@ -34,7 +34,7 @@ public final class SynchronizeHelpers {
                 .replace(VERSIONCODE_ANCHOR, Integer.toString(numversion))
                 .replace(APPLICATIONEXTRAS_ANCHOR, applicationExtras)
                 .replace(PERMISSIONS_ANCHOR, permissions)
-                .replace(DEBUGGABLE_ANCHOR, Boolean.toString(debuggable));
+                .replace(DEBUGGABLE_ANCHOR, debuggable ? "android:debuggable=\"true\"" : "");
         FileUtils.write(manifestfile, manifest);
     }
 
