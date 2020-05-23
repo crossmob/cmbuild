@@ -48,7 +48,7 @@ public class PluginAssembler {
     private static final byte SOURCE_TYPE = OBJ_STYLE;
 
     public static void assemble(File target, DependencyItem root,
-                                String[] embedlibs, File vendorSrc, File vendorBin,
+                                String[] embedlibs, File srcDir, File vendorSrc, File vendorBin,
                                 Consumer<ArtifactInfo> installer,
                                 Function<ArtifactInfo, File> resolver,
                                 File cachedir, Packages[] packs,
@@ -72,7 +72,7 @@ public class PluginAssembler {
                             PackageRegistry.register(pack.getName(), pack.getPlugin(), pack.getTarget());
             }, "Initialize classes");
             time(() -> {
-                for (Class cls : buildUwp ? cc.getUWPNativeClasses() : cc.getIOsNativeClasses())
+                for (Class<?> cls : buildUwp ? cc.getUWPNativeClasses() : cc.getIOsNativeClasses())
                     Parser.parse(cls);
                 XMLPluginWriter.updateXML(repository, root);
             }, "Gather native API");
@@ -111,7 +111,6 @@ public class PluginAssembler {
                 if (buildRvm)
                     mkdirs(rvmBase.apply(target, plugin));
             }
-
 
             CreateSkeleton skel = new CreateSkeleton(cc.getClassPool());
             int hm = 0;

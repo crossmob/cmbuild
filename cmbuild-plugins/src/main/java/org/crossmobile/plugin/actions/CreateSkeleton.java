@@ -53,7 +53,7 @@ public class CreateSkeleton {
         }
     }
 
-    public boolean stripClass(Class<?> cls, Function<String, File> resolver, byte apiStyleMask) throws IOException {
+    public boolean stripClass(Class<?> cls, Function<String, File> resolver, byte apiStyleMask) {
         try {
             String name = cls.getName();
             CtClass s = cp.get(name);

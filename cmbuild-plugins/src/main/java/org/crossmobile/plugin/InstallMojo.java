@@ -83,7 +83,7 @@ public class InstallMojo extends GenericMojo {
             getPluginDescriptor().getClassRealm().addURL(toURL(dep.getFile()));
 
         PluginAssembler.assemble(new File(getProject().getBuild().getDirectory()), dependencies,
-                embedlibs, new File(new File(getProject().getBuild().getSourceDirectory()).getParent(), "objc"),
+                embedlibs, new File(getProject().getBuild().getSourceDirectory()), new File(new File(getProject().getBuild().getSourceDirectory()).getParent(), "objc"),
                 new File(getProject().getBasedir(), "lib/main/vendor"),
                 this::installAndKeepJar, this::resolveArtifact, new File(getProject().getBasedir(), "gen"), packages,
                 !skipDesktop, !skipIos, !skipAndroid, !skipUwp, !skipRvm, !skipCore,

@@ -156,19 +156,24 @@ public class AppearanceInjections {
     }
 
     private void createContainerBaseMethods(CtClass appearanceC, CtClass baseC) throws Exception {
-        CtMethod appMethodPlain = CtNewMethod.make(appearanceC, "appearance", new CtClass[0], null, null, baseC);
-        appMethodPlain.setModifiers(appMethodPlain.getModifiers() | Modifier.STATIC);
-        appMethodPlain.getMethodInfo().addAttribute(getAttribute(CMSelector.class, baseC, asString("value", APPEARANCE_NATIVE)));
-        appMethodPlain.setBody(APPEARANCE_CODE.replaceAll(RESULT_ANCHOR, appearanceC.getName()).replaceAll(SOURCE_ANCHOR, baseC.getName()));
-        baseC.addMethod(appMethodPlain);
-
-        CtMethod appMethodHierarchy = CtNewMethod.make(appearanceC, "appearanceWhenContainedInInstancesOfClasses", new CtClass[]{ListCt}, null, null, baseC);
-        appMethodHierarchy.setModifiers(appMethodHierarchy.getModifiers() | Modifier.STATIC);
-        appMethodHierarchy.getMethodInfo().addAttribute(getAttribute(CMSelector.class, baseC, asString("value", APPEARANCE_CONTAINED_NATIVE)));
-        setParamAttr(0, CMParamMod.class, appMethodHierarchy, asString("convertWith", "jclass_to_class_list"));
-        appMethodHierarchy.getMethodInfo().addAttribute(new SignatureAttribute(appMethodHierarchy.getMethodInfo().getConstPool(), APPEARANCE_CONTAINED_SIGNATURE.replace(RESULT_ANCHOR, appearanceC.getName().replace('.', '/'))));
-        appMethodHierarchy.setBody(APPEARANCE_CONTAINED_CODE.replaceAll(RESULT_ANCHOR, appearanceC.getName()).replaceAll(SOURCE_ANCHOR, baseC.getName()));
-        baseC.addMethod(appMethodHierarchy);
+        try {
+            CtMethod appMethodPlain = CtNewMethod.make(appearanceC, "appearance", new CtClass[0], null, null, baseC);
+            appMethodPlain.setModifiers(appMethodPlain.getModifiers() | Modifier.STATIC);
+            appMethodPlain.getMethodInfo().addAttribute(getAttribute(CMSelector.class, baseC, asString("value", APPEARANCE_NATIVE)));
+            appMethodPlain.setBody(APPEARANCE_CODE.replaceAll(RESULT_ANCHOR, appearanceC.getName()).replaceAll(SOURCE_ANCHOR, baseC.getName()));
+            baseC.addMethod(appMethodPlain);
+        } catch (DuplicateMemberException ignored) {
+        }
+        try {
+            CtMethod appMethodHierarchy = CtNewMethod.make(appearanceC, "appearanceWhenContainedInInstancesOfClasses", new CtClass[]{ListCt}, null, null, baseC);
+            appMethodHierarchy.setModifiers(appMethodHierarchy.getModifiers() | Modifier.STATIC);
+            appMethodHierarchy.getMethodInfo().addAttribute(getAttribute(CMSelector.class, baseC, asString("value", APPEARANCE_CONTAINED_NATIVE)));
+            setParamAttr(0, CMParamMod.class, appMethodHierarchy, asString("convertWith", "jclass_to_class_list"));
+            appMethodHierarchy.getMethodInfo().addAttribute(new SignatureAttribute(appMethodHierarchy.getMethodInfo().getConstPool(), APPEARANCE_CONTAINED_SIGNATURE.replace(RESULT_ANCHOR, appearanceC.getName().replace('.', '/'))));
+            appMethodHierarchy.setBody(APPEARANCE_CONTAINED_CODE.replaceAll(RESULT_ANCHOR, appearanceC.getName()).replaceAll(SOURCE_ANCHOR, baseC.getName()));
+            baseC.addMethod(appMethodHierarchy);
+        } catch (DuplicateMemberException ignored) {
+        }
     }
 
     private CtClass createAppearanceClass(CtClass baseC, CtClass parentC) throws CannotCompileException {

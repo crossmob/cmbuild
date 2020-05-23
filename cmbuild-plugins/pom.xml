@@ -44,6 +44,11 @@
             <artifactId>cmbuild-maven</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.github.javaparser</groupId>
+            <artifactId>javaparser-symbol-solver-core</artifactId>
+            <version>${version.javaparser}</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
