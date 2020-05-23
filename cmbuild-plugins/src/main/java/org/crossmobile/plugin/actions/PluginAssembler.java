@@ -75,7 +75,7 @@ public class PluginAssembler {
             }, "Gather native API");
             time(() -> {
                 CreateBeanAPI bean = new CreateBeanAPI(cc.getClassPool());
-                for (Class cls : cc.getCompileTimeClasses())
+                for (Class<?> cls : cc.getCompileTimeClasses())
                     bean.beanClass(cls, runtime);
             }, "Create bean classes");
         }, "API processing");
@@ -112,9 +112,9 @@ public class PluginAssembler {
 
             CreateSkeleton skel = new CreateSkeleton(cc.getClassPool());
             int hm = 0;
-            for (Class cls : cc.getCompileTimeClasses())
+            for (Class<?> cls : cc.getCompileTimeClasses())
                 hm += skel.stripClass(cls, plugin -> compileBase.apply(target, plugin), SOURCE_TYPE) ? 1 : 0;
-            for (Class cls : cc.getBuildDependencyClasses())
+            for (Class<?> cls : cc.getBuildDependencyClasses())
                 hm += skel.stripClass(cls, plugin -> builddepBase.apply(target, plugin), SOURCE_TYPE) ? 1 : 0;
             // Still might need to add extra resource files
             CreateBundles.bundleFiles(runtime, plugin -> compileBase.apply(target, plugin), CreateBundles.noClassResolver, BaseTarget.COMPILE, true);

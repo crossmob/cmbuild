@@ -48,7 +48,7 @@ public class CreateBeanAPI {
         this.cp = cp;
     }
 
-    public boolean beanClass(Class cls, File basedir) {
+    public void beanClass(Class<?> cls, File basedir) {
         try {
             String name = cls.getName();
             CtClass s = cp.get(name);
@@ -70,10 +70,8 @@ public class CreateBeanAPI {
                     s.defrost();
                 }
             }
-            return true;
         } catch (ClassNotFoundException | IOException | NotFoundException | CannotCompileException ex) {
             BaseUtils.throwException(ex);
-            return false;
         }
     }
 

@@ -50,7 +50,7 @@ public class CreateSkeleton {
         }
     }
 
-    public boolean stripClass(Class cls, Function<String, File> resolver, byte apiStyleMask) throws IOException {
+    public boolean stripClass(Class<?> cls, Function<String, File> resolver, byte apiStyleMask) throws IOException {
         try {
             String name = cls.getName();
             CtClass s = cp.get(name);
@@ -70,7 +70,7 @@ public class CreateSkeleton {
                     CtMethod pmeth = null;  // if parent method exists, we don't need to re-implement it
                     try {
                         pmeth = s.getSuperclass().getMethod(m.getName(), m.getSignature());
-                    } catch (Exception e) {
+                    } catch (Exception ignored) {
                     }
                     if (!Modifier.isPublic(m.getModifiers()) || pmeth != null)
                         s.removeMethod(m);
