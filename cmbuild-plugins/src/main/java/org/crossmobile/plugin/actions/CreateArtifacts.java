@@ -6,16 +6,21 @@
 
 package org.crossmobile.plugin.actions;
 
+import org.apache.maven.BuildFailureException;
+import org.crossmobile.bridge.system.BaseUtils;
 import org.crossmobile.build.ArtifactInfo;
 import org.crossmobile.plugin.reg.Plugin;
 import org.crossmobile.plugin.reg.PluginDependency;
 import org.crossmobile.plugin.reg.PluginRegistry;
+import org.crossmobile.utils.CollectionUtils;
 import org.crossmobile.utils.Log;
 import org.crossmobile.utils.PluginMetaData;
 import org.crossmobile.utils.plugin.DependencyItem;
 
 import java.io.File;
 import java.io.Writer;
+import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 import static java.io.File.separator;
@@ -176,5 +181,22 @@ public class CreateArtifacts {
             default:
                 return false;
         }
+    }
+
+    public static void installJavadoc(Consumer<ArtifactInfo> installer, DependencyItem root) {
+        Plugin pluginData = PluginRegistry.getPluginData(root.getArtifactID());
+        String baseName = pluginData == null ? "" : pluginData.getName();
+        if (baseName == null) {
+            List<String> plugins = CollectionUtils.asList(PluginRegistry.plugins());
+            if (plugins.size() > 1)
+                BaseUtils.throwException(new BuildFailureException("Unable to locate main plugin data, more then one plugin found and none of them does not have the same name as the original module"));
+            else if (plugins.isEmpty())
+                BaseUtils.throwException(new BuildFailureException("No plugins defined"));
+            baseName = plugins.get(0);
+        }
+        String filename = baseName + "-" + root.getVersion() + "-javadoc.jar";
+        File javadocFile = new File(root.getFile().getParent(), filename);
+        if (javadocFile.isFile())
+            installer.accept(new ArtifactInfo(javadocFile, root.getGroupID(), "cmplugin-" + baseName, root.getVersion(), "javadoc", null));
     }
 }

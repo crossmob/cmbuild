@@ -140,6 +140,7 @@ public class PluginAssembler {
             for (String plugin : PluginRegistry.plugins())
                 CreateArtifacts.installPlugin(installer, plugin, target, root, cachedir, vendorSrc, vendorBin, codeRev,
                         buildDesktop, buildIos, buildUwp, buildAndroid, buildRvm, buildCore, writer);
+            CreateArtifacts.installJavadoc(installer, root);
             if (writer != null)
                 try (OutputStreamWriter filewriter = new OutputStreamWriter(new FileOutputStream(report), StandardCharsets.UTF_8)) {
                     filewriter.write(writer.toString().replaceAll(root.getVersion(), "<VERSION>"));
