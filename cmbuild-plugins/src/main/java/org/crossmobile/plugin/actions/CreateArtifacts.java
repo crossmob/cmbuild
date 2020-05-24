@@ -137,7 +137,7 @@ public class CreateArtifacts {
                 replace(POM_DEPENDENCIES, dependencies);
         File pomFile = new File(fileToInstall.getParent(), artifactid + "-" + version + ".pom");
         write(pomFile, pomData);
-        installer.accept(new ArtifactInfo(fileToInstall, groupid, artifactid, version, pomFile));
+        installer.accept(new ArtifactInfo(fileToInstall, groupid, artifactid, version, "", pomFile));
     }
 
     private static void addDependency(PluginDependency dep, String groupid, String type, String version, String packaging, StringBuilder deplist) {

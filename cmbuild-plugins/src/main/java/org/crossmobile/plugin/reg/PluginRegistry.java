@@ -33,15 +33,15 @@ public class PluginRegistry {
 
     private static boolean dirty = true;
 
-    public static void register(Class cls) {
+    public static void register(Class<?> cls) {
         registerImpl(cls, plugins, false);
     }
 
-    public static void registerDependencies(Class cls) {
+    public static void registerDependencies(Class<?> cls) {
         registerImpl(cls, otherPlugins, true);
     }
 
-    private static void registerImpl(Class cls, Map<String, Plugin> repository, boolean isExternalDependency) {
+    private static void registerImpl(Class<?> cls, Map<String, Plugin> repository, boolean isExternalDependency) {
         dirty = true;
         CMLib plugin = getPluginAnnotation(cls, !isExternalDependency);
         if (plugin != null) {

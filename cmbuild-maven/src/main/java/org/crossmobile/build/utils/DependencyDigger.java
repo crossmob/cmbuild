@@ -58,7 +58,7 @@ public class DependencyDigger {
                         stack.add(root);
                     else {
                         DependencyItem item = appender.resolve(stack.peek(), a.getGroupId(), a.getArtifactId(), a.getVersion(), a.getType(),
-                                resolver.apply(new ArtifactInfo(a.getGroupId(), a.getArtifactId(), a.getVersion(), a.getType())));
+                                resolver.apply(new ArtifactInfo(a.getGroupId(), a.getArtifactId(), a.getVersion(), a.getType(), a.getClassifier())));
                         stack.push(item == null ? ignore : item);
                     }
                     return true;

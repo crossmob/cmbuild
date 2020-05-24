@@ -24,6 +24,7 @@ import org.eclipse.aether.resolution.ArtifactResult;
 import java.io.File;
 import java.io.FileNotFoundException;
 
+import static org.crossmobile.bridge.system.BaseUtils.throwExceptionAndReturn;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.*;
 
 public abstract class GenericMojo extends AbstractMojo {
@@ -66,8 +67,7 @@ public abstract class GenericMojo extends AbstractMojo {
             ArtifactResult result = repoSystem.resolveArtifact(mavenSession.getRepositorySession(), request);
             return result.getArtifact().getFile();
         } catch (Exception ex) {
-            throwException(ex);
-            return null;
+            return throwExceptionAndReturn(ex);
         }
     }
 
@@ -82,10 +82,11 @@ public abstract class GenericMojo extends AbstractMojo {
                     goal("install-file"),
                     configuration(
                             element(name("file"), info.source == null ? "" : info.source.getAbsolutePath()),
-                            element(name("groupId"), info.groupId == null ? "" : info.groupId),
-                            element(name("artifactId"), info.artifactId == null ? "" : info.artifactId),
-                            element(name("version"), info.version == null ? "" : info.version),
-                            element(name("packaging"), info.source == null ? "" : info.packaging),
+                            element(name("groupId"), info.groupId),
+                            element(name("artifactId"), info.artifactId),
+                            element(name("version"), info.version),
+                            element(name("packaging"), info.packaging),
+                            element(name("classifier"), info.classifier),
                             element(name("pomFile"), info.pomFile == null ? "" : info.pomFile.getAbsolutePath())
                     ),
                     executionEnvironment(
@@ -96,8 +97,7 @@ public abstract class GenericMojo extends AbstractMojo {
             );
             return true;
         } catch (MojoExecutionException ex) {
-            throwException(ex);
-            return false;
+            return throwExceptionAndReturn(ex);
         }
     }
 
@@ -107,9 +107,9 @@ public abstract class GenericMojo extends AbstractMojo {
         if (url == null || url.trim().isEmpty())
             throw new NullPointerException("url could not be null");
         if (info == null || info.source == null)
-            throwException(new FileNotFoundException("Source file should be present"));
+            return throwExceptionAndReturn(new FileNotFoundException("Source file should be present"));
         if (!info.source.isFile())
-            throwException(new FileNotFoundException("File not found: " + info.source.getAbsolutePath()));
+            return throwExceptionAndReturn(new FileNotFoundException("File not found: " + info.source.getAbsolutePath()));
 
         try {
             executeMojo(
@@ -120,11 +120,12 @@ public abstract class GenericMojo extends AbstractMojo {
                     ),
                     goal("deploy-file"),
                     configuration(
-                            element(name("file"), info.source == null ? "" : info.source.getAbsolutePath()),
-                            element(name("groupId"), info.groupId == null ? "" : info.groupId),
-                            element(name("artifactId"), info.artifactId == null ? "" : info.artifactId),
-                            element(name("version"), info.version == null ? "" : info.version),
-                            element(name("packaging"), info.source == null ? "" : info.packaging),
+                            element(name("file"), info.source.getAbsolutePath()),
+                            element(name("groupId"), info.groupId),
+                            element(name("artifactId"), info.artifactId),
+                            element(name("version"), info.version),
+                            element(name("packaging"), info.packaging),
+                            element(name("classifier"), info.classifier),
                             element(name("pomFile"), info.pomFile == null ? "" : info.pomFile.getAbsolutePath()),
                             element(name("repositoryId"), repositoryId),
                             element((name("url")), url)
@@ -137,8 +138,7 @@ public abstract class GenericMojo extends AbstractMojo {
             );
             return true;
         } catch (MojoExecutionException ex) {
-            throwException(ex);
-            return false;
+            return throwExceptionAndReturn(ex);
         }
     }
 
@@ -160,13 +160,5 @@ public abstract class GenericMojo extends AbstractMojo {
 
     public PluginDescriptor getPluginDescriptor() {
         return pluginDescriptor;
-    }
-
-    private <R> R throwException(Throwable th) {
-        return (R) GenericMojo.<RuntimeException>throwExceptionImpl(th);
-    }
-
-    private static <T extends Throwable> Object throwExceptionImpl(Throwable th) throws T {
-        throw (T) th;
     }
 }

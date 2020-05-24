@@ -39,7 +39,7 @@ public class ModifyMojo extends GenericMojo {
     @Override
     public void exec() {
         MojoLogger.register(getLog());
-        time(() -> {
+        time("Post-process classes", () -> {
             File classes = new File(getProject().getBuild().getDirectory(), "classes");
             ReflectionUtils.resetClassLoader();
             ClassPool cp = ClassPool.getDefault();
@@ -55,7 +55,6 @@ public class ModifyMojo extends GenericMojo {
             injections.cleanup(classes);
             for (Class<?> cls : appearanceClasses)
                 injections.makeAppearance(cls);
-
-        }, "Post-process classes");
+        });
     }
 }

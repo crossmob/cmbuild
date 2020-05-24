@@ -14,7 +14,6 @@
 
     <modules>
         <module>cmbuild-maven</module>
-        <module>cmbuild-base</module>
         <module>cmbuild-maven-plugin</module>
         <module>cmbuild-plugins</module>
         <module>cmbuild-android-extra</module>

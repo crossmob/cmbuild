@@ -23,7 +23,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.jar.JarFile;
-import java.util.stream.Collectors;
 
 import static java.io.File.separator;
 import static java.util.stream.Collectors.toCollection;
@@ -51,15 +50,15 @@ public abstract class CreateLib {
         final Function<String, String> LIBNAME = asIOS ? IOSLibName : UWPLibName;
 
         AtomicBoolean hasSwift = new AtomicBoolean(false);
-        time(() -> {
+        time("Creating " + PLATFORM.apply(asIOS) + " files", () -> {
             for (String plugin : plugins())
                 delete(prodResolv.apply(plugin));
             runEmitters(prodResolv, hasSwift);
-        }, "Creating " + PLATFORM.apply(asIOS) + " files");
+        });
 
-        time(() -> handleRegistry.saveTo(prodResolv), "Creating inverse block handlers");
+        time("Creating inverse block handlers", () -> handleRegistry.saveTo(prodResolv));
 
-        time(() -> {
+        time("Synchronizing plugins", () -> {
             Requirement<Plugin> root = new Requirement<>(new Plugin("root", false));
             for (Plugin p : pluginsData())
                 root.setRequires(p.getRootRequirement());
@@ -117,7 +116,7 @@ public abstract class CreateLib {
                 } else
                     Log.debug("Plugin " + plugin + " is in sync with native cache files");
             });
-        }, "Synchronizing plugins");
+        });
     }
 
     protected static void emitPlatformFiles(Function<String, File> prodResolv, boolean asIOS, AtomicBoolean hasSwift) throws IOException {

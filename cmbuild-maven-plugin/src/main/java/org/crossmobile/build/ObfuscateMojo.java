@@ -13,14 +13,9 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.crossmobile.build.tools.Obfuscator;
 import org.crossmobile.build.utils.Versions;
-import org.crossmobile.utils.FileUtils;
 import org.crossmobile.utils.Log;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 
 import static java.util.Arrays.asList;
 import static org.crossmobile.utils.FileUtils.copyResource;

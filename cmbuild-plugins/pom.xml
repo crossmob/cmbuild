@@ -36,11 +36,6 @@
         </dependency>
         <dependency>
             <groupId>org.crossmobile</groupId>
-            <artifactId>cmbuild-base</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.crossmobile</groupId>
             <artifactId>cmbuild-maven</artifactId>
             <version>${project.version}</version>
         </dependency>

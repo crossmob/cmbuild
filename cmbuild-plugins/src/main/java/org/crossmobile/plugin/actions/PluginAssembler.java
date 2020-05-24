@@ -63,40 +63,40 @@ public class PluginAssembler {
         ClassCollection cc = new ClassCollection();
         ReflectionUtils.resetClassLoader();
         ProjectRegistry registry = new ProjectRegistry();
-        time(() -> {
-            time(() -> {
+        time("API processing", () -> {
+            time("Initialize classes", () -> {
                 registry.register(root, embedlibs, cc);
                 if (packs != null && packs.length > 0)
                     for (Packages pack : packs)
                         if (pack != null)
                             PackageRegistry.register(pack.getName(), pack.getPlugin(), pack.getTarget());
-            }, "Initialize classes");
-            time(() -> {
+            });
+            time("Gather native API", () -> {
                 for (Class<?> cls : buildUwp ? cc.getUWPNativeClasses() : cc.getIOsNativeClasses())
                     Parser.parse(cls);
                 XMLPluginWriter.updateXML(repository, root);
-            }, "Gather native API");
-            time(() -> {
+            });
+            time("Create bean classes", () -> {
                 CreateBeanAPI bean = new CreateBeanAPI(cc.getClassPool());
                 for (Class<?> cls : cc.getCompileTimeClasses())
                     bean.beanClass(cls, runtime);
-            }, "Create bean classes");
-        }, "API processing");
+            });
+        });
 
         if (buildIos || buildDesktop || buildUwp || buildAndroid)
-            time(() -> {
+            time("Extract embedded jars", () -> {
                 for (File f : registry.getAppjars().toArray(new File[0]))
                     unzipJar(f, runtime);
-            }, "Extract embedded jars");
+            });
 
-        ReverseCode codeRev = (buildIos || buildUwp) ? time(() -> new ReverseCode(cc.getClassPool()), "Create reverse code") : null;
+        ReverseCode codeRev = (buildIos || buildUwp) ? time("Create reverse code", () -> new ReverseCode(cc.getClassPool())) : null;
         if (buildIos || buildUwp) {
 //            time(() -> new JavaTransformer(cc.getClassPool(), runtime_rvm));
-            time(() -> new CreateDylib(resolver, target, cachedir, vendorSrc, null, codeRev.getHandleRegistry(), buildIos), "Create iOS libraries");
-            time(() -> new CreateDll(resolver, target, cachedir, vendorSrc, VStudioLocation, codeRev.getHandleRegistry(), buildUwp), "Create UWP libraries");
+            time("Create iOS libraries", () -> new CreateDylib(resolver, target, cachedir, vendorSrc, null, codeRev.getHandleRegistry(), buildIos));
+            time("Create UWP libraries", () -> new CreateDll(resolver, target, cachedir, vendorSrc, VStudioLocation, codeRev.getHandleRegistry(), buildUwp));
         }
 
-        time(() -> {
+        time("Initialize and create stub compile-time files", () -> {
             for (String plugin : PluginRegistry.plugins()) {
                 mkdirs(compileBase.apply(target, plugin));
                 mkdirs(builddepBase.apply(target, plugin));
@@ -123,8 +123,8 @@ public class PluginAssembler {
             CreateBundles.bundleFiles(runtime, plugin -> builddepBase.apply(target, plugin), CreateBundles.noClassResolver, BaseTarget.BUILDDEP, false);
 
             Log.debug(hm + " class" + plural(hm, "es") + " stripped");
-        }, "Initialize and create stub compile-time files");
-        time(() -> {
+        });
+        time("Create distributions of artifacts", () -> {
             if (buildDesktop)
                 CreateBundles.bundleFiles(runtime, plugin -> desktopBase.apply(target, plugin), CreateBundles.bundleResolver, BaseTarget.DESKTOP);
             if (buildIos)
@@ -147,7 +147,7 @@ public class PluginAssembler {
                 } catch (Exception e) {
                     Log.error("Unable to store reports.txt", e);
                 }
-        }, "Create distributions of artifacts");
+        });
     }
 
 }

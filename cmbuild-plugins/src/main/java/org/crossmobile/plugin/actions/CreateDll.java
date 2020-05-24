@@ -157,7 +157,7 @@ public class CreateDll extends CreateLib {
     private static void restoreNuget(File solutionDir) {
         if (new File(solutionDir, "packages").exists())
             return;
-        time(() -> {
+        time("Restoring NuGets", () -> {
             Commander cmd = new Commander("nuget", "restore");
             cmd.setCurrentDir(solutionDir);
             cmd.setOutListener(Log::debug);
@@ -165,7 +165,7 @@ public class CreateDll extends CreateLib {
             cmd.exec();
             cmd.waitFor();
             applyPatches(solutionDir.getParentFile().getParentFile(), new File(solutionDir, "packages"));
-        }, "Restoring NuGets  ");
+        });
     }
 
     private static void updateProjectToken(File project, String token) {
