@@ -48,6 +48,7 @@ public class CreateArtifacts {
         // Define targets
         File compileTarget = compileBase.apply(target, plugin);
         File builddepTarget = builddepBase.apply(target, plugin);
+        File sourcesTarget = sourcesBase.apply(target, plugin);
         File iosTarget = iosBase.apply(target, plugin);
         File desktopTarget = desktopBase.apply(target, plugin);
         File uwpTarget = uwpBase.apply(target, plugin);
@@ -100,6 +101,8 @@ public class CreateArtifacts {
                     plugin, "", item.getGroupID(), item.getVersion());
             install(installer, createJar(report, new File(artBase, "cmplugin-builddep-" + plugin + '-' + item.getVersion() + ".jar"), builddepTarget),
                     plugin, "builddep-", item.getGroupID(), item.getVersion());
+            installer.accept(new ArtifactInfo(createJar(report, new File(artBase, "cmplugin-" + plugin + '-' + item.getVersion() + "-sources.jar"), sourcesTarget),
+                    item.getGroupID(), "cmplugin-" + plugin, item.getVersion(), "jar", "sources", null));
         }
         if (buildIos)
             install(installer, createJar(report, new File(artBase, "cmplugin-ios-" + plugin + "-" + item.getVersion() + ".jar"), iosTarget),

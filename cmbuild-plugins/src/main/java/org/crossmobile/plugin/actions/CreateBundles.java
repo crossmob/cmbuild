@@ -21,42 +21,48 @@ import static org.crossmobile.utils.FileUtils.copy;
 
 public class CreateBundles {
 
-    public static final BundleResolver bundleResolver = (filename, packg) -> {
-        if (filename.endsWith(".class")) {
-            String clsname = filename.substring(0, filename.length() - 6);
-            int dollar = clsname.indexOf('$');
-            if (dollar > 0)
-                clsname = clsname.substring(0, dollar);
-            if (clsname.isEmpty())
+    private static BundleResolver getFileResolver(String extension) {
+        return (filename, packg) -> {
+            if (filename.endsWith(extension)) {
+                String clsname = filename.substring(0, filename.length() - extension.length());
+                int dollar = clsname.indexOf('$');
+                if (dollar > 0)
+                    clsname = clsname.substring(0, dollar);
+                if (clsname.isEmpty())
+                    return new PluginAndTarget(PackageRegistry.getPlugin(packg), PackageRegistry.getTarget(packg));
+                else {
+                    clsname = packageToJavaPackage(packg) + clsname;
+                    return new PluginAndTarget(PluginRegistry.getPlugin(clsname), TargetRegistry.getTarget(clsname));
+                }
+            } else
                 return new PluginAndTarget(PackageRegistry.getPlugin(packg), PackageRegistry.getTarget(packg));
-            else {
-                clsname = packageToJavaPackage(packg) + clsname;
-                return new PluginAndTarget(PluginRegistry.getPlugin(clsname), TargetRegistry.getTarget(clsname));
-            }
-        } else
-            return new PluginAndTarget(PackageRegistry.getPlugin(packg), PackageRegistry.getTarget(packg));
-    };
+        };
+    }
 
     public static final BundleResolver noClassResolver = (filename, packg) -> new PluginAndTarget(PackageRegistry.getPlugin(packg),
             filename.endsWith(".class") ? CMLibTarget.SOURCEONLY : PackageRegistry.getTarget(packg));
 
+    public static final BundleResolver classResolver = getFileResolver(".class");
+
+    public static final BundleResolver sourceResolver = getFileResolver(".java");
+
     public static void bundleFiles(File source, Function<String, File> filedest, BundleResolver resolver, BaseTarget filter) {
-        bundleFiles(source, filedest, resolver, filter, false);
+        bundleFiles(source, filedest, resolver, filter, false, "", true);
     }
 
-    public static void bundleFiles(File source, Function<String, File> filedest, BundleResolver resolver, BaseTarget filter, final boolean shouldInform) {
-        bundleFiles(source, filedest, resolver, filter, shouldInform, "", true);
+    public static void bundleFilesAndReport(File source, Function<String, File> filedest, BundleResolver resolver, BaseTarget filter) {
+        bundleFiles(source, filedest, resolver, filter, true, "", true);
     }
 
-    private static void bundleFiles(File source, Function<String, File> filedest, BundleResolver resolver, BaseTarget filter, final boolean shouldInform, String packg, boolean is_root) {
+    private static void bundleFiles(File source, Function<String, File> filedest, BundleResolver resolver, BaseTarget filter, final boolean letsReportThisTime, String packg, boolean is_root) {
         if (source.isDirectory())
             for (File child : listFiles(source))
-                bundleFiles(child, filedest, resolver, filter, shouldInform, packageToJavaPackage(packg) + (is_root ? "" : source.getName()), false);
+                bundleFiles(child, filedest, resolver, filter, letsReportThisTime, packageToJavaPackage(packg) + (is_root ? "" : source.getName()), false);
         else if (source.isFile()) {
             PluginAndTarget pt = resolver.resolve(source.getName(), packg);
-            if (pt.target == CMLibTarget.UNKNOWN && shouldInform)
+            if (letsReportThisTime && pt.target == CMLibTarget.UNKNOWN)
                 Log.warning("Unable to match file " + source.getAbsolutePath());
-            if (pt.target.matches(filter))
+            else if (pt.target.matches(filter))
                 copy(source, getOutput(filedest.apply(pt.plugin), packg, source.getName()));
         }
     }

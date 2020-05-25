@@ -39,6 +39,7 @@ public class PluginAssembler {
 
     public static final BiFunction<File, String, File> compileBase = (target, plugin) -> new File(target, BUNDLES + separator + plugin + separator + "compile");
     public static final BiFunction<File, String, File> builddepBase = (target, plugin) -> new File(target, BUNDLES + separator + plugin + separator + "builddep");
+    public static final BiFunction<File, String, File> sourcesBase = (target, plugin) -> new File(target, BUNDLES + separator + plugin + separator + "sources");
     public static final BiFunction<File, String, File> desktopBase = (target, plugin) -> new File(target, BUNDLES + separator + plugin + separator + "desktop");
     public static final BiFunction<File, String, File> androidBase = (target, plugin) -> new File(target, BUNDLES + separator + plugin + separator + "android");
     public static final BiFunction<File, String, File> iosBase = (target, plugin) -> new File(target, BUNDLES + separator + plugin + separator + "ios");
@@ -100,6 +101,7 @@ public class PluginAssembler {
             for (String plugin : PluginRegistry.plugins()) {
                 mkdirs(compileBase.apply(target, plugin));
                 mkdirs(builddepBase.apply(target, plugin));
+                mkdirs(sourcesBase.apply(target, plugin));
                 if (buildDesktop)
                     mkdirs(desktopBase.apply(target, plugin));
                 if (buildAndroid)
@@ -119,22 +121,22 @@ public class PluginAssembler {
             for (Class<?> cls : cc.getBuildDependencyClasses())
                 hm += skel.stripClass(cls, plugin -> builddepBase.apply(target, plugin), SOURCE_TYPE) ? 1 : 0;
             // Still might need to add extra resource files
-            CreateBundles.bundleFiles(runtime, plugin -> compileBase.apply(target, plugin), CreateBundles.noClassResolver, BaseTarget.COMPILE, true);
-            CreateBundles.bundleFiles(runtime, plugin -> builddepBase.apply(target, plugin), CreateBundles.noClassResolver, BaseTarget.BUILDDEP, false);
-
+            CreateBundles.bundleFilesAndReport(runtime, plugin -> compileBase.apply(target, plugin), CreateBundles.noClassResolver, BaseTarget.COMPILE);
+            CreateBundles.bundleFiles(runtime, plugin -> builddepBase.apply(target, plugin), CreateBundles.noClassResolver, BaseTarget.BUILDDEP);
             Log.debug(hm + " class" + plural(hm, "es") + " stripped");
         });
         time("Create distributions of artifacts", () -> {
             if (buildDesktop)
-                CreateBundles.bundleFiles(runtime, plugin -> desktopBase.apply(target, plugin), CreateBundles.bundleResolver, BaseTarget.DESKTOP);
+                CreateBundles.bundleFiles(runtime, plugin -> desktopBase.apply(target, plugin), CreateBundles.classResolver, BaseTarget.DESKTOP);
             if (buildIos)
-                CreateBundles.bundleFiles(runtime, plugin -> iosBase.apply(target, plugin), CreateBundles.bundleResolver, BaseTarget.IOS);
+                CreateBundles.bundleFiles(runtime, plugin -> iosBase.apply(target, plugin), CreateBundles.classResolver, BaseTarget.IOS);
             if (buildRvm)
-                CreateBundles.bundleFiles(runtime_rvm, plugin -> rvmBase.apply(target, plugin), CreateBundles.bundleResolver, BaseTarget.IOS);
+                CreateBundles.bundleFiles(runtime_rvm, plugin -> rvmBase.apply(target, plugin), CreateBundles.classResolver, BaseTarget.IOS);
             if (buildUwp)
-                CreateBundles.bundleFiles(runtime, plugin -> uwpBase.apply(target, plugin), CreateBundles.bundleResolver, BaseTarget.UWP);
+                CreateBundles.bundleFiles(runtime, plugin -> uwpBase.apply(target, plugin), CreateBundles.classResolver, BaseTarget.UWP);
             if (buildAndroid)
-                CreateBundles.bundleFiles(runtime, plugin -> androidBase.apply(target, plugin), CreateBundles.bundleResolver, BaseTarget.ANDROID);
+                CreateBundles.bundleFiles(runtime, plugin -> androidBase.apply(target, plugin), CreateBundles.classResolver, BaseTarget.ANDROID);
+            CreateBundles.bundleFiles(srcDir, plugin -> sourcesBase.apply(target, plugin), CreateBundles.sourceResolver, BaseTarget.ALL);
 
             StringWriter writer = report == null ? null : new StringWriter();
             for (String plugin : PluginRegistry.plugins())

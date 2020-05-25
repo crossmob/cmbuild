@@ -76,7 +76,10 @@ public abstract class CreateLib {
                 File lib = new File(cache, "lib" + separator + LIBNAME.apply(plugin));
                 File vendorFiles = new File(vendor, plugin);
                 int howMany = sync(prod, cached, null, true, f -> !f.getName().equals("patches"));
-                Log.info(howMany == 0 ? "All source files are in sync for plugin " + plugin : "Updated " + howMany + " file" + plural(howMany) + " for plugin " + plugin);
+                if (howMany == 0)
+                    Log.debug("All source files are in sync for plugin " + plugin);
+                else
+                    Log.info("Updated " + howMany + " file" + plural(howMany) + " for plugin " + plugin);
 
                 // Need to define these anyways, so that dependencies will work
                 Collection<File> compiled = getCompiled(cached, vendorFiles, prod);

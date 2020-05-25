@@ -43,9 +43,9 @@ public class ProjectRegistry {
 
         cc.addClassPaths(asList(getAppjars(), File::getAbsolutePath));
         cc.register(false);
-        for (Class cls : cc.getAllClasses())
+        for (Class<?> cls : cc.getAllClasses())
             PluginRegistry.register(cls);
-        for (Class cls : cc.getAllNativeClasses())
+        for (Class<?> cls : cc.getAllNativeClasses())
             TypeRegistry.register(cls);
 
         // Resolve all classes: required for type checking in plugins. Otherwise plugins will not be able to find base types
