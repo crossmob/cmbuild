@@ -41,7 +41,8 @@ public class ExecAndroidMojo extends GenericMojo {
         ExceptionUtils.callNoException(() -> UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()));
 
         Log.info("Rebuild APK");
-        GradleLauncher.runGradle(basedir, release);
+        if (!GradleLauncher.runGradle(basedir, release))
+            exitWithError("");
         String apkFile = Opt.of(getApkFile(basedir, release)).ifMissing(() -> exitWithError("Unable to locate APK")).get();
         if (!run)
             return;
@@ -95,7 +96,8 @@ public class ExecAndroidMojo extends GenericMojo {
     }
 
     private static void exitWithError(String message) {
-        Log.error(message);
+        if (message != null && !message.isEmpty())
+            Log.error(message);
         System.exit(1);
     }
 }

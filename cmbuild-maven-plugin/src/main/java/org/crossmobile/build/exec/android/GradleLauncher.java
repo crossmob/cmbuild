@@ -30,7 +30,7 @@ public class GradleLauncher {
 
     private static final boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase().contains("windows");
 
-    public static void runGradle(File currentDir, boolean release) {
+    public static boolean runGradle(File currentDir, boolean release) {
         if (!isInstalled())
             downloadGradle(getGradleHome());
         Commander gradle = new Commander(getGradleBin(), release ? "assembleRelease" : "assembleDebug");
@@ -39,6 +39,7 @@ public class GradleLauncher {
         gradle.setErrListener((Consumer<String>) Log::error);
         gradle.exec();
         gradle.waitFor();
+        return gradle.exitValue() == 0;
     }
 
     private static boolean isInstalled() {
