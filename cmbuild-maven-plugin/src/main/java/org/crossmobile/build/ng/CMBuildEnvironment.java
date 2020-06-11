@@ -30,6 +30,7 @@ public class CMBuildEnvironment {
     private final String appId;
     private final String artifactId;
     private final boolean release;
+    private final boolean run;
     private final Supplier<File> xmlvm;
     private final Supplier<File> retrolambda;
     private final DependencyItem root;
@@ -43,11 +44,11 @@ public class CMBuildEnvironment {
         return current;
     }
 
-    public static void create(File basedir, File builddir, Flavour flavour, Properties properties, ParamSet paramset, Supplier<File> xmlvm, Supplier<File> retrolambda, String groupId, String artifactId, String version, DependencyItem root, boolean release, String debugprofile) {
-        current = new CMBuildEnvironment(basedir, builddir, flavour, properties, paramset, xmlvm, retrolambda, groupId, artifactId, version, root, release, debugprofile);
+    public static void create(File basedir, File builddir, Flavour flavour, Properties properties, ParamSet paramset, Supplier<File> xmlvm, Supplier<File> retrolambda, String groupId, String artifactId, String version, DependencyItem root, boolean release, boolean run, String debugprofile) {
+        current = new CMBuildEnvironment(basedir, builddir, flavour, properties, paramset, xmlvm, retrolambda, groupId, artifactId, version, root, release, run, debugprofile);
     }
 
-    private CMBuildEnvironment(File basedir, File builddir, Flavour flavour, Properties properties, ParamSet paramset, Supplier<File> xmlvm, Supplier<File> retrolambda, String groupId, String artifactId, String version, DependencyItem root, boolean release, String debugprofile) {
+    private CMBuildEnvironment(File basedir, File builddir, Flavour flavour, Properties properties, ParamSet paramset, Supplier<File> xmlvm, Supplier<File> retrolambda, String groupId, String artifactId, String version, DependencyItem root, boolean release, boolean run, String debugprofile) {
         this.basedir = basedir;
         this.builddir = builddir;
         this.materials = new File(basedir, MATERIALS_PATH);
@@ -62,6 +63,7 @@ public class CMBuildEnvironment {
         this.paramset = paramset;
         this.root = root;
         this.release = release;
+        this.run = run;
         this.debugprofile = debugprofile == null ? DEBUG_PROFILE.tag().deflt : debugprofile;
     }
 
@@ -119,6 +121,10 @@ public class CMBuildEnvironment {
 
     public boolean isRelease() {
         return release;
+    }
+
+    public boolean isRun() {
+        return run;
     }
 
     public DependencyItem root() {

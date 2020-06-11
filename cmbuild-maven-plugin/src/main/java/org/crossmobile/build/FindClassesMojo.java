@@ -15,6 +15,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.crossmobile.bridge.system.BaseUtils;
 import org.crossmobile.utils.ClasspathUtils;
+import org.crossmobile.utils.Commander;
 import org.crossmobile.utils.ReverseCodeCollection;
 
 import java.io.File;

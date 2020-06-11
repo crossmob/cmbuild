@@ -8,6 +8,7 @@ package org.crossmobile.build.ng;
 
 import org.crossmobile.bridge.system.BaseUtils;
 import org.crossmobile.build.AnnotationConfig;
+import org.crossmobile.build.exec.android.AdbUtils;
 import org.crossmobile.build.ib.helper.XIBList;
 import org.crossmobile.build.tools.*;
 import org.crossmobile.build.tools.images.IconBuilder;
@@ -45,14 +46,6 @@ public class ResourcesPipeline implements Runnable {
                 resourcesDesktop();
                 break;
         }
-        ExtProjectLauncher.store(environment().getBuilddir(),
-                environment().getFlavour(),
-                "theme",
-                null,
-                environment().getArtifactId(),
-                environment().getProperties().getProperty(GROUP_ID.tag().name) + "." + environment().getProperties().getProperty(ARTIFACT_ID.tag().name),
-                environment().getProperties().getProperty(MAIN_CLASS.tag().name),
-                environment().isRelease(), environment().getDebugProfile());
     }
 
     private void resourcesUWP() {
@@ -82,8 +75,8 @@ public class ResourcesPipeline implements Runnable {
 
     private void resourcesAndroid() {
         CMBuildEnvironment env = environment();
-
-        new AdbLauncher(env.getProperties().getProperty("sdk.dir")).exec("devices", "-l"); // Early launching of ADB devices
+        if (env.isRun())
+            AdbUtils.launch(env.getProperties().getProperty("sdk.dir")); // Early launching of ADB devices if run is requested
 
         File andrRes = new File(env.getBuilddir(), ANDROID_RES);
         File andrAsset = new File(env.getBuilddir(), ANDROID_ASSET);
