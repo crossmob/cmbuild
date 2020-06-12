@@ -26,11 +26,11 @@ public class DependencyJarResolver {
 
     public static Collection<File> gatherLibs(DependencyItem root, boolean asRuntime) {
         Collection<File> jars = new TreeSet<>();
-        gatherProgramAndEmbeddedLibs(root, asRuntime, null, jars, null, null);
+        gatherProgramAndEmbeddedLibs(root, asRuntime, null, jars, null);
         return jars;
     }
 
-    public static void gatherProgramAndEmbeddedLibs(DependencyItem root, boolean asRuntime, String[] embedlibs, Collection<File> libraryjars, Collection<File> embeddedjars, Collection<File> bljars) {
+    public static void gatherProgramAndEmbeddedLibs(DependencyItem root, boolean asRuntime, String[] embedlibs, Collection<File> libraryjars, Collection<File> embeddedjars) {
         Collection<Pattern> patterns = new ArrayList<>();
         if (embedlibs != null && embedlibs.length > 0)
             for (String embedlib : embedlibs)
@@ -50,11 +50,6 @@ public class DependencyJarResolver {
         if (embeddedjars != null) {
             embeddedjars.addAll(asList(embeditems, DependencyItem::getFile));
             Log.debug("JARs registered as embedded: " + embeddedjars);
-        }
-        if (bljars != null) {
-            List<File> blacklisted = asList(root.getBlacklisted(), DependencyItem::getFile);
-            bljars.addAll(blacklisted);
-            Log.debug("JARs registered as blacklisted: " + blacklisted);
         }
     }
 

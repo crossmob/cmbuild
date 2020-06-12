@@ -25,7 +25,6 @@ public class ProjectRegistry {
     private Collection<File> libjars;
     private Collection<File> embedjars;
     private Collection<File> appjars;
-    private Collection<File> allbljars;
 
     public void register(DependencyItem root, String[] embedlibs, ClassCollection cc) {
         if (libjars != null)
@@ -34,12 +33,10 @@ public class ProjectRegistry {
         libjars = new TreeSet<>();
         embedjars = new TreeSet<>();
         appjars = new TreeSet<>();
-        allbljars = new TreeSet<>();
 
-        DependencyJarResolver.gatherProgramAndEmbeddedLibs(root, true, embedlibs, libjars, embedjars, allbljars);
+        DependencyJarResolver.gatherProgramAndEmbeddedLibs(root, true, embedlibs, libjars, embedjars);
         appjars.add(root.getFile());
         appjars.addAll(embedjars);
-        allbljars.addAll(libjars);
 
         cc.addClassPaths(asList(getAppjars(), File::getAbsolutePath));
         cc.register(false);
@@ -67,9 +64,5 @@ public class ProjectRegistry {
 
     public Collection<File> getLibjars() {
         return libjars;
-    }
-
-    public Collection<File> getLibAndBlacklistedJars() {
-        return allbljars;
     }
 }
