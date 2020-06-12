@@ -49,27 +49,6 @@ public final class AnnotationInjection {
         out.close();
     }
 
-    public final void serializeAsSource(String parentClassName, String parentFlatname, Writer out) throws IOException {
-        out.append("package org.crossmobile.sys;\n\nimport crossmobile.ios.uikit.*;\n\npublic class " + parentFlatname + "__ {\n");
-        for (String outletKey : outlets.keySet()) {
-            String outletType = outlets.get(outletKey);
-            if (generatedOutlets.containsKey(parentFlatname))
-                generatedOutlets.get(parentFlatname).remove(outletKey + "_field");
-            out.append("\n    public static void ").append(outletKey + "_field").append("(").
-                    append(parentClassName).append(' ').append("parent, ").append(outletType).append(" outlet){\n").
-                    append("        parent.").append(outletKey).append(" = outlet;\n").
-                    append("    }\n");
-        }
-        out.append("}\n");
-        out.flush();
-        out.close();
-    }
-
-    private String capitalizeFirst(String str) {
-        return str.toUpperCase().charAt(0) + str.substring(1);
-    }
-
-
     public static final String esc(String input) {
         return input.
                 replaceAll("\\\\", "\\\\\\\\").

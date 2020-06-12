@@ -265,24 +265,11 @@ public class SourceAnnotationsProcessor extends AbstractProcessor {
                 String flatName = key.replace('.', '_');
                 if (objcoutdir != null)
                     injection.serializeForXcode(new OutputStreamWriter(new FileOutputStream(new File(objcoutdir, flatName + OBJECTS_EXT)), StandardCharsets.UTF_8));
-                else if (injection.hasOutlets()) {
-                    injection.serializeAsSource(key, flatName, filer.createSourceFile(AnnotationConfig.OUTLET_PGK + "." + flatName + "__").openWriter());
+                else if (injection.hasOutlets())
                     generatedOutlets.remove(flatName);
-                }
             } catch (IOException ex) {
                 processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, ex.toString());
             }
-        for (String key : generatedOutlets.keySet()) {
-            try {
-                if (filer != null) {
-                    String flatName = key.replace('.', '_');
-                    new AnnotationInjection(true).serializeAsSource(key, flatName, filer.createSourceFile(AnnotationConfig.OUTLET_PGK + "." + flatName + "__").openWriter());
-                }
-            } catch (IOException ex) {
-                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, ex.toString());
-            }
-        }
-
     }
 
     private void generatedOutlets(File objcoutdir) {

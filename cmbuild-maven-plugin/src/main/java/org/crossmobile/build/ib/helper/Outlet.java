@@ -45,7 +45,8 @@ public class Outlet extends RealElement {
             return I4 + variableName + ".set" + capitalize(property) + "(" + destination + ");" + NEWLINE;
         variableType = variableType.replace('.', '_');
         writeOUT(variableType, property);
-        return I4 + OUTLET_PGK + "." + variableType + "__." + property + "(" + variableName + ", " + destination + ");" + NEWLINE;
+        String fieldName = property.substring(0, property.length() - "_field".length());
+        return I4 + variableName + "." + fieldName + " = " + destination + ";" + NEWLINE;
     }
 
     private void writeOUT(String variableType, String property) {
