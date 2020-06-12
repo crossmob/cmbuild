@@ -106,4 +106,10 @@ public class NType {
         return sizeResolver;
     }
 
+    public String getDefaultValue() {
+        if (isPrimitive())
+            return "0";
+        else
+            return "JAVA_NULL";
+    }
 }

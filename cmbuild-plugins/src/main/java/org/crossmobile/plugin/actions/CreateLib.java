@@ -49,11 +49,10 @@ public abstract class CreateLib {
         Function<String, File> prodResolv = plugin -> new File(target, PLATFORM.apply(asIOS) + separator + plugin);
         final Function<String, String> LIBNAME = asIOS ? IOSLibName : UWPLibName;
 
-        AtomicBoolean hasSwift = new AtomicBoolean(false);
         time("Creating " + PLATFORM.apply(asIOS) + " files", () -> {
             for (String plugin : plugins())
                 delete(prodResolv.apply(plugin));
-            runEmitters(prodResolv, hasSwift);
+            runEmitters(prodResolv);
         });
 
         time("Creating inverse block handlers", () -> handleRegistry.saveTo(prodResolv));
@@ -113,7 +112,7 @@ public abstract class CreateLib {
                             headerSearchPaths.addAll(depfiles);
                     });
                     File proj = createProj(target, plugin);
-                    updateProj(proj, pData, includeDir, headerSearchPaths, compiled, requirements, hasSwift.get());    // Update project with project files and includes
+                    updateProj(proj, pData, includeDir, headerSearchPaths, compiled, requirements);    // Update project with project files and includes
                     if (build)
                         compile(proj, asIOS ? lib : IDELocation, pData, LIBNAME.apply(plugin));
                 } else
@@ -122,36 +121,32 @@ public abstract class CreateLib {
         });
     }
 
-    protected static void emitPlatformFiles(Function<String, File> prodResolv, boolean asIOS, AtomicBoolean hasSwift) throws IOException {
-        objectEmitter(prodResolv, false, hasSwift);
+    protected static void emitPlatformFiles(Function<String, File> prodResolv, boolean asIOS) throws IOException {
+        objectEmitter(prodResolv, false);
     }
 
-    protected static void objectEmitter(Function<String, File> prodResolv, boolean headersOnly, AtomicBoolean hasSwift) throws IOException {
-        Map<String, Streamer> swift = new HashMap<>();
+    protected static void objectEmitter(Function<String, File> prodResolv, boolean headersOnly) throws IOException {
         for (NObject obj : ObjectRegistry.retrieveAll()) {
             ObjectEmitter out = new ObjectEmitter(obj);
             String name = toObjC(obj.getType());
             String plugin = getPlugin(obj.getType().getName());
             if (plugin != null) {
-                Streamer swiftStreamer = swift.computeIfAbsent(plugin, o -> Streamer.asString());
                 File pluginRoot = prodResolv.apply(plugin + (headersOnly ? separator + "uwpinclude" : ""));
-                out.emitAndTerminate(asHeader(pluginRoot, name), headersOnly ? null : asBody(pluginRoot, name), swiftStreamer, headersOnly, PluginRegistry.getPluginData(plugin).getImports());
-                if (!swiftStreamer.isEmpty())
-                    hasSwift.set(true);
+                out.emitAndTerminate(asHeader(pluginRoot, name), headersOnly ? null : asBody(pluginRoot, name), headersOnly, PluginRegistry.getPluginData(plugin).getImports());
             }
         }
-        for (String plugin : swift.keySet()) {
-            Streamer streamer = swift.get(plugin);
-            String data = streamer.toString();
-            if (data.isEmpty())
-                continue;
-            File swiftFile = new File(prodResolv.apply(plugin), "swift_bindings.swift");
-            String swiftContent = "import Foundation\n@objc\nclass " +
-                    plugin + "_swift :NSObject {\n" +
-                    data +
-                    "}\n";
-            FileUtils.write(swiftFile, swiftContent);
-        }
+//        for (String plugin : swift.keySet()) {
+//            Streamer streamer = swift.get(plugin);
+//            String data = streamer.toString();
+//            if (data.isEmpty())
+//                continue;
+//            File swiftFile = new File(prodResolv.apply(plugin), "swift_bindings.swift");
+//            String swiftContent = "import Foundation\n@objc\nclass " +
+//                    plugin + "_swift :NSObject {\n" +
+//                    data +
+//                    "}\n";
+//            FileUtils.write(swiftFile, swiftContent);
+//        }
     }
 
     private File external(Plugin pData, Function<ArtifactInfo, File> resolver, boolean asIOS, File target) {
@@ -186,11 +181,11 @@ public abstract class CreateLib {
         return compiled;
     }
 
-    protected abstract void runEmitters(Function<String, File> prodResolv, AtomicBoolean hasSwift) throws IOException;
+    protected abstract void runEmitters(Function<String, File> prodResolv) throws IOException;
 
     protected abstract void compile(File projRoot, File lib, Plugin plugin, String libname);
 
-    protected abstract void updateProj(File proj, Plugin plugin, Collection<File> includeDir, Collection<File> headerSearchPaths, Collection<File> compiled, Collection<String> deps, boolean createSwift);
+    protected abstract void updateProj(File proj, Plugin plugin, Collection<File> includeDir, Collection<File> headerSearchPaths, Collection<File> compiled, Collection<String> deps);
 
     protected abstract File createProj(File target, String plugin);
 

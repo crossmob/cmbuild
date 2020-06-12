@@ -20,20 +20,18 @@ public class ObjectEmitter {
         this.obj = obj;
     }
 
-    public void emitAndTerminate(Streamer header, Streamer body, Streamer swift, boolean asImportHeaders, String... imports) throws IOException {
-        emit(header, body, swift, null, asImportHeaders, imports);
+    public void emitAndTerminate(Streamer header, Streamer body, boolean asImportHeaders, String... imports) throws IOException {
+        emit(header, body, null, asImportHeaders, imports);
         if (header != null)
             header.close();
         if (body != null)
             body.close();
-        if (swift != null)
-            swift.close();
     }
 
-    public void emit(Streamer header, Streamer body, Streamer swift, String[] filter, boolean asImportHeaders, String... imports) throws IOException {
+    public void emit(Streamer header, Streamer body, String[] filter, boolean asImportHeaders, String... imports) throws IOException {
         new HeaderEmitter(obj, asImportHeaders, imports).emit(header);
         if (!obj.getType().isInterface() && body != null)
-            new BodyEmitter(obj).emit(body, swift, filter);
+            new BodyEmitter(obj).emit(body, filter);
     }
 
 }

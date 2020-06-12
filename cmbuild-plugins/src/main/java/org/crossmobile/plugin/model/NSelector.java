@@ -33,8 +33,8 @@ public class NSelector extends NParsable implements Comparable<NSelector> {
     private NObject container;
     private NProperty property;
     private boolean asStatic;
-    private String swiftMethod = "";
     private NStructField structRef;
+    private String sinceIos = "";
 
     /* Function info */
     public void setConstructor(boolean constructor) {
@@ -169,6 +169,14 @@ public class NSelector extends NParsable implements Comparable<NSelector> {
         return property != null && !getName().startsWith("set");
     }
 
+    public void setSinceIos(String sinceIos) {
+        this.sinceIos = sinceIos == null ? "" : sinceIos;
+    }
+
+    public String getSinceIos() {
+        return sinceIos;
+    }
+
     @Override
     public int compareTo(NSelector other) {
         if (Modifier.isStatic(this.java.getModifiers()) != Modifier.isStatic(other.java.getModifiers()))
@@ -232,18 +240,6 @@ public class NSelector extends NParsable implements Comparable<NSelector> {
      */
     public boolean isFakeConstructor() {
         return fakeConstructor;
-    }
-
-    public void setSwiftMethod(String swiftMethod) {
-        this.swiftMethod = swiftMethod;
-    }
-
-    /**
-     * The Swift method used as a bridge between a varargs argument and a va_list argument. The va_list
-     * argument name of this method <b>should</b> be va_array.
-     */
-    public String getSwiftMethod() {
-        return swiftMethod;
     }
 
     @Override

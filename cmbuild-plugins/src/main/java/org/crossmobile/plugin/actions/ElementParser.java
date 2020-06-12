@@ -48,19 +48,19 @@ public class ElementParser {
         return parseSelector(nobj, sel, cs, nobj.getType());
     }
 
-    public static boolean parseMethod(NObject nobj, Method m, boolean forceStatic, String nativeCode, String sizeResolver, String swiftMethod) {
+    public static boolean parseMethod(NObject nobj, Method m, boolean forceStatic, String nativeCode, String sizeResolver, String sinceIos) {
         NSelector sel = AnnotationParser.parseSelector(nativeCode);
         if (sel == null) {
             Log.error("Unable to parse selector for method " + execSignature(m) + " using native code: " + nativeCode);
             return false;
         } else {
+            sel.setSinceIos(sinceIos);
             sel.getReturnType().setSizeResolver(sizeResolver);
-            sel.setSwiftMethod(swiftMethod);
             return parseSelector(nobj, sel, m, m.getReturnType(), forceStatic ? StaticMappingType.JAVA : StaticMappingType.NONE);
         }
     }
 
-    public static boolean parseGetter(NObject nobj, Method m, String nativeCode, String sizeResolver) {
+    public static boolean parseGetter(NObject nobj, Method m, String nativeCode, String sizeResolver, String sinceIos) {
         NProperty get = AnnotationParser.parseProperty(nativeCode);
         if (get == null) {
             Log.error("Unable to parse getter for method " + execSignature(m) + " using native code: " + nativeCode);
@@ -68,10 +68,11 @@ public class ElementParser {
         }
         NSelector sel = Factories.getGetterSelector(get);
         sel.getReturnType().setSizeResolver(sizeResolver);
+        sel.setSinceIos(sinceIos);
         return parseSelector(nobj, sel, m, m.getReturnType());
     }
 
-    public static boolean parseSetter(NObject nobj, Method m, String nativeCode) {
+    public static boolean parseSetter(NObject nobj, Method m, String nativeCode, String sinceIos) {
         NProperty set = AnnotationParser.parseProperty(nativeCode);
         if (set == null) {
             Log.error("Unable to parse setter for method " + execSignature(m) + " using native code: " + nativeCode);
@@ -81,10 +82,12 @@ public class ElementParser {
             Log.error("Property " + set.getName() + " is a readonly method and not compatible with `" + execSignature(m) + "` ; native code provided: " + nativeCode);
             return false;
         }
-        return parseSelector(nobj, Factories.getSetterSelector(set), m, m.getReturnType());
+        NSelector sel = Factories.getSetterSelector(set);
+        sel.setSinceIos(sinceIos);
+        return parseSelector(nobj, sel, m, m.getReturnType());
     }
 
-    public static boolean parseFunc(NObject nobj, Method m, String nativeCode, String sizeResolver, String swiftMethod) {
+    public static boolean parseFunc(NObject nobj, Method m, String nativeCode, String sizeResolver) {
         NSelector func = AnnotationParser.parseFunction(nativeCode);
         StaticMappingType staticMapping = StaticMappingType.NONE;
         if (func == null) {
@@ -92,8 +95,7 @@ public class ElementParser {
             return false;
         } else if (!func.getParams().isEmpty()) {
             func.getReturnType().setSizeResolver(sizeResolver);
-            func.setSwiftMethod(swiftMethod);
-            Class firstParam = getReferencedJavaClass(func.getParams().get(0).getNType().getType());
+            Class<?> firstParam = getReferencedJavaClass(func.getParams().get(0).getNType().getType());
             if (isAssignableFrom(firstParam, nobj.getType(), null))
                 staticMapping = StaticMappingType.NATIVE;
         }

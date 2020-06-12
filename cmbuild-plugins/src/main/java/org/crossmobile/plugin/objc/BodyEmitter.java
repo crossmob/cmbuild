@@ -31,7 +31,7 @@ public class BodyEmitter extends FileEmitter {
         super(obj);
     }
 
-    void emit(Streamer out, Streamer swift, String[] filter) throws IOException {
+    void emit(Streamer out, String[] filter) throws IOException {
         emitInfo(out);
         emitIncludes(out);
         if (obj.needsOverrideBindings()) {
@@ -41,7 +41,7 @@ public class BodyEmitter extends FileEmitter {
 //        emitStaticFunctionPointers(out);
         emitDefinition(out, false);
 //        emitLoad(out);
-        emitSelectors(out, swift, filter);
+        emitSelectors(out, filter);
         emitHelperSelectors(out);
         emitEnd(out, false);
     }
@@ -53,11 +53,6 @@ public class BodyEmitter extends FileEmitter {
             dependencies.remove(fullName(obj.getType().getSuperclass()));
         for (String dependency : dependencies)
             out.append("#import \"").append(dependency).append(".h\"\n");
-        for (NSelector sel : obj.getSelectors())
-            if (!sel.getSwiftMethod().isEmpty()) {
-                out.append("#import \"").append(PluginRegistry.getPlugin(obj.getType().getName())).append("-Swift.h\"\n");
-                break;
-            }
         out.append("\n");
     }
 
@@ -122,12 +117,12 @@ public class BodyEmitter extends FileEmitter {
             StructConstructorParser.helperMethods(obj, out);
     }
 
-    private void emitSelectors(Streamer out, Streamer swift, String[] filter) throws IOException {
+    private void emitSelectors(Streamer out, String[] filter) throws IOException {
         String selfName = TypeRegistry.isObjCReference(obj.getType()) ? "self->" + REFERENCE_NAME : null;
         for (NSelector sel : obj.getSelectors())
             if (filter == null || startsWith(sel.getName(), Arrays.asList(filter))) {
                 out.append("// ").append(sel.getOriginalCode()).append("\n");
-                new SelectorEmitter(sel, selfName).emitImplementation(out).emitSwift(swift);
+                new SelectorEmitter(sel, selfName).emitImplementation(out);
             }
     }
 

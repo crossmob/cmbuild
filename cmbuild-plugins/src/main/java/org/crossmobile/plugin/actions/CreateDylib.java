@@ -45,8 +45,8 @@ public class CreateDylib extends CreateLib {
     }
 
     @Override
-    protected void runEmitters(Function<String, File> prodResolv, AtomicBoolean hasSwift) throws IOException {
-        emitPlatformFiles(prodResolv, true, hasSwift);
+    protected void runEmitters(Function<String, File> prodResolv) throws IOException {
+        emitPlatformFiles(prodResolv, true);
     }
 
     @Override
@@ -64,7 +64,7 @@ public class CreateDylib extends CreateLib {
 
     @SuppressWarnings("UseSpecificCatch")
     @Override
-    protected void updateProj(File xcodeproj, Plugin plugin, Collection<File> includes, Collection<File> headerSearchPaths, Collection<File> compiled, Collection<String> deps, boolean createSwift) {
+    protected void updateProj(File xcodeproj, Plugin plugin, Collection<File> includes, Collection<File> headerSearchPaths, Collection<File> compiled, Collection<String> deps) {
         if (plugin.hasPods())
             PluginPod.create(xcodeproj.getParentFile().getParentFile(), plugin.getName(), singletonList(XcodeTarget.Main), plugin.getPods());
         try {
@@ -84,15 +84,15 @@ public class CreateDylib extends CreateLib {
                 ((NSDictionary) buildobj.get("buildSettings")).
                         put("HEADER_SEARCH_PATHS", incPaths.toArray(new NSString[incPaths.size()]));
 
-            if (createSwift) {
-                String bridge = getSwiftBridge(includes, plugin.getName());
-                for (NSDictionary buildobj : findEntriesWithChild(objects, "isa", "XCBuildConfiguration")) {
-                    NSDictionary buildSettings = ((NSDictionary) buildobj.get("buildSettings"));
-                    buildSettings.put("SWIFT_OBJC_BRIDGING_HEADER", bridge);
-                    buildSettings.put("SWIFT_OPTIMIZATION_LEVEL", "-Onone");
-                    buildSettings.put("SWIFT_VERSION", "4.0");
-                }
-            }
+//            if (createSwift) {
+//                String bridge = getSwiftBridge(includes, plugin.getName());
+//                for (NSDictionary buildobj : findEntriesWithChild(objects, "isa", "XCBuildConfiguration")) {
+//                    NSDictionary buildSettings = ((NSDictionary) buildobj.get("buildSettings"));
+//                    buildSettings.put("SWIFT_OBJC_BRIDGING_HEADER", bridge);
+//                    buildSettings.put("SWIFT_OPTIMIZATION_LEVEL", "-Onone");
+//                    buildSettings.put("SWIFT_VERSION", "4.0");
+//                }
+//            }
 
             PropertyListParser.saveAsASCII(root, xcodeproj);
 
@@ -120,19 +120,6 @@ public class CreateDylib extends CreateLib {
         buildfile.put("isa", "PBXBuildFile");
         buildfile.put("fileRef", fileref);
         return ref.put(buildfile);
-    }
-
-    private String getSwiftBridge(Collection<File> filelist, String plugin) {
-        String bridge = "";
-        for (File file : filelist) {
-            if (file.isDirectory())
-                bridge = getSwiftBridge(listFiles(file), plugin);
-            else if (file.getName().endsWith(plugin + "-Bridging-Header.h"))
-                bridge = file.getAbsolutePath();
-            if (!bridge.isEmpty())
-                return bridge;
-        }
-        return "";
     }
 
     public int addRefs(Collection<File> filelist, SafeRef objRef, List<NSString> filerefs, List<NSString> buildrefs) {

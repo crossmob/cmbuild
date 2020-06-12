@@ -47,6 +47,8 @@ public class SelectorEmitter {
     public final SelectorEmitter emitImplementation(Streamer out) throws IOException {
         emitDefinition(out);
         emitOpenBracket(out);
+        if (!selector.getSinceIos().isEmpty())
+            out.append("if (@available(iOS ").append(selector.getSinceIos()).append(", *)) {\n").tab();
 
         if (selector.getStructRef() != null)
             emitSelectorAsStructMember(out);
@@ -78,6 +80,16 @@ public class SelectorEmitter {
             result.emit(out, selValue);
 //        emitMethodImpDefinition(out);
         }
+        if (!selector.getSinceIos().isEmpty()) {
+            if (selector.getReturnType().getType() == void.class)
+                out.untab().append("}\n");
+            else {
+                out.untab().append("} else {\n").tab();
+                out.append("return ").append(selector.getReturnType().getDefaultValue()).append(";\n");
+                out.untab().append("}\n");
+            }
+        }
+
         emitCloseBracket(out);
         return this;
     }
@@ -225,44 +237,44 @@ public class SelectorEmitter {
 //                && (selector.getMethodType() == MethodType.SELECTOR || selector.getMethodType() == MethodType.BLOCK);
     }
 
-    public void emitSwift(Streamer out) throws IOException {
-        if (selector.getSwiftMethod().isEmpty())
-            return;
-        out.append("\t@objc\n");
-        out.append("\tstatic func ").append(getClassNameSimple(selector.getContainer().getType()));
-        out.append("_").append(selector.getName()).append("(");
-        forEach(selector.getParams()).
-                onAny(e -> {
-                    try {
-                        out.append("_ ").append(e.getVarname()).append(":");
-                        out.append(getSwiftType(e.getNType()));
-                    } catch (Exception e2) {
-                        e2.printStackTrace();
-                    }
-                }).
-                onFront(e -> out.append(", ")).go();
-        out.append(") -> ").append(getSwiftType(selector.getReturnType())).append(" {\n\t\t");
-        if (!selector.getReturnType().getType().equals(void.class))
-            out.append("return ");
-        out.append(selector.getSwiftMethod().replace("va_array", "convArgs(va_array"));
-        out.append("\n\t}\n\n");
-    }
-
-    private String getSwiftType(NType ntype) {
-        if (ntype.getVarargType() != null && ntype.getVarargType().virtual)
-            return "[Any]";
-        String type = ntype.getNativeType().trim();
-        if (type.equals("void"))
-            return "Void";
-        if (type.equals("id"))
-            return "Any";
-        if (type.equals("instancetype")) {
-            type = getClassNameSimple(selector.getContainer().getType());
-            if (type.equals("String"))  // Maybe other types as well?
-                return "NSString";
-        }
-        if (type.endsWith("*"))
-            type = type.substring(0, type.length() - 2).trim();
-        return type;
-    }
+//    public void emitSwift(Streamer out) throws IOException {
+//        if (selector.getSwiftMethod().isEmpty())
+//            return;
+//        out.append("\t@objc\n");
+//        out.append("\tstatic func ").append(getClassNameSimple(selector.getContainer().getType()));
+//        out.append("_").append(selector.getName()).append("(");
+//        forEach(selector.getParams()).
+//                onAny(e -> {
+//                    try {
+//                        out.append("_ ").append(e.getVarname()).append(":");
+//                        out.append(getSwiftType(e.getNType()));
+//                    } catch (Exception e2) {
+//                        e2.printStackTrace();
+//                    }
+//                }).
+//                onFront(e -> out.append(", ")).go();
+//        out.append(") -> ").append(getSwiftType(selector.getReturnType())).append(" {\n\t\t");
+//        if (!selector.getReturnType().getType().equals(void.class))
+//            out.append("return ");
+//        out.append(selector.getSwiftMethod().replace("va_array", "convArgs(va_array"));
+//        out.append("\n\t}\n\n");
+//    }
+//
+//    private String getSwiftType(NType ntype) {
+//        if (ntype.getVarargType() != null && ntype.getVarargType().virtual)
+//            return "[Any]";
+//        String type = ntype.getNativeType().trim();
+//        if (type.equals("void"))
+//            return "Void";
+//        if (type.equals("id"))
+//            return "Any";
+//        if (type.equals("instancetype")) {
+//            type = getClassNameSimple(selector.getContainer().getType());
+//            if (type.equals("String"))  // Maybe other types as well?
+//                return "NSString";
+//        }
+//        if (type.endsWith("*"))
+//            type = type.substring(0, type.length() - 2).trim();
+//        return type;
+//    }
 }
