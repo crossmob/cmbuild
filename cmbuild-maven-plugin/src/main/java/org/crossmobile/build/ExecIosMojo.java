@@ -15,9 +15,12 @@ import java.io.File;
 import java.io.IOException;
 
 @Mojo(name = "execios", defaultPhase = LifecyclePhase.PACKAGE, requiresDependencyResolution = ResolutionScope.COMPILE)
-public class ExecIosMojo extends GenericMojo {
+public class ExecIosMojo extends ExecGenericMojo {
     @Override
     public void exec() throws MojoExecutionException {
+        if (!isRunnable())
+            return;
+
         File baseDir = getProject().getBasedir();
         String app = getProject().getArtifactId();
         File xcworkspace = new File(baseDir, app + ".xcworkspace");

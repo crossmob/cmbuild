@@ -24,17 +24,13 @@ import java.io.File;
 import static org.crossmobile.utils.ParamsCommon.DEBUG_PROFILE;
 
 @Mojo(name = "execandroid", defaultPhase = LifecyclePhase.PACKAGE, requiresDependencyResolution = ResolutionScope.COMPILE)
-public class ExecAndroidMojo extends GenericMojo {
+public class ExecAndroidMojo extends ExecGenericMojo {
     private static final String APK_PREFIX = File.separator + "target" + File.separator + "app" + File.separator + "build" + File.separator + "outputs" + File.separator + "apk" + File.separator;
-
-    @Parameter(defaultValue = "${settings}", readonly = true)
-    private Settings settings;
 
     @Override
     public void exec() {
         File basedir = getProject().getBasedir();
         String bundleID = getProject().getGroupId() + "." + getProject().getArtifactId();
-        boolean run = settings.getActiveProfiles().contains("run");
         boolean release = settings.getActiveProfiles().contains("release");
         String debugProfile = Opt.of(getSession().getUserProperties().getProperty(DEBUG_PROFILE.tag().name)).getOrElse(DEBUG_PROFILE.tag().deflt);
 
@@ -44,7 +40,7 @@ public class ExecAndroidMojo extends GenericMojo {
         if (!GradleLauncher.runGradle(basedir, release))
             exitWithError("");
         String apkFile = Opt.of(getApkFile(basedir, release)).ifMissing(() -> exitWithError("Unable to locate APK")).get();
-        if (!run)
+        if (!isRunnable())
             return;
 
         AdbUtils adb = AdbUtils.getInstance();
@@ -86,18 +82,5 @@ public class ExecAndroidMojo extends GenericMojo {
         File oldLocation = new File(basedir + APK_PREFIX + apkName + "-" + rel_deb + ".apk");
         File newLocation = new File(basedir + APK_PREFIX + rel_deb + File.separator + apkName + "-" + rel_deb + ".apk");
         return newLocation.isFile() ? newLocation.getAbsolutePath() : (oldLocation.isFile() ? oldLocation.getAbsolutePath() : null);
-    }
-
-    private static void waitSomeTime() {
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException ignored) {
-        }
-    }
-
-    private static void exitWithError(String message) {
-        if (message != null && !message.isEmpty())
-            Log.error(message);
-        System.exit(1);
     }
 }

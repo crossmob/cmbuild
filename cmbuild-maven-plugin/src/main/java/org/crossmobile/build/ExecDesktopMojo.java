@@ -22,12 +22,15 @@ import java.util.Collection;
 import static org.crossmobile.utils.ParamsCommon.MAIN_CLASS;
 
 @Mojo(name = "execdesktop", defaultPhase = LifecyclePhase.INSTALL)
-public class ExecDesktopMojo extends GenericMojo {
+public class ExecDesktopMojo extends ExecGenericMojo {
 
     private static final int DaemonTimeout = 3000;
 
     @Override
     public void exec() {
+        if (!isRunnable())
+            return;
+
         File baseJar = new File(getProject().getProperties().getProperty("cm.launch.desktop"));
         if (!baseJar.isFile())
             BaseUtils.throwException(new IOException("Unable to locate JAR file " + baseJar.getAbsolutePath()));
