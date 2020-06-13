@@ -236,11 +236,8 @@ public class AndroidTargetSelector extends JDialog implements AListener {
             if (result == JOptionPane.OK_OPTION && group.getSelection() != null) {
                 Commander launch = new Commander(emulator.getAbsolutePath(), "-avd", group.getSelection().getActionCommand());
                 launch.setCurrentDir(emulator.getParentFile());
+                launch.setDetachable(true);
                 launch.setDebug(true);
-                launch.setOutListener(s -> {
-                });
-                launch.setErrListener(s -> {
-                });
                 launch.exec();
             }
         }

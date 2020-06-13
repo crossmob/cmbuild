@@ -8,10 +8,7 @@ package org.crossmobile.build.exec.android;
 
 import org.crossmobile.utils.Commander;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -20,8 +17,7 @@ public class ConnectedAndroidDispatcher {
 
     private final String adb;
     private AListener listener;
-    private Collection<AndroidDevice> previously = null;
-
+    private List<AndroidDevice> previously = null;
     private ScheduledExecutorService executor;
 
     public ConnectedAndroidDispatcher(String adb) {
@@ -29,10 +25,7 @@ public class ConnectedAndroidDispatcher {
             throw new NullPointerException("ADB should not be null");
         this.adb = adb;
         executor = Executors.newSingleThreadScheduledExecutor();
-        executor.scheduleAtFixedRate(() -> {
-            if (listener == null)
-                return;
-
+        executor.scheduleWithFixedDelay(() -> {
             List<AndroidDevice> currently = new ArrayList<>();
             for (String id : getAndroidIDs()) {
                 AndroidDevice dev = getAndroidDevice(id);
@@ -40,7 +33,7 @@ public class ConnectedAndroidDispatcher {
                     currently.add(dev);
             }
             Collections.sort(currently);
-            if ((previously == null ? -1 : previously.size()) != currently.size() || !previously.containsAll(currently))
+            if (listener != null && ((previously == null ? -1 : previously.size()) != currently.size() || !previously.containsAll(currently)))
                 listener.onDeviceStateChange(currently);
             previously = currently;
         }, 0, 1000, TimeUnit.MILLISECONDS);
@@ -48,13 +41,15 @@ public class ConnectedAndroidDispatcher {
 
     public void stop() {
         if (executor != null) {
-            executor.shutdown();
+            executor.shutdownNow();
             executor = null;
         }
     }
 
     public void setListener(AListener listener) {
         this.listener = listener;
+        if (previously != null)
+            this.listener.onDeviceStateChange(previously);
     }
 
     private List<String> getAndroidIDs() {
