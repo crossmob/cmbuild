@@ -8,15 +8,13 @@ package org.crossmobile.build;
 
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.apache.maven.settings.Settings;
 import org.crossmobile.build.exec.android.AdbUtils;
 import org.crossmobile.build.exec.android.AndroidTargetSelector;
 import org.crossmobile.build.exec.android.GradleLauncher;
 import org.crossmobile.utils.ExceptionUtils;
 import org.crossmobile.utils.Log;
-import org.crossmobile.utils.Opt;
+import org.crossmobile.utils.func.Opt;
 
 import javax.swing.*;
 import java.io.File;
