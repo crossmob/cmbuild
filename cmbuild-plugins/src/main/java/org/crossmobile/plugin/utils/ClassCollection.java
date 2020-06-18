@@ -39,14 +39,13 @@ public class ClassCollection {
         ClassWalker.getClasspathEntries(iterableToString(paths, pathSeparator), item -> {
             if (!item.contains("/$")) {
                 item = item.replace('/', '.');
-                Class cls;
+                Class<?> cls;
                 try {
-                    if ((cls = Class.forName(item, false, getClassLoader())) != null) {
-                        if (packages != null)
-                            packages.accept(cls.getPackage());
-                        if (Modifier.isPublic(cls.getModifiers()) || item.endsWith("package-info") && classes != null)
-                            classes.accept(cls);
-                    }
+                    cls = Class.forName(item, false, getClassLoader());
+                    if (packages != null)
+                        packages.accept(cls.getPackage());
+                    if (Modifier.isPublic(cls.getModifiers()) || item.endsWith("package-info") && classes != null)
+                        classes.accept(cls);
                 } catch (Throwable ex) {
                     if (!silently)
                         Log.warning("While instantiating class " + item + ": " + ex.toString());

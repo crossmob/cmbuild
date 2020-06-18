@@ -15,7 +15,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -136,7 +135,7 @@ public class ExecDesktopMojo extends ExecGenericMojo {
             } catch (MalformedURLException e) {
                 BaseUtils.throwException(e);
             }
-            setContextClassLoader(new URLClassLoader(new URL[]{fileUrl}));
+            setContextClassLoader(new java.net.URLClassLoader(new URL[]{fileUrl}));
         }
     }
 }
