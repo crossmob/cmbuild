@@ -152,7 +152,7 @@ public class Objects extends Subviews {
     }
 
     private static void lateInitMethod(StringBuilder late, View view) {
-        String variable = ((RealElement) view).variable();
+        String variable = view.variable();
         late.append(I2).append("public final void ").append(LATE_INITTER).append(variable).append("() {").append(NEWLINE);
         late.append(view.late());
         late.append(I2).append("}").append(NEWLINE);

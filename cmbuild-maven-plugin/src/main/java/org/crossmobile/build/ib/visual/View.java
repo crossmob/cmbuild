@@ -67,11 +67,12 @@ public class View extends RealElement {
 
     public String addSubviews(String variable) {
         StringBuilder out = new StringBuilder();
-        for (Subviews e : parts(Elements.Subviews))
-            for (View s : e.parts(Elements.View)) {
+        for (Subviews e : parts(Elements.Subviews)) {
+            for (View s : e.parts(Elements.View))
                 out.append(I4).append(variable).append(".addSubview(").append(Objects.GETTER).append(s.variable()).append("());").append(NEWLINE);
+            for (View s : e.parts(Elements.View))
                 out.append(I4).append(Objects.LATE_INITTER).append(s.variable()).append("();").append(NEWLINE);
-            }
+        }
         return out.toString();
     }
 
