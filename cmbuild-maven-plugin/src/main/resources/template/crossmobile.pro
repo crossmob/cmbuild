@@ -26,7 +26,7 @@
 
 -dontnote com.panayotis.appenh.**
 
--keep public class org.crossmobile.backend.desktop.Chassis{ public *; }
+-keep public class org.crossmobile.backend.desktop.cgeo.Chassis{ public *; }
 -keep public class org.crossmobile.backend.desktop.javazoom.* { public *; }
 
 

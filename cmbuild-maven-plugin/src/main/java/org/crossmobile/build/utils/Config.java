@@ -6,16 +6,12 @@
 
 package org.crossmobile.build.utils;
 
-import org.crossmobile.utils.SystemDependent;
-
 import java.io.File;
 
+import static org.crossmobile.bridge.system.LauncherCommons.CROSSMOBILE_PROPERTIES;
 import static org.crossmobile.bridge.system.MaterialsCommon.MATERIALS_TAG;
 
 public class Config {
-
-    //CrossMobile
-    public static final String CROSSMOBILE_PROPERTIES = "crossmobile.properties";
 
     //Xcode Build dirs
     public final static String XCODE_BASE = "xcode";
