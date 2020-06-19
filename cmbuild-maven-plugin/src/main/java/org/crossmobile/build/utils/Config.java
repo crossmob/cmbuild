@@ -13,14 +13,14 @@ import static org.crossmobile.bridge.system.MaterialsCommon.MATERIALS_TAG;
 
 public class Config {
 
-    //Xcode Build dirs
+    // Xcode Build dirs
     public final static String XCODE_BASE = "xcode";
     public final static String XCODE_EXT_APP = "application";
     public final static String XCODE_EXT_MAT = MATERIALS_TAG;
     public final static String XCODE_EXT_INC = "plugins" + File.separator + "include";
     public final static String XCODE_EXT_LIB = "plugins" + File.separator + "lib";
     public final static String XCODE_EXT_PLIST = "plists";
-    //General
+    // General
     public final static String PROJECT_CACHES = "cache";
     public final static String CLASSES = "classes";
     public final static String GENERATED_CMSOURCES = "generated-sources" + File.separator + "main";
@@ -28,7 +28,7 @@ public class Config {
     public final static String SYS = CLASSES + File.separator + "org" + File.separator + "crossmobile" + File.separator + MATERIALS_TAG + File.separator + "sys";
     public final static String PLUGIN_LAUNCHER = "org" + File.separator + "crossmobile" + File.separator + "sys" + File.separator + "PluginsLauncherList.java";
     public final static String IBOBJECTS = "org" + File.separator + "crossmobile" + File.separator + "sys" + File.separator + "IBObjects.java";
-    //ANDROID APP
+    // Android
     public final static String ANDROID_APP = "app";
     public final static String ANDROID_MANIFEST = ANDROID_APP + File.separator + "AndroidManifest.xml";
     public final static String ANDROID_ASSET = ANDROID_APP + File.separator + "asset";

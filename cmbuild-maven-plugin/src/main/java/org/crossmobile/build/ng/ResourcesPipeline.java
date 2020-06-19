@@ -20,6 +20,7 @@ import org.crossmobile.utils.plugin.DependencyItem;
 import java.io.File;
 import java.lang.management.ManagementFactory;
 
+import static org.crossmobile.backend.desktop.DesktopLocations.FONT_LIST;
 import static org.crossmobile.bridge.system.LauncherCommons.CROSSMOBILE_PROPERTIES;
 import static org.crossmobile.build.ng.CMBuildEnvironment.environment;
 import static org.crossmobile.build.utils.Config.*;
@@ -72,6 +73,7 @@ public class ResourcesPipeline implements Runnable {
         new InfoPListCreator(env.getProperties(), info, null, env.getProperties().getProperty(INJECTED_INFOPLIST.tag().name),
                 env.getBasedir()).execute(env);
         new PluginsLauncher(env.root().getPluginMetaData(), generated, cacheBase).execute();
+        write(new File(env.getBuilddir(), "classes" + File.separator + FONT_LIST), String.join("\n", FontExtractor.findFonts(env.getMaterialsDir()).keySet()));
     }
 
     private void resourcesAndroid() {

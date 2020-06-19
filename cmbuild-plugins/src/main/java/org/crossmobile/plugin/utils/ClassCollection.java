@@ -9,7 +9,6 @@ package org.crossmobile.plugin.utils;
 import javassist.ClassPool;
 import javassist.NotFoundException;
 import org.crossmobile.bridge.ann.CMLibTarget;
-import org.crossmobile.bridge.system.ClassWalker;
 import org.crossmobile.plugin.reg.PackageRegistry;
 import org.crossmobile.plugin.reg.TargetRegistry;
 import org.crossmobile.utils.Log;
