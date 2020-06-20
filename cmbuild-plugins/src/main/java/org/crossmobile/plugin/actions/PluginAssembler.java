@@ -66,11 +66,11 @@ public class PluginAssembler {
         ProjectRegistry registry = new ProjectRegistry();
         time("API processing", () -> {
             time("Initialize classes", () -> {
-                registry.register(root, embedlibs, cc);
                 if (packs != null && packs.length > 0)
                     for (Packages pack : packs)
                         if (pack != null)
                             PackageRegistry.register(pack.getName(), pack.getPlugin(), pack.getTarget());
+                registry.register(root, embedlibs, cc);
             });
             time("Gather native API", () -> {
                 for (Class<?> cls : buildUwp ? cc.getUWPNativeClasses() : cc.getIOsNativeClasses())

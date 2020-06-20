@@ -43,7 +43,7 @@ public class PluginRegistry {
 
     private static void registerImpl(Class<?> cls, Map<String, Plugin> repository, boolean isExternalDependency) {
         dirty = true;
-        CMLib plugin = getPluginAnnotation(cls, !isExternalDependency);
+        CMLib plugin = getPluginAnnotation(cls);
         if (plugin != null) {
             String name = getPluginName(plugin, cls, !isExternalDependency);
             if (isExternalDependency && name.isEmpty())
@@ -100,19 +100,18 @@ public class PluginRegistry {
         return plugins.values();
     }
 
-    private static CMLib getPluginAnnotation(Class cls, boolean requireLibrary) {
-        CMLib library = (CMLib) cls.getAnnotation(CMLib.class);
+    private static CMLib getPluginAnnotation(Class<?> cls) {
+        CMLib library = cls.getAnnotation(CMLib.class);
         if (library == null) {
             Package pkg = ReflectionUtils.findPackage(cls.getPackage(), CMLib.class);
             if (pkg != null)
                 library = pkg.getAnnotation(CMLib.class);
         }
-        if (library == null && requireLibrary)
-            Log.error("Unable to locate plugin of class " + cls.getName());
+        // We don't really care if the annotation is missing, since this is called only when registering
         return library;
     }
 
-    private static String getPluginName(CMLib plugin, Class cls, boolean requireName) {
+    private static String getPluginName(CMLib plugin, Class<?> cls, boolean requireName) {
         String name = plugin.name();
         if (name.isEmpty())
             name = PackageRegistry.getPlugin(cls.getPackage().getName());

@@ -10,6 +10,8 @@ import org.crossmobile.bridge.ann.CMLib;
 import org.crossmobile.bridge.ann.CMLibTarget;
 import org.crossmobile.utils.Log;
 import org.crossmobile.utils.ReflectionUtils;
+import org.crossmobile.utils.func.Opt;
+import org.crossmobile.utils.func.UnsafePredicate;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,6 +21,7 @@ import static org.crossmobile.bridge.ann.CMLibTarget.UNKNOWN;
 public class PackageRegistry {
 
     private static final Map<String, PackageDefaults> registry = new HashMap<>();
+    private static final Map<String, PackageDefaults> virtualRegistry = new HashMap<>();
 
     public static void register(Package pkg) {
         register(pkg, true);
@@ -52,7 +55,7 @@ public class PackageRegistry {
             }
 
             if (pluginName.isEmpty() && target == UNKNOWN) {
-                if (requireAllInfo)
+                if (requireAllInfo && getDefaults(pkgName, virtualRegistry) == null)
                     Log.error("Unable to locate default plugin and target for package " + pkgName);
             } else {
                 if (target == UNKNOWN)
@@ -84,30 +87,24 @@ public class PackageRegistry {
             Log.error("Unknown target: " + target);
             return;
         }
-        if (!PluginRegistry.pluginExists(pluginName)) {
-            Log.error("Plugin " + pluginName + " is not defined");
-            return;
-        }
-        if (registry.containsKey(pkgName)) {
-            Log.error("Package " + pkgName + " already defined");
-            return;
-        }
-        registry.put(pkgName, new PackageDefaults(pluginName, libtargt));
+        virtualRegistry.put(pkgName, new PackageDefaults(pluginName, libtargt));
     }
 
     public static String getPlugin(String pkg) {
-        PackageDefaults defs = getPackageDefaults(pkg);
-        return defs == null ? "" : defs.plugin;
+        return getAny(pkg, p -> !p.plugin.trim().isEmpty()).map(d -> d.plugin).getOrElse("");
     }
 
     public static CMLibTarget getTarget(String pkg) {
-        PackageDefaults defs = getPackageDefaults(pkg);
-        return defs == null ? UNKNOWN : defs.target;
+        return getAny(pkg, p -> p.target != UNKNOWN).map(d -> d.target).getOrElse(UNKNOWN);
     }
 
-    private static PackageDefaults getPackageDefaults(String pkg) {
+    private static Opt<PackageDefaults> getAny(String pkg, UnsafePredicate<PackageDefaults> predicate) {
+        return Opt.of(getDefaults(pkg, registry)).filter(predicate).mapMissing(() -> getDefaults(pkg, virtualRegistry));
+    }
+
+    private static PackageDefaults getDefaults(String pkg, Map<String, PackageDefaults> aRegistry) {
         while (pkg != null) {
-            PackageDefaults defs = registry.get(pkg);
+            PackageDefaults defs = aRegistry.get(pkg);
             if (defs != null)
                 return defs;
             if (pkg.isEmpty())

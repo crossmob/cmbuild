@@ -61,7 +61,7 @@ public class CreateBundles {
         else if (source.isFile()) {
             PluginAndTarget pt = resolver.resolve(source.getName(), packg);
             if (letsReportThisTime && pt.target == CMLibTarget.UNKNOWN)
-                Log.warning("Unable to match file " + source.getAbsolutePath());
+                Log.warning("Unable to match bundle of file " + source.getAbsolutePath());
             else if (pt.target.matches(filter))
                 copy(source, getOutput(filedest.apply(pt.plugin), packg, source.getName()));
         }
