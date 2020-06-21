@@ -67,7 +67,7 @@ public class InstallMojo extends GenericMojo {
     private Repository repository;
 
     @Override
-    public void exec() throws MojoExecutionException {
+    public void exec() {
         MojoLogger.register(getLog());
 
         skipIos |= !SystemDependent.canMakeIos();

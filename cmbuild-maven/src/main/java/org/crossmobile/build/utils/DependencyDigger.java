@@ -26,23 +26,18 @@ import java.util.Stack;
 import java.util.function.Function;
 
 public class DependencyDigger {
-    //   Lazy initialization of dependencies 
-
-    private static DependencyItem root;
 
     public static DependencyItem getDependencyTree(MavenProject mavenProject, MavenSession mavenSession, DependencyGraphBuilder dependencyGraphBuilder, Function<ArtifactInfo, File> resolver, boolean shouldResolveRoot) {
-        if (root == null) {
-            root = new DependencyItem(mavenProject.getGroupId(), mavenProject.getArtifactId(), mavenProject.getVersion(), mavenProject.getPackaging(),
-                    shouldResolveRoot ? resolver.apply(new ArtifactInfo(mavenProject.getGroupId(), mavenProject.getArtifactId(), mavenProject.getVersion(), mavenProject.getPackaging())) : null);
-            parseTree("compile", DependencyItem::addCompiletime, mavenProject, mavenSession, dependencyGraphBuilder, resolver);
-            parseTree("runtime", DependencyItem::addRuntime, mavenProject, mavenSession, dependencyGraphBuilder, resolver);
-            Log.debug("Compile time dependencies: " + root.getCompiletimeDependencies(true).toString());
-            Log.debug("Run time dependencies: " + root.getRuntimeDependencies(true).toString());
-        }
+        DependencyItem root = new DependencyItem(mavenProject.getGroupId(), mavenProject.getArtifactId(), mavenProject.getVersion(), mavenProject.getPackaging(),
+                shouldResolveRoot ? resolver.apply(new ArtifactInfo(mavenProject.getGroupId(), mavenProject.getArtifactId(), mavenProject.getVersion(), mavenProject.getPackaging())) : null);
+        parseTree(root, "compile", DependencyItem::addCompiletime, mavenProject, mavenSession, dependencyGraphBuilder, resolver);
+        parseTree(root, "runtime", DependencyItem::addRuntime, mavenProject, mavenSession, dependencyGraphBuilder, resolver);
+        Log.debug("Compile time dependencies: " + root.getCompiletimeDependencies(true).toString());
+        Log.debug("Run time dependencies: " + root.getRuntimeDependencies(true).toString());
         return root;
     }
 
-    private static void parseTree(String scope, DependencyTreeConsumer appender, MavenProject mavenProject, MavenSession mavenSession, DependencyGraphBuilder dependencyGraphBuilder, Function<ArtifactInfo, File> resolver) {
+    private static void parseTree(DependencyItem root, String scope, DependencyTreeConsumer appender, MavenProject mavenProject, MavenSession mavenSession, DependencyGraphBuilder dependencyGraphBuilder, Function<ArtifactInfo, File> resolver) {
         try {
             ProjectBuildingRequest buildingRequest = new DefaultProjectBuildingRequest(mavenSession.getProjectBuildingRequest());
             buildingRequest.setProject(mavenProject);
