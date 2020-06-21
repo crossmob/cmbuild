@@ -27,21 +27,25 @@ public class PluginRegistry {
             compile("java\\..*"),
             compile("META-INF\\..*"));
 
-    private static final Map<String, Plugin> plugins = new TreeMap<>();
-    private static final Map<String, Plugin> otherPlugins = new HashMap<>();
-    private static final Map<String, String> classes = new TreeMap<>();
+    private final Map<String, Plugin> plugins = new TreeMap<>();
+    private final Map<String, Plugin> otherPlugins = new HashMap<>();
+    private final Map<String, String> classes = new TreeMap<>();
+    private final Registry reg;
+    private boolean dirty = true;
 
-    private static boolean dirty = true;
+    PluginRegistry(Registry reg) {
+        this.reg = reg;
+    }
 
-    public static void register(Class<?> cls) {
+    public void register(Class<?> cls) {
         registerImpl(cls, plugins, false);
     }
 
-    public static void registerDependencies(Class<?> cls) {
+    public void registerDependencies(Class<?> cls) {
         registerImpl(cls, otherPlugins, true);
     }
 
-    private static void registerImpl(Class<?> cls, Map<String, Plugin> repository, boolean isExternalDependency) {
+    private void registerImpl(Class<?> cls, Map<String, Plugin> repository, boolean isExternalDependency) {
         dirty = true;
         CMLib plugin = getPluginAnnotation(cls);
         if (plugin != null) {
@@ -63,7 +67,7 @@ public class PluginRegistry {
             for (String lib : plugin.libs())
                 data.addLib(lib);
             for (CMLibDepends dep : plugin.depends())
-                data.addDependency(dep, cls, !isExternalDependency);
+                data.addDependency(dep, cls, reg, !isExternalDependency);
             for (CMPod pod : plugin.pods())
                 data.addPod(pod);
             for (String perm : plugin.permissions())
@@ -84,23 +88,23 @@ public class PluginRegistry {
         }
     }
 
-    public static Iterable<String> plugins() {
+    public Iterable<String> plugins() {
         if (dirty)
             checkRegistry();
         return plugins.keySet();
     }
 
-    public static boolean pluginExists(String name) {
+    public boolean pluginExists(String name) {
         return plugins.containsKey(name);
     }
 
-    public static Iterable<Plugin> pluginsData() {
+    public Iterable<Plugin> pluginsData() {
         if (dirty)
             checkRegistry();
         return plugins.values();
     }
 
-    private static CMLib getPluginAnnotation(Class<?> cls) {
+    private CMLib getPluginAnnotation(Class<?> cls) {
         CMLib library = cls.getAnnotation(CMLib.class);
         if (library == null) {
             Package pkg = ReflectionUtils.findPackage(cls.getPackage(), CMLib.class);
@@ -111,22 +115,22 @@ public class PluginRegistry {
         return library;
     }
 
-    private static String getPluginName(CMLib plugin, Class<?> cls, boolean requireName) {
+    private String getPluginName(CMLib plugin, Class<?> cls, boolean requireName) {
         String name = plugin.name();
         if (name.isEmpty())
-            name = PackageRegistry.getPlugin(cls.getPackage().getName());
+            name = reg.packages().getPlugin(cls.getPackage().getName());
         if (name.isEmpty() && requireName)
             Log.error("Unable to locate plugin name for class " + cls.getName());
         return name;
     }
 
-    public static String getPlugin(String cls) {
+    public String getPlugin(String cls) {
         if (dirty)
             checkRegistry();
         String plugin = classes.get(cls);
         if (plugin != null && !plugin.isEmpty())
             return plugin;
-        plugin = PackageRegistry.getPlugin(NamingUtils.getPackageName(cls));
+        plugin = reg.packages().getPlugin(NamingUtils.getPackageName(cls));
         if (plugin != null && !plugin.isEmpty())
             return plugin;
         if (!mightIgnoreItem(cls))
@@ -134,7 +138,7 @@ public class PluginRegistry {
         return null;
     }
 
-    public static Plugin getPluginData(String plugin) {
+    public Plugin getPluginData(String plugin) {
         if (dirty)
             checkRegistry();
         Plugin result = plugins.get(plugin);
@@ -143,7 +147,7 @@ public class PluginRegistry {
                 : result;
     }
 
-    public static String getNativeLibraries(String plugin) {
+    public String getNativeLibraries(String plugin) {
         if (dirty)
             checkRegistry();
         Plugin pd = plugins.get(plugin);
@@ -159,14 +163,14 @@ public class PluginRegistry {
         }
     }
 
-    public static boolean mightIgnoreItem(String classname) {
+    public boolean mightIgnoreItem(String classname) {
         for (Pattern bl : BLACKLIST)
             if (bl.matcher(classname).matches())
                 return true;
         return false;
     }
 
-    private static void checkRegistry() {
+    private void checkRegistry() {
         dirty = false;
         for (String plugin : plugins.keySet()) {
             Plugin pd = plugins.get(plugin);
@@ -181,7 +185,7 @@ public class PluginRegistry {
     }
 
     //TODO
-    public static String getLibs(String name) {
+    public String getLibs(String name) {
         return "UIKit.lib";
     }
 }

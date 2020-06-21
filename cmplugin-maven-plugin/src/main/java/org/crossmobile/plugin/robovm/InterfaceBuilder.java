@@ -6,18 +6,15 @@
 
 package org.crossmobile.plugin.robovm;
 
-import javassist.CannotCompileException;
-import javassist.NotFoundException;
-import org.crossmobile.plugin.bro.JavaTransformer;
 import org.crossmobile.plugin.model.NObject;
-
-import java.io.IOException;
+import org.crossmobile.plugin.reg.Registry;
+import org.crossmobile.plugin.utils.WaterPark;
 
 import static org.crossmobile.plugin.bro.JavaTransformer.NSOBJ_OBJ_PROT;
 
 public class InterfaceBuilder extends ClassBuilder {
-    InterfaceBuilder(NObject obj) throws ClassNotFoundException, CannotCompileException, NotFoundException, IOException {
-        super(obj);
-        setCclass(wp.classPool().makeInterface(target.getName(), wp.get(NSOBJ_OBJ_PROT)));
+    InterfaceBuilder(NObject obj, ClassBuilderFactory cbf) {
+        super(obj,cbf);
+        setCclass(cbf.waterpark().classPool().makeInterface(target.getName(), cbf.waterpark().get(NSOBJ_OBJ_PROT)));
     }
 }

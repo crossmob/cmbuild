@@ -7,11 +7,11 @@
 package org.crossmobile.plugin.actions;
 
 import crossmobile.rt.StrongReference;
-import org.crossmobile.bridge.ann.CMLibParam;
 import org.crossmobile.plugin.Repository;
 import org.crossmobile.plugin.reg.Plugin;
 import org.crossmobile.plugin.reg.PluginParam;
 import org.crossmobile.plugin.reg.PluginRegistry;
+import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.utils.FileUtils;
 import org.crossmobile.utils.XMLWalker;
 import org.crossmobile.utils.plugin.DependencyItem;
@@ -19,7 +19,7 @@ import org.crossmobile.utils.plugin.DependencyItem;
 import static org.crossmobile.bridge.ann.CMLibParam.ParamContext.Regular;
 
 public class XMLPluginWriter {
-    public static void updateXML(Repository repository, DependencyItem root) {
+    public static void updateXML(Repository repository, DependencyItem root, Registry reg) {
         if (repository == null)
             return;
         if (repository.getFile() == null)
@@ -65,10 +65,10 @@ public class XMLPluginWriter {
         walker.toTag().execIf(p -> !p.nodeExists("plugin"), e -> e.add("plugins"));
         walker.toTag().node("plugins").tag();
 
-        for (String pluginName : PluginRegistry.plugins()) {
+        for (String pluginName : reg.plugins().plugins()) {
             if (pluginName.equals("cmioslayer"))
                 continue;
-            Plugin plugin = PluginRegistry.getPluginData(pluginName);
+            Plugin plugin = reg.plugins().getPluginData(pluginName);
             walker.toTag().add("plugin").tag("p");
             walker.toTag("p").add("groupId").setText(root.getGroupID());
             walker.toTag("p").add("artifactId").setText("cmplugin-" + plugin.getName());

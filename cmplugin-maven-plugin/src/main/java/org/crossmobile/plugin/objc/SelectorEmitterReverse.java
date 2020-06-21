@@ -8,6 +8,7 @@ package org.crossmobile.plugin.objc;
 
 import org.crossmobile.plugin.model.NSelector;
 import org.crossmobile.plugin.objc.param.ParamEmitter;
+import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.plugin.utils.Streamer;
 
 import java.io.IOException;
@@ -18,16 +19,16 @@ import static org.crossmobile.utils.NamingUtils.execSignature;
 public class SelectorEmitterReverse extends SelectorEmitter {
 
     private final String blockvar;
-    private final ReverseImportRegistry handleRegistry;
+    private final Registry reg;
 
-    public SelectorEmitterReverse(NSelector selector, ReverseImportRegistry handleRegistry) {
-        this(selector, null, handleRegistry);
+    public SelectorEmitterReverse(NSelector selector, Registry reg) {
+        this(selector, null, reg);
     }
 
-    SelectorEmitterReverse(NSelector selector, String blockvar, ReverseImportRegistry handleRegistry) {
-        super(selector);
+    SelectorEmitterReverse(NSelector selector, String blockvar, Registry reg) {
+        super(selector, reg);
         this.blockvar = blockvar;
-        this.handleRegistry = handleRegistry;
+        this.reg = reg;
     }
 
     @Override
@@ -42,7 +43,7 @@ public class SelectorEmitterReverse extends SelectorEmitter {
 
     @Override
     protected ParamEmitter getParams() {
-        return ParamEmitter.reverse(selector, handleRegistry, blockvar);
+        return ParamEmitter.reverse(selector, reg, blockvar);
     }
 
     @Override

@@ -17,9 +17,14 @@ import java.util.Map;
 
 public class TargetRegistry {
 
-    private static final Map<String, CMLibTarget> targets = new LinkedHashMap<>();
+    private final Map<String, CMLibTarget> targets = new LinkedHashMap<>();
+    private final Registry reg;
 
-    public static CMLibTarget register(Class<?> cls) {
+    TargetRegistry(Registry reg) {
+        this.reg = reg;
+    }
+
+    public CMLibTarget register(Class<?> cls) {
         String name = cls.getName();
         CMLibTarget target;
         CMLib library = cls.getAnnotation(CMLib.class);
@@ -31,7 +36,7 @@ public class TargetRegistry {
             if (library != null && library.target() != CMLibTarget.UNKNOWN)
                 target = library.target();
             else
-                target = PackageRegistry.getTarget(cls.getPackage().getName());
+                target = reg.packages().getTarget(cls.getPackage().getName());
         }
         if (target == CMLibTarget.UNKNOWN)
             Log.error("Unable to locate target of class " + name);
@@ -39,15 +44,15 @@ public class TargetRegistry {
         return target;
     }
 
-    public static CMLibTarget getTarget(String cls) {
+    public CMLibTarget getTarget(String cls) {
         return getTarget(cls, false);
     }
 
-    public static CMLibTarget getTarget(String cls, boolean silently) {
+    public CMLibTarget getTarget(String cls, boolean silently) {
         CMLibTarget target = targets.get(cls);
         if (target != null)
             return target;
-        target = PackageRegistry.getTarget(NamingUtils.getPackageName(cls));
+        target = reg.packages().getTarget(NamingUtils.getPackageName(cls));
         if (target != null)
             return target;
         if (!silently)

@@ -7,21 +7,17 @@
 package org.crossmobile.plugin.robovm;
 
 import javassist.CannotCompileException;
-import javassist.CtClass;
-import javassist.CtConstructor;
 import javassist.NotFoundException;
-import org.crossmobile.plugin.reg.ObjectRegistry;
+import org.crossmobile.plugin.reg.Registry;
+import org.crossmobile.plugin.utils.WaterPark;
 
 import java.io.IOException;
 
 import static org.crossmobile.plugin.bro.JavaTransformer.CFT_OBJ;
-import static org.crossmobile.plugin.bro.JavaTransformer.NSOBJ_OBJ;
-import static org.crossmobile.plugin.bro.JavaTransformer.OBJC_RUNTIME;
-import static org.crossmobile.plugin.bro.JavaTransformer.RT_BRO;
 
 public class CFTypeBuilder extends CObjectBuilder {
-    CFTypeBuilder() throws NotFoundException, CannotCompileException, IOException, ClassNotFoundException {
-        super(ObjectRegistry.retrieve(ObjectRegistry.getCFType()));
+    CFTypeBuilder(ClassBuilderFactory cbf) throws NotFoundException, CannotCompileException, IOException, ClassNotFoundException {
+        super(cbf.registry().objects().retrieve(cbf.registry().objects().getCFType()), cbf);
         //these should be reenabled when we migrate to our own NSOBject
 //        {
 //            // Sanitize root objects
@@ -41,9 +37,8 @@ public class CFTypeBuilder extends CObjectBuilder {
 
     @Override
     void createClass() {
-        setCclass(wp.classPool().makeClass(target.getName(), wp.get(CFT_OBJ)));
+        setCclass(cbf.waterpark().classPool().makeClass(target.getName(), cbf.waterpark().get(CFT_OBJ)));
     }
-
 
 
 }

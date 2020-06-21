@@ -9,7 +9,7 @@ package org.crossmobile.plugin.utils;
 import javassist.ClassPool;
 import javassist.NotFoundException;
 import org.crossmobile.bridge.ann.CMLibTarget;
-import org.crossmobile.plugin.reg.PackageRegistry;
+import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.plugin.reg.TargetRegistry;
 import org.crossmobile.utils.Log;
 
@@ -72,23 +72,23 @@ public class ClassCollection {
         addClassPaths(cp, paths, appPaths);
     }
 
-    public void register(boolean silently) {
+    public void register(Registry reg, boolean silently) {
         Collection<Package> packages = new LinkedHashSet<>();
         Collection<Class<?>> classes = new LinkedHashSet<>();
         gatherClasses(paths, packages::add, classes::add, silently);
-        register(packages, classes);
+        register(packages, classes, reg);
         Log.debug("Registered " + packages.size() + " package" + plural(packages.size()) + " and " + classes.size() + " application class" + plural(classes.size()));
 
     }
 
-    public void register(Iterable<Package> packages, Iterable<Class<?>> classes) {
+    public void register(Iterable<Package> packages, Iterable<Class<?>> classes, Registry reg) {
         if (packages != null)
             for (Package p : packages)
-                PackageRegistry.register(p);
+                reg.packages().register(p);
         if (classes != null)
             for (Class<?> cls : classes) {
                 allClasses.add(cls);
-                CMLibTarget target = TargetRegistry.register(cls);
+                CMLibTarget target = reg.targets().register(cls);
                 if (target.compile)
                     compileClasses.add(cls);
                 if (target.builddep)

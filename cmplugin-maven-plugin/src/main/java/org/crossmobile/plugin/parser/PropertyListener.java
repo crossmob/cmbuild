@@ -9,12 +9,13 @@ package org.crossmobile.plugin.parser;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.crossmobile.plugin.model.NProperty;
 import org.crossmobile.plugin.parser.antlr.CMAnnotParser;
+import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.plugin.utils.Factories;
 
 class PropertyListener extends BaseListener<NProperty> {
 
-    public PropertyListener() {
-        super(new NProperty());
+    public PropertyListener(Registry reg) {
+        super(new NProperty(), reg);
     }
 
     @Override
@@ -38,7 +39,7 @@ class PropertyListener extends BaseListener<NProperty> {
 
     @Override
     public void exitProperty(CMAnnotParser.PropertyContext ctx) {
-        data.setType(Factories.getType(ctx.variable().vartype()));
+        data.setType(Factories.getType(ctx.variable().vartype(), reg));
         data.setName(ctx.variable().ID().getText());
         data.setObjcBased(ctx.objc != null);
         found();

@@ -13,13 +13,16 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.crossmobile.build.GenericMojo;
 import org.crossmobile.build.utils.MojoLogger;
 import org.crossmobile.plugin.actions.AppearanceInjections;
-import org.crossmobile.plugin.reg.ObjectRegistry;
+import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.plugin.utils.ClassCollection;
 import org.crossmobile.utils.ReflectionUtils;
 import org.robovm.objc.block.VoidBlock1;
 
 import java.io.File;
-import java.util.*;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
+import java.util.TreeSet;
 
 import static java.util.Arrays.asList;
 import static org.crossmobile.utils.TimeUtils.time;
@@ -38,6 +41,7 @@ public class ModifyMojo extends GenericMojo {
 
     @Override
     public void exec() {
+        Registry reg = new Registry();
         MojoLogger.register(getLog());
         time("Post-process classes", () -> {
             File classes = new File(getProject().getBuild().getDirectory(), "classes");
@@ -48,7 +52,7 @@ public class ModifyMojo extends GenericMojo {
             List<String> classPath = asList(classes.getAbsolutePath(), VoidBlock1.class.getProtectionDomain().getCodeSource().getLocation().getFile());
             ClassCollection.addClassPaths(cp, classPath);
             ClassCollection.gatherClasses(classPath, null, e -> {
-                if (ObjectRegistry.isUIAppearanceClass(e) && !e.isInterface())
+                if (reg.objects().isUIAppearanceClass(e) && !e.isInterface())
                     appearanceClasses.add(e);
             }, true);
             AppearanceInjections injections = new AppearanceInjections(cp, classes.getAbsolutePath());

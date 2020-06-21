@@ -7,6 +7,7 @@
 package org.crossmobile.plugin.objc;
 
 import org.crossmobile.plugin.model.NObject;
+import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.plugin.utils.Statics;
 import org.crossmobile.plugin.utils.Streamer;
 
@@ -18,9 +19,11 @@ import static org.crossmobile.utils.NamingUtils.*;
 public abstract class FileEmitter {
 
     protected final NObject obj;
+    protected final Registry reg;
 
-    public FileEmitter(NObject obj) {
+    public FileEmitter(NObject obj, Registry reg) {
         this.obj = obj;
+        this.reg = reg;
     }
 
     public void emitInfo(Streamer out) throws IOException {

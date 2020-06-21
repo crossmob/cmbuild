@@ -9,6 +9,7 @@ package org.crossmobile.plugin.objc;
 import org.crossmobile.plugin.model.NObject;
 import org.crossmobile.plugin.model.NSelector;
 import org.crossmobile.plugin.model.NStructField;
+import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.plugin.utils.Streamer;
 
 import java.io.IOException;
@@ -26,8 +27,8 @@ public class HeaderEmitter extends FileEmitter {
     private final boolean asImportHeaders;
     private final Collection<String> imports = new TreeSet<>();
 
-    public HeaderEmitter(NObject obj, boolean asImportHeaders, String... imports) {
-        super(obj);
+    public HeaderEmitter(NObject obj, Registry reg, boolean asImportHeaders, String... imports) {
+        super(obj, reg);
         this.asImportHeaders = asImportHeaders;
         this.imports.addAll(Arrays.asList(imports));
     }
@@ -52,7 +53,7 @@ public class HeaderEmitter extends FileEmitter {
             out.append("#import \"").append(parent).append(".h\"\n");
         }
         for (String dependency : dependencies)
-            out.append("@").append(getJavaClass(dependency).isInterface() ? "protocol" : "class").append(" ").append(dependency).append(";\n");
+            out.append("@").append(reg.types().getJavaClass(dependency).isInterface() ? "protocol" : "class").append(" ").append(dependency).append(";\n");
         out.append("\n");
     }
 
@@ -102,7 +103,7 @@ public class HeaderEmitter extends FileEmitter {
 
     private void emitSelectors(Streamer out) throws IOException {
         for (NSelector selector : obj.getSelectors())
-            new SelectorEmitter(selector).emitSignature(out);
+            new SelectorEmitter(selector, reg).emitSignature(out);
     }
 
     @Override

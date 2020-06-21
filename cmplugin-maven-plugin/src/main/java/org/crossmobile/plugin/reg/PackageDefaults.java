@@ -13,7 +13,7 @@ public class PackageDefaults {
     public final String plugin;
     public final CMLibTarget target;
 
-    public PackageDefaults(String plugin, CMLibTarget target) {
+    PackageDefaults(String plugin, CMLibTarget target) {
         this.plugin = plugin;
         this.target = target;
     }

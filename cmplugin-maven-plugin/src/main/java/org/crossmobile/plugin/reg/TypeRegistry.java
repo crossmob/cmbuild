@@ -18,8 +18,8 @@ import org.robovm.objc.block.*;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.crossmobile.plugin.actions.FormerTests.testSelectorClass;
@@ -28,45 +28,42 @@ import static org.crossmobile.utils.ReflectionUtils.*;
 import static org.crossmobile.utils.TextUtils.capitalize;
 
 public class TypeRegistry {
-
-    private static final String VoidRefClassName = NamingUtils.getClassNameSimple(VoidRef.class);
-    private static final TypeDef typedef = new TypeDef();
     private static final Class<Method> SELclass = Method.class;
-    private static final Set<String> needsCasting = new HashSet<>();
-
+    private static final String VoidRefClassName = NamingUtils.getClassNameSimple(VoidRef.class);
     public static final int VARARG_SIZE_SUPPORT = 20;
-
     public static final String JCLASS_TO_CLASS_METHOD = "jclass_to_class";
     public static final String JCLASS_TO_STRING_METHOD = "jclass_to_string";
     public static final String JCLASS_TO_CLASS_LIST_METHOD = "jclass_to_class_list";
 
-    static {
-        needsCasting.add("CFString");
-        needsCasting.add("CFDictionary");
-        needsCasting.add("CFSet");
-        needsCasting.add("CFError");
+    private static final Collection<String> needsCasting = Arrays.asList("CFString", "CFDictionary", "CFSet", "CFError");   // Everything starts with "CF", we take this into account when checking
+
+    private final TypeDef typedef = new TypeDef();
+    private final Registry reg;
+
+    TypeRegistry(Registry reg) {
+        this.reg = reg;
         typedef.alias(SELclass, "SEL");
     }
 
-    public static void register(Class cls) {
+    public void register(Class<?> cls) {
         if (!Modifier.isPublic(cls.getModifiers()))
             return;
         typedef.add(cls);
     }
 
-    public static void registerDependencies(Class cls) {
+    public void registerDependencies(Class<?> cls) {
         register(cls);
     }
 
-    public static Class getReferencedJavaClass(Class baseClass) {
+    public Class<?> getReferencedJavaClass(Class<?> baseClass) {
         return getJavaClass(getClassNameSimple(baseClass));
     }
 
-    public static Class getJavaClass(String type) {
+    public Class<?> getJavaClass(String type) {
         return getJavaClass(type, 0, false, false, null);
     }
 
-    public static Class getJavaClass(String type, int stars, boolean varargs, boolean array, AtomicInteger referenceCount) {
+    public Class<?> getJavaClass(String type, int stars, boolean varargs, boolean array, AtomicInteger referenceCount) {
         if (type.endsWith("Ref")) {
             if (type.equals(VoidRefClassName))
                 return VoidRef.class;
@@ -76,7 +73,7 @@ public class TypeRegistry {
         if (referenceCount != null)
             referenceCount.set(stars);
 
-        Class classType = typedef.get(type);
+        Class<?> classType = typedef.get(type);
         if (classType == null)
             classType = ReflectionUtils.getClassForName(type);
         if (classType == null) {
@@ -84,13 +81,26 @@ public class TypeRegistry {
             return TypeUnknown.class;
         }
         if (varargs) {
-            Class varargsClass = getArrayClassOfClass(classType);
+            Class<?> varargsClass = getArrayClassOfClass(classType);
             if (varargsClass != null)
                 classType = varargsClass;
         }
         if ((classType.isPrimitive() || isStruct(classType)) && stars > 0)
             classType = getArrayClassOfClass(classType);
         return array ? getArrayClassOfClass(classType) : classType;
+    }
+
+    public String getCastingIfNeeded(String nativeType) {
+        nativeType = nativeType.replace('*', ' ').trim();
+        if (nativeType.endsWith("Ref"))
+            nativeType = nativeType.substring(0, nativeType.length() - 3);
+        if (needsCasting(nativeType))
+            return "(__bridge " + getClassNameSimple(typedef.get(nativeType)) + "*)";
+        return "";
+    }
+
+    private static boolean needsCasting(String nativeType) {
+        return nativeType.startsWith("CF") && needsCasting.contains(nativeType);
     }
 
     public static boolean isCBased(Class<?> s) {
@@ -140,11 +150,11 @@ public class TypeRegistry {
         return isTarget(s) && getLambdaMethod(s).getAnnotation(CMSelector.class) != null;
     }
 
-    public static boolean isProtocol(Class s) {
+    public static boolean isProtocol(Class<?> s) {
         return s.isInterface() && isObjCBased(s);
     }
 
-    public static boolean isJavaWrapped(Class s) {
+    public static boolean isJavaWrapped(Class<?> s) {
         if (s == null || s.getPackage() == null)
             return false;
         if (s.equals(VoidRef.class))
@@ -152,7 +162,7 @@ public class TypeRegistry {
         return s.getPackage().getName().startsWith("java.");
     }
 
-    public static boolean isBlock(Class s) {
+    public static boolean isBlock(Class<?> s) {
         return Runnable.class.isAssignableFrom(s)
                 || Block0.class.isAssignableFrom(s)
                 || Block1.class.isAssignableFrom(s)
@@ -173,7 +183,7 @@ public class TypeRegistry {
         return SELclass.equals(cls);
     }
 
-    public static String getObjCTypeRef(Class cls) {
+    public static String getObjCTypeRef(Class<?> cls) {
         String base = getClassNameSimple(cls);
         if (isStruct(cls))
             return base;
@@ -234,7 +244,7 @@ public class TypeRegistry {
         return false;
     }
 
-    public static Class blockType(int inputCount, boolean voidOutput) {
+    public static Class<?> blockType(int inputCount, boolean voidOutput) {
         if (voidOutput)
             switch (inputCount) {
                 case 0:
@@ -291,7 +301,7 @@ public class TypeRegistry {
         return capitalize(primitiveClass.getName());
     }
 
-    public static Class getJavaBoxed(Class<?> primitiveClass) {
+    public static Class<?> getJavaBoxed(Class<?> primitiveClass) {
         if (primitiveClass == null || !primitiveClass.isPrimitive())
             return primitiveClass;
         if (int.class.equals(primitiveClass))
@@ -309,14 +319,5 @@ public class TypeRegistry {
         else if (double.class.equals(primitiveClass))
             return Double.class;
         return primitiveClass;
-    }
-
-    public static String getCastingIfNeeded(String nativeType) {
-        nativeType = nativeType.replace('*', ' ').trim();
-        if (nativeType.endsWith("Ref"))
-            nativeType = nativeType.substring(0, nativeType.length() - 3);
-        if (needsCasting.contains(nativeType))
-            return "(__bridge " + getClassNameSimple(typedef.get(nativeType)) + "*)";
-        return "";
     }
 }

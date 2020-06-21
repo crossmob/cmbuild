@@ -9,6 +9,7 @@ package org.crossmobile.plugin.actions;
 import org.crossmobile.build.utils.DependencyJarResolver;
 import org.crossmobile.plugin.reg.PackageRegistry;
 import org.crossmobile.plugin.reg.PluginRegistry;
+import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.plugin.reg.TypeRegistry;
 import org.crossmobile.plugin.utils.ClassCollection;
 import org.crossmobile.utils.plugin.DependencyItem;
@@ -26,7 +27,7 @@ public class ProjectRegistry {
     private Collection<File> embedjars;
     private Collection<File> appjars;
 
-    public void register(DependencyItem root, String[] embedlibs, ClassCollection cc) {
+    public void register(DependencyItem root, String[] embedlibs, ClassCollection cc, Registry reg) {
         if (libjars != null)
             return;
 
@@ -39,19 +40,19 @@ public class ProjectRegistry {
         appjars.addAll(embedjars);
 
         cc.addClassPaths(asList(getAppjars(), File::getAbsolutePath));
-        cc.register(false);
+        cc.register(reg, false);
         for (Class<?> cls : cc.getAllClasses())
-            PluginRegistry.register(cls);
+            reg.plugins().register(cls);
         for (Class<?> cls : cc.getAllNativeClasses())
-            TypeRegistry.register(cls);
+            reg.types().register(cls);
 
         // Resolve all classes: required for type checking in plugins. Otherwise plugins will not be able to find base types
         Collection<Package> packages = new HashSet<>();
         Collection<Class<?>> classes = new HashSet<>();
         ClassCollection.gatherClasses(asList(libjars, File::getAbsolutePath), packages::add, classes::add, true);
-        packages.forEach(PackageRegistry::registerDependencies);
-        classes.forEach(PluginRegistry::registerDependencies);
-        classes.forEach(TypeRegistry::registerDependencies);
+        packages.forEach(reg.packages()::registerDependencies);
+        classes.forEach(reg.plugins()::registerDependencies);
+        classes.forEach(reg.types()::registerDependencies);
     }
 
     public Collection<File> getAppjars() {

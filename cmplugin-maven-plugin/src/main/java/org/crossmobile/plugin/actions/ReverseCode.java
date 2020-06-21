@@ -12,10 +12,9 @@ import org.crossmobile.bridge.system.JsonHelper;
 import org.crossmobile.plugin.model.NObject;
 import org.crossmobile.plugin.model.NSelector;
 import org.crossmobile.plugin.model.NType;
-import org.crossmobile.plugin.objc.ReverseImportRegistry;
 import org.crossmobile.plugin.objc.SelectorEmitter;
 import org.crossmobile.plugin.objc.SelectorEmitterReverse;
-import org.crossmobile.plugin.reg.ObjectRegistry;
+import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.plugin.utils.Streamer;
 import org.crossmobile.plugin.utils.Texters;
 import org.crossmobile.utils.CustomTypeClasses;
@@ -24,21 +23,21 @@ import org.crossmobile.utils.ReverseCodeCollection;
 import java.io.IOException;
 import java.util.*;
 
-import static org.crossmobile.plugin.reg.PluginRegistry.getPlugin;
 import static org.crossmobile.utils.NamingUtils.toObjC;
 import static org.crossmobile.utils.ReflectionUtils.getBareClass;
 
 public final class ReverseCode {
 
     private final Map<String, Factory> entries = new TreeMap<>();
-    private final ReverseImportRegistry handleRegistry = new ReverseImportRegistry();
     private final ClassPool cp;
+    private final Registry reg;
 
-    public ReverseCode(ClassPool cp) {
+    public ReverseCode(ClassPool cp, Registry reg) {
         this.cp = cp;
-        for (NObject obj : ObjectRegistry.retrieveAll())
+        this.reg = reg;
+        for (NObject obj : reg.objects().retrieveAll())
             if (obj.needsOverrideBindings()) {
-                String plugin = getPlugin(obj.getType().getName());
+                String plugin = reg.plugins().getPlugin(obj.getType().getName());
                 entries.computeIfAbsent(plugin, p -> new Factory()).attachObject(obj);
             }
     }
@@ -62,10 +61,10 @@ public final class ReverseCode {
             Collection<NSelector> selectors = new TreeSet<>();
             while (current != null) {
                 current.getSelectors().stream().filter(NSelector::needsOverrideBindings).forEach(selectors::add);
-                current = ObjectRegistry.retrieve(current.getType().getSuperclass());
+                current = reg.objects().retrieve(current.getType().getSuperclass());
             }
             for (Class<?> inter : obj.getType().getInterfaces()) {
-                NObject interClass = ObjectRegistry.retrieve(inter);
+                NObject interClass = reg.objects().retrieve(inter);
                 if (interClass != null)
                     selectors.addAll(interClass.getSelectors());
             }
@@ -82,9 +81,9 @@ public final class ReverseCode {
                 Collection<String> reverseImports = Collections.emptyList();
                 Collection<String> superImports = Collections.emptyList();
                 if (shouldEmitMethods) {
-                    new SelectorEmitterReverse(sel, handleRegistry).emitImplementation(reverseCode);
-                    reverseImports = handleRegistry.getReverseImports(obj.getType(), signature);
-                    new SelectorEmitter(sel, "super").emitImplementation(superCode);
+                    new SelectorEmitterReverse(sel, reg).emitImplementation(reverseCode);
+                    reverseImports = reg.imports().getReverseImports(obj.getType(), signature);
+                    new SelectorEmitter(sel, reg, "super").emitImplementation(superCode);
                     superImports = getSuperImports(sel);
                 }
                 codeCollection.addFromSource(signature, obj.getType()
@@ -120,9 +119,4 @@ public final class ReverseCode {
             }
         }
     }
-
-    ReverseImportRegistry getHandleRegistry() {
-        return handleRegistry;
-    }
-
 }

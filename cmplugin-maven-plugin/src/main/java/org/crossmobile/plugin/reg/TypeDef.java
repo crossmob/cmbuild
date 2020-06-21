@@ -20,26 +20,29 @@ import static org.crossmobile.utils.NamingUtils.*;
 
 public class TypeDef {
 
-    private final Map<String, Class> map = new HashMap<>();
+    private final Map<String, Class<?>> map = new HashMap<>();
 
-    public void add(Class type) {
+    TypeDef() {
+    }
+
+    public void add(Class<?> type) {
         define(getClassNameSimple(type), type, false);
     }
 
-    public void alias(Class type, String... aliases) {
+    public void alias(Class<?> type, String... aliases) {
         if (aliases != null && aliases.length > 0)
             for (String alias : aliases)
                 if (alias != null && !alias.trim().isEmpty())
                     define(alias, type, true);
     }
 
-    private void define(String typeName, Class type, boolean asAlias) {
+    private void define(String typeName, Class<?> type, boolean asAlias) {
         if (type == null)
             Log.error("No class has been provided");
         else {
-            CMClass cls = (CMClass) type.getAnnotation(CMClass.class);
-            CMEnum en = (CMEnum) type.getAnnotation(CMEnum.class);
-            CMReference ref = (CMReference) type.getAnnotation(CMReference.class);
+            CMClass cls = type.getAnnotation(CMClass.class);
+            CMEnum en = type.getAnnotation(CMEnum.class);
+            CMReference ref = type.getAnnotation(CMReference.class);
 
             if (en != null)
                 // If enumeration, type is the type of it's content
@@ -51,7 +54,7 @@ public class TypeDef {
             }
 
             // lazy addition of items, so that original aliases will have advantage
-            Class old = map.get(typeName);
+            Class<?> old = map.get(typeName);
             if (old != null)
                 map.put(toObjC(type), old);   // just in case it is not present
             else {
@@ -71,7 +74,7 @@ public class TypeDef {
         }
     }
 
-    public Class get(String typeName) {
+    public Class<?> get(String typeName) {
         return map.get(typeName);
     }
 

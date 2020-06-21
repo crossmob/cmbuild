@@ -14,6 +14,7 @@ import org.crossmobile.build.ArtifactInfo;
 import org.crossmobile.build.utils.PlistUtils.*;
 import org.crossmobile.plugin.objc.ReverseImportRegistry;
 import org.crossmobile.plugin.reg.Plugin;
+import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.utils.Commander;
 import org.crossmobile.utils.Log;
 import org.crossmobile.utils.PluginPod;
@@ -39,12 +40,12 @@ import static org.crossmobile.utils.TextUtils.plural;
 
 public class CreateDylib extends CreateLib {
 
-    public CreateDylib(Function<ArtifactInfo, File> resolver, File target, File cache, File vendor, File IDELocation, ReverseImportRegistry handleRegistry, boolean build) throws IOException {
-        super(resolver, target, cache, vendor, IDELocation, handleRegistry, true, build);
+    public CreateDylib(Function<ArtifactInfo, File> resolver, File target, File cache, File vendor, File IDELocation, Registry reg, boolean build) {
+        super(resolver, target, cache, vendor, IDELocation, reg, true, build);
     }
 
     @Override
-    protected void runEmitters(Function<String, File> prodResolv) throws IOException {
+    protected void runEmitters(Function<String, File> prodResolv, Registry reg) throws IOException {
         emitPlatformFiles(prodResolv, true);
     }
 

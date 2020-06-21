@@ -11,6 +11,7 @@ import org.crossmobile.plugin.model.*;
 import org.crossmobile.plugin.objc.param.Emitter;
 import org.crossmobile.plugin.objc.param.ParamEmitter;
 import org.crossmobile.plugin.objc.param.ResultEmitter;
+import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.plugin.utils.Streamer;
 
 import java.io.IOException;
@@ -29,14 +30,16 @@ public class SelectorEmitter {
 
     private static final String FUNC_REF = "func$ref";
     private final String selfName;
+    private final Registry reg;
 
-    public SelectorEmitter(NSelector selector) {
-        this(selector, null);
+    public SelectorEmitter(NSelector selector, Registry reg) {
+        this(selector, reg, null);
     }
 
-    public SelectorEmitter(NSelector selector, String selfName) {
+    public SelectorEmitter(NSelector selector, Registry reg, String selfName) {
         this.selector = selector;
         this.selfName = selfName == null ? "self" : selfName;
+        this.reg = reg;
     }
 
     public final void emitSignature(Streamer out) throws IOException {
@@ -224,7 +227,7 @@ public class SelectorEmitter {
     }
 
     protected ParamEmitter getParams() {
-        return ParamEmitter.forward(selector, selfName);
+        return ParamEmitter.forward(selector, reg, selfName);
     }
 
     protected String getOriginalCode() {

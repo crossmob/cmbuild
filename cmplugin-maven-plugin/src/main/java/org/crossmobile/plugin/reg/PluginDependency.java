@@ -15,18 +15,20 @@ public class PluginDependency implements Comparable<PluginDependency> {
 
     private final CMLibDepends depends;
     private final String hostClassName;
+    private final Registry reg;
     private CMLibTarget target;
 
-    public PluginDependency(CMLibDepends depends, Class host, boolean requireTarget) {
+    PluginDependency(CMLibDepends depends, Class<?> host, Registry reg, boolean requireTarget) {
         this.depends = depends;
         this.hostClassName = host.getName();
+        this.reg = reg;
         if (target() == CMLibTarget.UNKNOWN && requireTarget)
             Log.error("Plugin Dependency " + toString() + " for Class " + hostClassName + ", has invalid target. A Valid target should be specified (i.e. \"target=API\")");
     }
 
     public CMLibTarget target() {
         if (target == null)
-            target = depends.target() != CMLibTarget.UNKNOWN ? depends.target() : TargetRegistry.getTarget(hostClassName);
+            target = depends.target() != CMLibTarget.UNKNOWN ? depends.target() : reg.targets().getTarget(hostClassName);
         return target;
     }
 

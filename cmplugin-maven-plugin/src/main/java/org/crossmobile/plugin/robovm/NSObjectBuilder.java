@@ -10,7 +10,7 @@ import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.CtConstructor;
 import javassist.NotFoundException;
-import org.crossmobile.plugin.reg.ObjectRegistry;
+import org.crossmobile.plugin.reg.Registry;
 
 import java.io.IOException;
 
@@ -18,9 +18,9 @@ import static org.crossmobile.plugin.bro.JavaTransformer.NSOBJ_OBJ;
 import static org.crossmobile.plugin.bro.JavaTransformer.OBJC_RUNTIME;
 
 public class NSObjectBuilder extends ObjectBuilder {
-    NSObjectBuilder() throws NotFoundException, CannotCompileException, IOException, ClassNotFoundException {
-        super(ObjectRegistry.retrieve(ObjectRegistry.getNSObject()));
-        //these should be reenabled when we migrate to our own NSOBject
+    NSObjectBuilder(ClassBuilderFactory cbf) throws NotFoundException, CannotCompileException, IOException, ClassNotFoundException {
+        super(cbf.registry().objects().retrieve(cbf.registry().objects().getNSObject()), cbf);
+        //these should be re-enabled when we migrate to our own NSObject
 //        {
 //            // Sanitize root objects
 //            skipInitP = new CtClass[]{wp.classPool().makeClass("crossmobile.ios.foundation.NSObject$SkipInit")};
@@ -46,7 +46,7 @@ public class NSObjectBuilder extends ObjectBuilder {
 
     @Override
     void createClass() {
-        setCclass(wp.classPool().makeClass(target.getName(), wp.get(NSOBJ_OBJ)));
+        setCclass(cbf.waterpark().classPool().makeClass(target.getName(), cbf.waterpark().get(NSOBJ_OBJ)));
     }
 
     /**
@@ -57,12 +57,12 @@ public class NSObjectBuilder extends ObjectBuilder {
      */
     private void addNSObjectCostructors(CtClass cclass) throws CannotCompileException {
         // SkipInit Cnstructor
-        CtConstructor skipInitC = new CtConstructor(skipInitP, cclass);
-        skipInitC.setBody("super(("+NSOBJ_OBJ+"$SkipInit)$1);");
+        CtConstructor skipInitC = new CtConstructor(cbf.skipInitP, cclass);
+        skipInitC.setBody("super((" + NSOBJ_OBJ + "$SkipInit)$1);");
         cclass.addConstructor(skipInitC);
 
         // Handle constructors
-        CtConstructor handleC = new CtConstructor(handleP, cclass);
+        CtConstructor handleC = new CtConstructor(cbf.handleP, cclass);
         handleC.setBody("super($$);");
         cclass.addConstructor(handleC);
 

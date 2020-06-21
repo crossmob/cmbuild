@@ -9,8 +9,7 @@ package org.crossmobile.plugin.objc.param;
 import org.crossmobile.plugin.model.NParam;
 import org.crossmobile.plugin.model.NSelector;
 import org.crossmobile.plugin.model.NType;
-
-import static org.crossmobile.plugin.reg.TypeRegistry.getCastingIfNeeded;
+import org.crossmobile.plugin.reg.Registry;
 
 class EmitterObject extends Emitter {
 
@@ -18,15 +17,15 @@ class EmitterObject extends Emitter {
     private final boolean needsRetain;
     private final String casting;
 
-    EmitterObject(NParam param, NSelector sel, boolean forward) {
-        this(param.getName(), param.getVarname(), param.getNType(), !(sel.isConstructor() || sel.isFakeConstructor()), forward);
+    EmitterObject(NParam param, NSelector sel, Registry reg, boolean forward) {
+        this(param.getName(), param.getVarname(), param.getNType(), reg, !(sel.isConstructor() || sel.isFakeConstructor()), forward);
     }
 
-    EmitterObject(String paramName, String varName, NType type, boolean noObjectRetainNeeded, boolean forward) {
+    EmitterObject(String paramName, String varName, NType type, Registry reg, boolean noObjectRetainNeeded, boolean forward) {
         super(paramName, varName, type, !type.getConverterFunction().isEmpty(), forward);
         this.convFunction = type.getConverterFunction();
         this.needsRetain = !noObjectRetainNeeded;
-        casting = getCastingIfNeeded(type.getNativeType());
+        casting = reg.types().getCastingIfNeeded(type.getNativeType());
     }
 
     @Override

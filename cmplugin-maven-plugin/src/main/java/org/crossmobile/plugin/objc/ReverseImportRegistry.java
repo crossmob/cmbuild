@@ -8,6 +8,7 @@ package org.crossmobile.plugin.objc;
 
 import org.crossmobile.plugin.model.NSelector;
 import org.crossmobile.plugin.reg.PluginRegistry;
+import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.utils.FileUtils;
 
 import java.io.File;
@@ -18,15 +19,20 @@ import java.util.stream.Collectors;
 
 public class ReverseImportRegistry {
     private final Map<String, Map<Class<?>, HandlerData>> registry = new HashMap<>();   // plugin, object, ...
+    private final Registry reg;
+
+    public ReverseImportRegistry(Registry reg) {
+        this.reg = reg;
+    }
 
     public Collection<String> getReverseImports(Class<?> containerObject, String execSignature) {
-        String plugin = PluginRegistry.getPlugin(containerObject.getName());
+        String plugin = reg.plugins().getPlugin(containerObject.getName());
         HandlerData handlerData = registry.getOrDefault(plugin, Collections.emptyMap()).getOrDefault(containerObject, null);
         return handlerData == null ? Collections.emptyList() : handlerData.getImports(execSignature);
     }
 
     public String requestRandomClass(Class<?> containerObject, String execSignature, NSelector block) {
-        String plugin = PluginRegistry.getPlugin(containerObject.getName());
+        String plugin = reg.plugins().getPlugin(containerObject.getName());
         HandlerData objectRegistry = registry.computeIfAbsent(plugin, p -> new HashMap<>()).computeIfAbsent(containerObject, c -> new HandlerData());
         Collection<ReverseBlockHandler> execRegistry = objectRegistry.methodImports.computeIfAbsent(execSignature, e -> new ArrayList<>());
         String className = "CM_Block_Reverse_" + plugin + "_" + objectRegistry.counter.getAndIncrement();

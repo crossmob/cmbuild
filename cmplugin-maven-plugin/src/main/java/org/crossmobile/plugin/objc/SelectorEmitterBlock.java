@@ -7,6 +7,7 @@
 package org.crossmobile.plugin.objc;
 
 import org.crossmobile.plugin.model.NSelector;
+import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.plugin.utils.Streamer;
 
 import java.io.IOException;
@@ -15,8 +16,8 @@ import static org.crossmobile.utils.CollectionUtils.forEach;
 
 public class SelectorEmitterBlock extends SelectorEmitterReverse {
 
-    public SelectorEmitterBlock(NSelector selector, String blockvar) {
-        super(selector, blockvar, null);
+    public SelectorEmitterBlock(NSelector selector, String blockvar, Registry reg) {
+        super(selector, blockvar, reg);
     }
 
     @Override

@@ -10,6 +10,7 @@ import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
 import org.crossmobile.plugin.reg.ObjectRegistry;
+import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.utils.Log;
 
 /**
@@ -21,10 +22,12 @@ public class WaterPark {
     // initialClasses contains classes that are not referenced but are necessary to compile
     private final static Class<?>[] initialClasses = {Object.class, Class.class};
     private final ClassPool defaultClassPool;
+    private final Registry reg;
     private final ClassPool current;
 
-    public WaterPark(ClassPool parent) {
+    public WaterPark(ClassPool parent, Registry reg) {
         this.defaultClassPool = parent;
+        this.reg = reg;
         current = new ClassPool();
         for (Class<?> initialClass : initialClasses) transferToCurrent(initialClass.getName());
     }
@@ -46,10 +49,8 @@ public class WaterPark {
     public boolean contains(String className) {
         if (current.getOrNull(className) != null)
             return true;
-
-        if (ObjectRegistry.contains(className))
+        if (reg.objects().contains(className))
             return false;
-
         transferToCurrent(className);
         return true;
     }

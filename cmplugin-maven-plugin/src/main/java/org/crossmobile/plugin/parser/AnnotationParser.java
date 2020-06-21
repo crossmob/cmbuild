@@ -14,6 +14,7 @@ import org.crossmobile.plugin.model.NProperty;
 import org.crossmobile.plugin.model.NSelector;
 import org.crossmobile.plugin.parser.antlr.CMAnnotLexer;
 import org.crossmobile.plugin.parser.antlr.CMAnnotParser;
+import org.crossmobile.plugin.reg.Registry;
 
 import java.io.StringReader;
 import java.util.regex.Pattern;
@@ -25,20 +26,20 @@ public class AnnotationParser {
     AnnotationParser() {
     }
 
-    public static NSelector parseSelector(String signature) {
-        return parse(signature, new SelectorListener());
+    public static NSelector parseSelector(String signature, Registry reg) {
+        return parse(signature, new SelectorListener(reg));
     }
 
-    public static NProperty parseProperty(String signature) {
-        return parse(signature, new PropertyListener());
+    public static NProperty parseProperty(String signature, Registry reg) {
+        return parse(signature, new PropertyListener(reg));
     }
 
-    public static NSelector parseFunction(String signature) {
-        return parse(signature, new FunctionListener());
+    public static NSelector parseFunction(String signature, Registry reg) {
+        return parse(signature, new FunctionListener(reg));
     }
 
-    public static NSelector parseBlock(String signature) {
-        return parse(signature, new BlockListener());
+    public static NSelector parseBlock(String signature, Registry reg) {
+        return parse(signature, new BlockListener(reg));
     }
 
     @SuppressWarnings("UseSpecificCatch")

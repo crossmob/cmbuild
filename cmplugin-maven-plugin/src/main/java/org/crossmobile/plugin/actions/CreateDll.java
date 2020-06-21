@@ -14,6 +14,7 @@ import org.crossmobile.plugin.model.NObject;
 import org.crossmobile.plugin.objc.ReverseImportRegistry;
 import org.crossmobile.plugin.reg.ObjectRegistry;
 import org.crossmobile.plugin.reg.Plugin;
+import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.utils.*;
 
 import java.io.BufferedReader;
@@ -25,7 +26,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -34,7 +34,6 @@ import java.util.stream.Stream;
 import static java.io.File.separator;
 import static org.crossmobile.bridge.system.BaseUtils.listFiles;
 import static org.crossmobile.build.utils.PlistUtils.isInclude;
-import static org.crossmobile.plugin.reg.PluginRegistry.getPlugin;
 import static org.crossmobile.plugin.reg.TypeRegistry.isReference;
 import static org.crossmobile.plugin.utils.Templates.LIB_DEF;
 import static org.crossmobile.plugin.utils.Texters.toObjCTypeForLibDef;
@@ -44,15 +43,15 @@ import static org.crossmobile.utils.TimeUtils.time;
 
 public class CreateDll extends CreateLib {
 
-    public CreateDll(Function<ArtifactInfo, File> resolver, File target, File cache, File vendor, File IDELocation, ReverseImportRegistry handleRegistry, boolean build) throws IOException {
-        super(resolver, target, cache, vendor, IDELocation, handleRegistry, false, build);
+    public CreateDll(Function<ArtifactInfo, File> resolver, File target, File cache, File vendor, File IDELocation, Registry reg, boolean build) throws IOException {
+        super(resolver, target, cache, vendor, IDELocation, reg, false, build);
     }
 
     @Override
-    protected void runEmitters(Function<String, File> prodResolv) throws IOException {
+    protected void runEmitters(Function<String, File> prodResolv, Registry reg) throws IOException {
         emitPlatformFiles(prodResolv, false);
         emitIncludeHeaders(prodResolv);
-        libDef(prodResolv);
+        libDef(prodResolv, reg);
     }
 
     private static Collection<File> getHeaders(Collection<File> includes) {
@@ -91,13 +90,13 @@ public class CreateDll extends CreateLib {
         return compiled;
     }
 
-    private static void emitIncludeHeaders(Function<String, File> prodResolv) throws IOException {
+    private void emitIncludeHeaders(Function<String, File> prodResolv) throws IOException {
         objectEmitter(prodResolv, true);
     }
 
-    private static void libDef(Function<String, File> prodResolv) {
-        for (NObject obj : ObjectRegistry.retrieveAll()) {
-            String plugin = getPlugin(obj.getType().getName());
+    private static void libDef(Function<String, File> prodResolv, Registry reg) {
+        for (NObject obj : reg.objects().retrieveAll()) {
+            String plugin = reg.plugins().getPlugin(obj.getType().getName());
             if (plugin != null) {
                 StringBuilder builder = new StringBuilder();
                 File pluginRoot = prodResolv.apply(plugin);

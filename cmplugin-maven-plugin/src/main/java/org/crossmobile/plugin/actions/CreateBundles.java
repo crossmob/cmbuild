@@ -8,8 +8,10 @@ package org.crossmobile.plugin.actions;
 
 import org.crossmobile.bridge.ann.CMLibTarget;
 import org.crossmobile.bridge.ann.CMLibTarget.BaseTarget;
+import org.crossmobile.plugin.actions.CreateBundles.BundleResolver;
 import org.crossmobile.plugin.reg.PackageRegistry;
 import org.crossmobile.plugin.reg.PluginRegistry;
+import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.plugin.reg.TargetRegistry;
 import org.crossmobile.utils.Log;
 
@@ -21,7 +23,7 @@ import static org.crossmobile.utils.FileUtils.copy;
 
 public class CreateBundles {
 
-    private static BundleResolver getFileResolver(String extension) {
+    private static BundleResolver getFileResolver(String extension, Registry reg) {
         return (filename, packg) -> {
             if (filename.endsWith(extension)) {
                 String clsname = filename.substring(0, filename.length() - extension.length());
@@ -29,22 +31,28 @@ public class CreateBundles {
                 if (dollar > 0)
                     clsname = clsname.substring(0, dollar);
                 if (clsname.isEmpty())
-                    return new PluginAndTarget(PackageRegistry.getPlugin(packg), PackageRegistry.getTarget(packg));
+                    return new PluginAndTarget(reg.packages().getPlugin(packg), reg.packages().getTarget(packg));
                 else {
                     clsname = packageToJavaPackage(packg) + clsname;
-                    return new PluginAndTarget(PluginRegistry.getPlugin(clsname), TargetRegistry.getTarget(clsname));
+                    return new PluginAndTarget(reg.plugins().getPlugin(clsname), reg.targets().getTarget(clsname));
                 }
             } else
-                return new PluginAndTarget(PackageRegistry.getPlugin(packg), PackageRegistry.getTarget(packg));
+                return new PluginAndTarget(reg.packages().getPlugin(packg), reg.packages().getTarget(packg));
         };
     }
 
-    public static final BundleResolver noClassResolver = (filename, packg) -> new PluginAndTarget(PackageRegistry.getPlugin(packg),
-            filename.endsWith(".class") ? CMLibTarget.SOURCEONLY : PackageRegistry.getTarget(packg));
+    public static BundleResolver getNoClassResolver(Registry reg) {
+        return (filename, packg) -> new PluginAndTarget(reg.packages().getPlugin(packg),
+                filename.endsWith(".class") ? CMLibTarget.SOURCEONLY : reg.packages().getTarget(packg));
+    }
 
-    public static final BundleResolver classResolver = getFileResolver(".class");
+    public static BundleResolver classResolver(Registry reg) {
+        return getFileResolver(".class", reg);
+    }
 
-    public static final BundleResolver sourceResolver = getFileResolver(".java");
+    public static BundleResolver sourceResolver(Registry reg) {
+        return getFileResolver(".java", reg);
+    }
 
     public static void bundleFiles(File source, Function<String, File> filedest, BundleResolver resolver, BaseTarget filter) {
         bundleFiles(source, filedest, resolver, filter, false, "", true);

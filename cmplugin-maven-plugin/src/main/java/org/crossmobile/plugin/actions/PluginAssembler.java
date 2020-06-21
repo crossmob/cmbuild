@@ -12,6 +12,7 @@ import org.crossmobile.plugin.Packages;
 import org.crossmobile.plugin.Repository;
 import org.crossmobile.plugin.reg.PackageRegistry;
 import org.crossmobile.plugin.reg.PluginRegistry;
+import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.plugin.utils.ClassCollection;
 import org.crossmobile.utils.Log;
 import org.crossmobile.utils.ReflectionUtils;
@@ -60,28 +61,32 @@ public class PluginAssembler {
         File runtime_rvm = new File(target, "runtime_rvm");
         File bundles = new File(target, BUNDLES);
         delete(bundles);
+        Registry reg = new Registry();
 
         ClassCollection cc = new ClassCollection();
         ReflectionUtils.resetClassLoader();
         ProjectRegistry registry = new ProjectRegistry();
         time("API processing", () -> {
             time("Initialize classes", () -> {
+                reg.packages().register("META-INF", "none", "SOURCEONLY");
                 if (packs != null && packs.length > 0)
                     for (Packages pack : packs)
                         if (pack != null)
-                            PackageRegistry.register(pack.getName(), pack.getPlugin(), pack.getTarget());
-                registry.register(root, embedlibs, cc);
+                            reg.packages().register(pack.getName(), pack.getPlugin(), pack.getTarget());
+                registry.register(root, embedlibs, cc, reg);
             });
             time("Gather native API", () -> {
+                Parser parser = new Parser(reg);
                 for (Class<?> cls : buildUwp ? cc.getUWPNativeClasses() : cc.getIOsNativeClasses())
-                    Parser.parse(cls);
-                XMLPluginWriter.updateXML(repository, root);
+                    parser.parse(cls);
+                XMLPluginWriter.updateXML(repository, root, reg);
             });
-            time("Create bean classes", () -> {
-                CreateBeanAPI bean = new CreateBeanAPI(cc.getClassPool());
-                for (Class<?> cls : cc.getCompileTimeClasses())
-                    bean.beanClass(cls, runtime);
-            });
+//            // This should be done source-level
+//            time("Create bean classes", () -> {
+//                CreateBeanAPI bean = new CreateBeanAPI(cc.getClassPool());
+//                for (Class<?> cls : cc.getCompileTimeClasses())
+//                    bean.beanClass(cls, runtime);
+//            });
         });
 
         if (buildIos || buildDesktop || buildUwp || buildAndroid)
@@ -90,15 +95,15 @@ public class PluginAssembler {
                     unzipJar(f, runtime);
             });
 
-        ReverseCode codeRev = (buildIos || buildUwp) ? time("Create reverse code", () -> new ReverseCode(cc.getClassPool())) : null;
+        ReverseCode codeRev = (buildIos || buildUwp) ? time("Create reverse code", () -> new ReverseCode(cc.getClassPool(), reg)) : null;
         if (buildIos || buildUwp) {
 //            time(() -> new JavaTransformer(cc.getClassPool(), runtime_rvm));
-            time("Create iOS libraries", () -> new CreateDylib(resolver, target, cachedir, vendorSrc, null, codeRev.getHandleRegistry(), buildIos));
-            time("Create UWP libraries", () -> new CreateDll(resolver, target, cachedir, vendorSrc, VStudioLocation, codeRev.getHandleRegistry(), buildUwp));
+            time("Create iOS libraries", () -> new CreateDylib(resolver, target, cachedir, vendorSrc, null, reg, buildIos));
+            time("Create UWP libraries", () -> new CreateDll(resolver, target, cachedir, vendorSrc, VStudioLocation, reg, buildUwp));
         }
 
         time("Initialize and create stub compile-time files", () -> {
-            for (String plugin : PluginRegistry.plugins()) {
+            for (String plugin : reg.plugins().plugins()) {
                 mkdirs(compileBase.apply(target, plugin));
                 mkdirs(builddepBase.apply(target, plugin));
                 mkdirs(sourcesBase.apply(target, plugin));
@@ -117,32 +122,33 @@ public class PluginAssembler {
             CreateSkeleton skel = new CreateSkeleton(cc.getClassPool());
             int hm = 0;
             for (Class<?> cls : cc.getCompileTimeClasses())
-                hm += skel.stripClass(cls, plugin -> compileBase.apply(target, plugin), SOURCE_TYPE) ? 1 : 0;
+                hm += skel.stripClass(cls, plugin -> compileBase.apply(target, plugin), reg, SOURCE_TYPE) ? 1 : 0;
             for (Class<?> cls : cc.getBuildDependencyClasses())
-                hm += skel.stripClass(cls, plugin -> builddepBase.apply(target, plugin), SOURCE_TYPE) ? 1 : 0;
+                hm += skel.stripClass(cls, plugin -> builddepBase.apply(target, plugin), reg, SOURCE_TYPE) ? 1 : 0;
             // Still might need to add extra resource files
-            CreateBundles.bundleFilesAndReport(runtime, plugin -> compileBase.apply(target, plugin), CreateBundles.noClassResolver, BaseTarget.COMPILE);
-            CreateBundles.bundleFiles(runtime, plugin -> builddepBase.apply(target, plugin), CreateBundles.noClassResolver, BaseTarget.BUILDDEP);
+            CreateBundles.bundleFilesAndReport(runtime, plugin -> compileBase.apply(target, plugin), CreateBundles.getNoClassResolver(reg), BaseTarget.COMPILE);
+            CreateBundles.bundleFiles(runtime, plugin -> builddepBase.apply(target, plugin), CreateBundles.getNoClassResolver(reg), BaseTarget.BUILDDEP);
             Log.debug(hm + " class" + plural(hm, "es") + " stripped");
         });
         time("Create distributions of artifacts", () -> {
             if (buildDesktop)
-                CreateBundles.bundleFiles(runtime, plugin -> desktopBase.apply(target, plugin), CreateBundles.classResolver, BaseTarget.DESKTOP);
+                CreateBundles.bundleFiles(runtime, plugin -> desktopBase.apply(target, plugin), CreateBundles.classResolver(reg), BaseTarget.DESKTOP);
             if (buildIos)
-                CreateBundles.bundleFiles(runtime, plugin -> iosBase.apply(target, plugin), CreateBundles.classResolver, BaseTarget.IOS);
+                CreateBundles.bundleFiles(runtime, plugin -> iosBase.apply(target, plugin), CreateBundles.classResolver(reg), BaseTarget.IOS);
             if (buildRvm)
-                CreateBundles.bundleFiles(runtime_rvm, plugin -> rvmBase.apply(target, plugin), CreateBundles.classResolver, BaseTarget.IOS);
+                CreateBundles.bundleFiles(runtime_rvm, plugin -> rvmBase.apply(target, plugin), CreateBundles.classResolver(reg), BaseTarget.IOS);
             if (buildUwp)
-                CreateBundles.bundleFiles(runtime, plugin -> uwpBase.apply(target, plugin), CreateBundles.classResolver, BaseTarget.UWP);
+                CreateBundles.bundleFiles(runtime, plugin -> uwpBase.apply(target, plugin), CreateBundles.classResolver(reg), BaseTarget.UWP);
             if (buildAndroid)
-                CreateBundles.bundleFiles(runtime, plugin -> androidBase.apply(target, plugin), CreateBundles.classResolver, BaseTarget.ANDROID);
-            CreateBundles.bundleFiles(srcDir, plugin -> sourcesBase.apply(target, plugin), CreateBundles.sourceResolver, BaseTarget.ALL);
+                CreateBundles.bundleFiles(runtime, plugin -> androidBase.apply(target, plugin), CreateBundles.classResolver(reg), BaseTarget.ANDROID);
+            CreateBundles.bundleFiles(srcDir, plugin -> sourcesBase.apply(target, plugin), CreateBundles.sourceResolver(reg), BaseTarget.ALL);
 
             StringWriter writer = report == null ? null : new StringWriter();
-            for (String plugin : PluginRegistry.plugins())
+            for (String plugin : reg.plugins().plugins())
                 CreateArtifacts.installPlugin(installer, plugin, target, root, cachedir, vendorSrc, vendorBin, codeRev,
-                        buildDesktop, buildIos, buildUwp, buildAndroid, buildRvm, buildCore, writer);
-            CreateArtifacts.installJavadoc(installer, root);
+                        buildDesktop, buildIos, buildUwp, buildAndroid, buildRvm, buildCore, writer, reg);
+            CreateArtifacts.installJavadoc(installer, root, reg);
+            report.getParentFile().mkdirs();
             if (writer != null)
                 try (OutputStreamWriter filewriter = new OutputStreamWriter(new FileOutputStream(report), StandardCharsets.UTF_8)) {
                     filewriter.write(writer.toString().replaceAll(root.getVersion(), "<VERSION>"));

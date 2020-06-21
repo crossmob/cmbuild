@@ -18,6 +18,9 @@ public class PluginParam {
     private String paramMeta = "";
     private ParamContext paramContext = Regular;
 
+    PluginParam() {
+    }
+
     public void setDescription(String description, String info) {
         this.description = replaceOldString(this.description, description, info);
     }

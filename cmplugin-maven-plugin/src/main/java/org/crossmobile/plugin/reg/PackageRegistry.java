@@ -20,18 +20,23 @@ import static org.crossmobile.bridge.ann.CMLibTarget.UNKNOWN;
 
 public class PackageRegistry {
 
-    private static final Map<String, PackageDefaults> registry = new HashMap<>();
-    private static final Map<String, PackageDefaults> virtualRegistry = new HashMap<>();
+    private final Map<String, PackageDefaults> registry = new HashMap<>();
+    private final Map<String, PackageDefaults> virtualRegistry = new HashMap<>();
+    private final Registry reg;
 
-    public static void register(Package pkg) {
+    PackageRegistry(Registry reg) {
+        this.reg = reg;
+    }
+
+    public void register(Package pkg) {
         register(pkg, true);
     }
 
-    public static void registerDependencies(Package pkg) {
+    public void registerDependencies(Package pkg) {
         register(pkg, false);
     }
 
-    private static void register(Package pkg, boolean requireAllInfo) {
+    private void register(Package pkg, boolean requireAllInfo) {
         String pkgName = pkg.getName();
         PackageDefaults def = registry.get(pkgName);
         if (def == null) {
@@ -67,7 +72,7 @@ public class PackageRegistry {
         }
     }
 
-    public static void register(String pkgName, String pluginName, String target) {
+    public void register(String pkgName, String pluginName, String target) {
         if (pkgName == null || pkgName.trim().isEmpty()) {
             Log.error("Package name is a required field");
             return;
@@ -90,19 +95,19 @@ public class PackageRegistry {
         virtualRegistry.put(pkgName, new PackageDefaults(pluginName, libtargt));
     }
 
-    public static String getPlugin(String pkg) {
+    public String getPlugin(String pkg) {
         return getAny(pkg, p -> !p.plugin.trim().isEmpty()).map(d -> d.plugin).getOrElse("");
     }
 
-    public static CMLibTarget getTarget(String pkg) {
+    public CMLibTarget getTarget(String pkg) {
         return getAny(pkg, p -> p.target != UNKNOWN).map(d -> d.target).getOrElse(UNKNOWN);
     }
 
-    private static Opt<PackageDefaults> getAny(String pkg, UnsafePredicate<PackageDefaults> predicate) {
+    private Opt<PackageDefaults> getAny(String pkg, UnsafePredicate<PackageDefaults> predicate) {
         return Opt.of(getDefaults(pkg, registry)).filter(predicate).mapMissing(() -> getDefaults(pkg, virtualRegistry));
     }
 
-    private static PackageDefaults getDefaults(String pkg, Map<String, PackageDefaults> aRegistry) {
+    private PackageDefaults getDefaults(String pkg, Map<String, PackageDefaults> aRegistry) {
         while (pkg != null) {
             PackageDefaults defs = aRegistry.get(pkg);
             if (defs != null)

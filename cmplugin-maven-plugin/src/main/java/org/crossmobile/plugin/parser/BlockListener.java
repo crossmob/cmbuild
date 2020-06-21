@@ -11,6 +11,7 @@ import org.crossmobile.plugin.model.MethodType;
 import org.crossmobile.plugin.model.NSelector;
 import org.crossmobile.plugin.model.NType;
 import org.crossmobile.plugin.parser.antlr.CMAnnotParser;
+import org.crossmobile.plugin.reg.Registry;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -23,8 +24,8 @@ import static org.crossmobile.utils.ReflectionUtils.getLambdaMethod;
 
 public class BlockListener extends BaseListener<NSelector> {
 
-    public BlockListener() {
-        super(new NSelector());
+    public BlockListener(Registry reg) {
+        super(new NSelector(), reg);
     }
 
     @Override
@@ -39,7 +40,7 @@ public class BlockListener extends BaseListener<NSelector> {
 
     @Override
     public void exitBlock(CMAnnotParser.BlockContext ctx) {
-        parse(data, ctx, null);
+        parse(data, ctx, null, reg);
         found();
     }
 
@@ -51,13 +52,13 @@ public class BlockListener extends BaseListener<NSelector> {
      * @param nt  if NType is provided, then this means that it is run on the fly
      *            from an outer source
      */
-    public static void parse(NSelector sel, CMAnnotParser.BlockContext ctx, NType nt) {
-        sel.setReturnType(getType(ctx.simple_vartype_name(0).simple_vartype()));
+    public static void parse(NSelector sel, CMAnnotParser.BlockContext ctx, NType nt, Registry reg) {
+        sel.setReturnType(getType(ctx.simple_vartype_name(0).simple_vartype(), reg));
         sel.setName(ctx.ID() == null ? "" : ctx.ID().getText());
         sel.setStatic(false);
         sel.setMethodType(MethodType.BLOCK);
         for (CMAnnotParser.Simple_vartype_nameContext param : tail(ctx.simple_vartype_name()))
-            sel.addParam(getParam(param));
+            sel.addParam(getParam(param, reg));
         if (nt != null) {
             sel.setOriginalCode(getText(ctx));
             Method m = getLambdaMethod(nt.getType());

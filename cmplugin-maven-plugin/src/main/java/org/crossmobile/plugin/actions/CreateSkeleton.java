@@ -15,6 +15,7 @@ import javassist.bytecode.annotation.Annotation;
 import org.crossmobile.bridge.ann.CMLibTarget;
 import org.crossmobile.bridge.system.BaseUtils;
 import org.crossmobile.plugin.reg.PluginRegistry;
+import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.plugin.reg.TargetRegistry;
 
 import javax.annotation.processing.SupportedAnnotationTypes;
@@ -49,15 +50,15 @@ public class CreateSkeleton {
                 }
             }
             method.setBody(null);
-        } catch (Exception ex) {
+        } catch (Exception ignored) {
         }
     }
 
-    public boolean stripClass(Class<?> cls, Function<String, File> resolver, byte apiStyleMask) {
+    public boolean stripClass(Class<?> cls, Function<String, File> resolver, Registry reg, byte apiStyleMask) {
         try {
             String name = cls.getName();
             CtClass s = cp.get(name);
-            if (TargetRegistry.getTarget(s.getName()).compile && !shouldRetainBody(s)) {
+            if (reg.targets().getTarget(s.getName()).compile && !shouldRetainBody(s)) {
                 if (s.getClassInitializer() != null)
                     s.removeConstructor(s.getClassInitializer());
 //                removeAttrs((AnnotationsAttribute) s.getClassFile().getAttribute(AnnotationsAttribute.visibleTag));
@@ -93,7 +94,7 @@ public class CreateSkeleton {
 //                    else
 //                        removeAttrs((AnnotationsAttribute) f.getFieldInfo().getAttribute(AnnotationsAttribute.visibleTag));
             }
-            s.writeFile(resolver.apply(PluginRegistry.getPlugin(name)).getAbsolutePath());
+            s.writeFile(resolver.apply(reg.plugins().getPlugin(name)).getAbsolutePath());
             return true;
         } catch (IOException | NotFoundException | CannotCompileException ex) {
             BaseUtils.throwException(ex);
@@ -101,7 +102,7 @@ public class CreateSkeleton {
         }
     }
 
-    private static void removeAttrs(ParameterAnnotationsAttribute aa) {
+    private static void removeAttrs(ParameterAnnotationsAttribute aa, Registry reg) {
         if (aa != null) {
             Annotation[][] annotations = aa.getAnnotations();
             for (int i = 0; i < annotations.length; i++) {
@@ -110,7 +111,7 @@ public class CreateSkeleton {
                 Iterator<Annotation> iterator = ann.iterator();
                 while (iterator.hasNext()) {
                     Annotation cann = iterator.next();
-                    CMLibTarget target = TargetRegistry.getTarget(cann.getTypeName(), true);
+                    CMLibTarget target = reg.targets().getTarget(cann.getTypeName(), true);
                     if (!target.compile)
                         iterator.remove();
                 }
@@ -120,13 +121,13 @@ public class CreateSkeleton {
         }
     }
 
-    private static void removeAttrs(AnnotationsAttribute aa) {
+    private static void removeAttrs(AnnotationsAttribute aa, Registry reg) {
         if (aa != null) {
             List<Annotation> ann = new ArrayList<>(Arrays.asList(aa.getAnnotations()));
             Iterator<Annotation> iterator = ann.iterator();
             while (iterator.hasNext()) {
                 Annotation cann = iterator.next();
-                CMLibTarget target = TargetRegistry.getTarget(cann.getTypeName(), true);
+                CMLibTarget target = reg.targets().getTarget(cann.getTypeName(), true);
                 if (!target.compile)
                     iterator.remove();
             }

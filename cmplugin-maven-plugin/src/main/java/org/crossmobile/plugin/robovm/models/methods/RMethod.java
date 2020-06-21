@@ -15,6 +15,7 @@ import javassist.Modifier;
 import org.crossmobile.plugin.model.NObject;
 import org.crossmobile.plugin.model.NSelector;
 import org.crossmobile.plugin.robovm.models.parameters.RParam;
+import org.crossmobile.plugin.utils.WaterPark;
 
 import java.util.List;
 import java.util.function.Function;
@@ -28,6 +29,7 @@ public abstract class RMethod {
     private final NSelector selector;
     private final RParam returnParam;
     private final List<RParam> parameters;
+    private final WaterPark wp;
     private final NObject object;
     private final CtClass cclass;
     private final boolean needsReturn;
@@ -35,11 +37,12 @@ public abstract class RMethod {
     private boolean needsMapping = false;
 
 
-    public RMethod(NSelector selector, RParam returnParam, List<RParam> parameters, NObject object, CtClass cclass) {
+    public RMethod(NSelector selector, RParam returnParam, List<RParam> parameters, NObject object, CtClass cclass, WaterPark wp) {
         this.selector = selector;
         this.returnParam = returnParam;
         this.needsReturn = !returnParam.isVoid();
         this.parameters = parameters;
+        this.wp = wp;
         this.needsMapping = returnParam.needsConvert() || parameters.stream().anyMatch(RParam::needsConvert);
         this.object = object;
         this.cclass = cclass;
@@ -105,7 +108,7 @@ public abstract class RMethod {
                 String ann = params.get(i).annotation();
                 if ((isMapping ? params.get(i).reference() : params.get(i)) != null) {
                     if (!ann.isEmpty())
-                        addAnnotation(method, actualParamIndex, ann, params.get(i).annotationParams());
+                        addAnnotation(method, actualParamIndex, ann, params.get(i).annotationParams(wp));
                     actualParamIndex++;
                 }
             }
@@ -115,7 +118,7 @@ public abstract class RMethod {
     protected void annotateReturn(CtBehavior method, RParam param, boolean isMapping) {
         String ann = param.annotation();
         if (!ann.isEmpty())
-            addAnnotation(method, ann, param.annotationParams());
+            addAnnotation(method, ann, param.annotationParams(wp));
     }
 
     protected String mapSignature() {

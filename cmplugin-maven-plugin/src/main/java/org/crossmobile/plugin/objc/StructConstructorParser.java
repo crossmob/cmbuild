@@ -9,6 +9,7 @@ package org.crossmobile.plugin.objc;
 import org.crossmobile.plugin.model.NObject;
 import org.crossmobile.plugin.model.NStructField;
 import org.crossmobile.plugin.reg.ObjectRegistry;
+import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.plugin.utils.Streamer;
 
 import java.io.IOException;
@@ -21,7 +22,7 @@ import static org.crossmobile.utils.NamingUtils.getClassNameSimple;
 
 public class StructConstructorParser {
 
-    public static void helperMethods(NObject nobj, Streamer out) throws IOException {
+    public static void helperMethods(NObject nobj, Registry reg, Streamer out) throws IOException {
         String structName = getClassNameSimple(nobj.getType());
         Collection<NStructField> primaryFields = nobj.getStructFields().stream().filter(n -> !n.type.isPrimitive()).collect(Collectors.toList());
 
@@ -43,24 +44,24 @@ public class StructConstructorParser {
         // Initialize from native
         out.append("- (instancetype) initWith").append(structName).append(":(").append(structName).append(") other\n{\n").tab();
         out.append("self = [super init];\n");
-        emitConverters(nobj, "self->", "other.", true, out);
+        emitConverters(nobj, "self->", "other.", true, reg, out);
         out.append("return self;\n").untab();
         out.append("}\n\n");
 
         // From native to wrapped
         out.append("- (void) set").append(structName).append(":(").append(structName).append(") other\n{\n").tab();
-        emitConverters(nobj, "self->", "other.", true, out);
+        emitConverters(nobj, "self->", "other.", true, reg, out);
         out.untab().append("}\n\n");
 
         // From wrapped to native
         out.append("- (").append(structName).append(") get").append(structName).append("\n{\n").tab();
         out.append(structName).append(" result;\n");
-        emitConverters(nobj, "self->", "result.", false, out);
+        emitConverters(nobj, "self->", "result.", false, reg, out);
         out.append("return result;\n").untab();
         out.append("}\n\n");
     }
 
-    private static void emitConverters(NObject nobj, String self, String other, boolean toCurrent, Streamer out) throws IOException {
+    private static void emitConverters(NObject nobj, String self, String other, boolean toCurrent, Registry reg, Streamer out) throws IOException {
         for (NStructField f : nobj.getStructFields())
             if (f.type.isPrimitive()) {
                 String selfRef = self + f.objc_name;
@@ -70,6 +71,6 @@ public class StructConstructorParser {
                 else
                     out.append(otherRef).append(" = ").append(selfRef).append(";\n");
             } else
-                emitConverters(ObjectRegistry.retrieve(f.type), self + f.objc_name + "->", other + f.name + ".", toCurrent, out);
+                emitConverters(reg.objects().retrieve(f.type), self + f.objc_name + "->", other + f.name + ".", toCurrent, reg, out);
     }
 }

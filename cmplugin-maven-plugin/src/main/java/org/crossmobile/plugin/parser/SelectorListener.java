@@ -12,12 +12,13 @@ import org.crossmobile.plugin.model.NParam;
 import org.crossmobile.plugin.model.NSelector;
 import org.crossmobile.plugin.model.VarargType;
 import org.crossmobile.plugin.parser.antlr.CMAnnotParser;
+import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.plugin.utils.Factories;
 
 class SelectorListener extends BaseListener<NSelector> {
 
-    public SelectorListener() {
-        super(new NSelector());
+    public SelectorListener(Registry reg) {
+        super(new NSelector(), reg);
     }
 
     @Override
@@ -28,7 +29,7 @@ class SelectorListener extends BaseListener<NSelector> {
     @Override
     public void exitReturntype(CMAnnotParser.ReturntypeContext ctx) {
         data.setStatic("+".equals(ctx.isstatic.getText()));
-        data.setReturnType(Factories.getType(ctx.vartype()));
+        data.setReturnType(Factories.getType(ctx.vartype(), reg));
     }
 
     @Override
@@ -38,10 +39,10 @@ class SelectorListener extends BaseListener<NSelector> {
         boolean varargs = ctx.varargs != null;
         int namedParams = ctx.selectorNamedParam().size();
         if (sp != null)
-            data.addParam(Factories.getParam(sp, varargs && namedParams == 0 ? VarargType.OBJC : null, false));
+            data.addParam(Factories.getParam(sp, reg, varargs && namedParams == 0 ? VarargType.OBJC : null, false));
         for (int i = 0; i < namedParams; i++) {
             CMAnnotParser.SelectorNamedParamContext npc = ctx.selectorNamedParam(i);
-            NParam param = Factories.getParam(npc.selectorparam, varargs && i == (namedParams - 1) ? VarargType.OBJC : null, false);
+            NParam param = Factories.getParam(npc.selectorparam, reg, varargs && i == (namedParams - 1) ? VarargType.OBJC : null, false);
             if (npc.paramname != null)
                 param.setName(npc.paramname.getText());
             data.addParam(param);

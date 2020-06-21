@@ -9,16 +9,17 @@ package org.crossmobile.plugin.robovm.models.parameters;
 import org.crossmobile.plugin.model.NParam;
 import org.crossmobile.plugin.model.NType;
 import org.crossmobile.plugin.robovm.ClassBuilder;
+import org.crossmobile.plugin.utils.WaterPark;
 import org.crossmobile.utils.Log;
 
 public class StrongRParam extends RParam {
     private final String nativeS;
 
-    public StrongRParam(NParam nParam, Class<?> parrameter, NType type) {
+    public StrongRParam(NParam nParam, Class<?> parrameter, NType type, WaterPark wp) {
         super(nParam, parrameter, type);
-        if (!ClassBuilder.wp.contains(parrameter.getName()))
+        if (!wp.contains(parrameter.getName()))
             Log.error("Water Park does not contain : " + parrameter.getName());
-        nativeS = ClassBuilder.wp.get(super.getNative() + "$" + getType().getType().getSimpleName() + "Ptr").getName();
+        nativeS = wp.get(super.getNative() + "$" + getType().getType().getSimpleName() + "Ptr").getName();
     }
 
     @Override

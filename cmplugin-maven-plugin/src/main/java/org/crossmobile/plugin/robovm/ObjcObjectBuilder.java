@@ -11,6 +11,8 @@ import javassist.CtClass;
 import javassist.CtConstructor;
 import javassist.NotFoundException;
 import org.crossmobile.plugin.model.NObject;
+import org.crossmobile.plugin.reg.Registry;
+import org.crossmobile.plugin.utils.WaterPark;
 
 import java.io.IOException;
 
@@ -18,18 +20,16 @@ import static org.crossmobile.plugin.bro.JavaTransformer.NSOBJ_OBJ;
 import static org.crossmobile.plugin.bro.JavaTransformer.OBJC_RUNTIME;
 
 public class ObjcObjectBuilder extends ObjectBuilder {
-    protected ObjcObjectBuilder(NObject obj) throws IOException, CannotCompileException, NotFoundException, ClassNotFoundException {
-        super(obj);
+    protected ObjcObjectBuilder(NObject obj, ClassBuilderFactory cbf) throws IOException, CannotCompileException, NotFoundException, ClassNotFoundException {
+        super(obj, cbf);
         addObjcRuntimeBind(getCclass());
         addNSObjectCostructors(getCclass());
     }
-
 
     private void addObjcRuntimeBind(CtClass cclass) throws CannotCompileException {
         CtConstructor classInitializer = cclass.makeClassInitializer();
         classInitializer.setBody(OBJC_RUNTIME + ".bind(" + cclass.getName() + ".class);");
     }
-
 
     /**
      * Adds skipinit and Handle constructors
@@ -39,12 +39,12 @@ public class ObjcObjectBuilder extends ObjectBuilder {
      */
     private void addNSObjectCostructors(CtClass cclass) throws CannotCompileException {
         // SkipInit Cnstructor
-        CtConstructor skipInitC = new CtConstructor(skipInitP, cclass);
-        skipInitC.setBody("super(("+NSOBJ_OBJ+"$SkipInit)$1);");
+        CtConstructor skipInitC = new CtConstructor(cbf.skipInitP, cclass);
+        skipInitC.setBody("super((" + NSOBJ_OBJ + "$SkipInit)$1);");
         cclass.addConstructor(skipInitC);
 
         // Handle constructors
-        CtConstructor handleC = new CtConstructor(handleP, cclass);
+        CtConstructor handleC = new CtConstructor(cbf.handleP, cclass);
         handleC.setBody("super($$);");
         cclass.addConstructor(handleC);
 

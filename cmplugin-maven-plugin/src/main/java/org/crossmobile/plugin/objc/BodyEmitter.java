@@ -8,14 +8,13 @@ package org.crossmobile.plugin.objc;
 
 import org.crossmobile.plugin.model.NObject;
 import org.crossmobile.plugin.model.NSelector;
-import org.crossmobile.plugin.reg.PluginRegistry;
+import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.plugin.reg.TypeRegistry;
 import org.crossmobile.plugin.utils.Streamer;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.crossmobile.bridge.ann.CMReference.REFERENCE_NAME;
 import static org.crossmobile.plugin.reg.TypeRegistry.getObjCTypeRef;
@@ -27,8 +26,8 @@ import static org.crossmobile.utils.TextUtils.startsWith;
 
 public class BodyEmitter extends FileEmitter {
 
-    public BodyEmitter(NObject obj) {
-        super(obj);
+    public BodyEmitter(NObject obj, Registry reg) {
+        super(obj, reg);
     }
 
     void emit(Streamer out, String[] filter) throws IOException {
@@ -114,7 +113,7 @@ public class BodyEmitter extends FileEmitter {
                 out.append("}\n\n");
             }
         } else if (obj.isStruct())
-            StructConstructorParser.helperMethods(obj, out);
+            StructConstructorParser.helperMethods(obj, reg, out);
     }
 
     private void emitSelectors(Streamer out, String[] filter) throws IOException {
@@ -122,7 +121,7 @@ public class BodyEmitter extends FileEmitter {
         for (NSelector sel : obj.getSelectors())
             if (filter == null || startsWith(sel.getName(), Arrays.asList(filter))) {
                 out.append("// ").append(sel.getOriginalCode()).append("\n");
-                new SelectorEmitter(sel, selfName).emitImplementation(out);
+                new SelectorEmitter(sel, reg, selfName).emitImplementation(out);
             }
     }
 

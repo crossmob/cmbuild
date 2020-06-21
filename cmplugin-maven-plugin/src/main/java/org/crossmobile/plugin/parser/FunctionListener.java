@@ -13,14 +13,15 @@ import org.crossmobile.plugin.model.NSelector;
 import org.crossmobile.plugin.model.VarargType;
 import org.crossmobile.plugin.parser.antlr.CMAnnotParser;
 import org.crossmobile.plugin.parser.antlr.CMAnnotParser.Var_type_nameContext;
+import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.plugin.utils.Factories;
 
 import java.util.List;
 
 class FunctionListener extends BaseListener<NSelector> {
 
-    public FunctionListener() {
-        super(new NSelector());
+    public FunctionListener(Registry reg) {
+        super(new NSelector(), reg);
     }
 
     @Override
@@ -40,7 +41,7 @@ class FunctionListener extends BaseListener<NSelector> {
         if (params != null && !params.isEmpty())
             for (Var_type_nameContext typename : params) {
                 NParam p = new NParam();
-                p.setNType(Factories.getType(typename.vartype(), typename.varargs == null ? null : VarargType.C, typename.s3 != null));
+                p.setNType(Factories.getType(typename.vartype(), reg, typename.varargs == null ? null : VarargType.C, typename.s3 != null));
                 p.setVarname(typename.varname.getText());
                 data.addParam(p);
             }
@@ -52,7 +53,7 @@ class FunctionListener extends BaseListener<NSelector> {
     }
 
     private void initFunc(CMAnnotParser.VartypeContext vartype, String name, MethodType methodType) {
-        data.setReturnType(Factories.getType(vartype));
+        data.setReturnType(Factories.getType(vartype, reg));
         data.setName(name);
         data.setStatic(true);
         data.setMethodType(methodType);

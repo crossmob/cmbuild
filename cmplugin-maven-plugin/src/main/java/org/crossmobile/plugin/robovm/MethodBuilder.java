@@ -9,22 +9,9 @@ package org.crossmobile.plugin.robovm;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.NotFoundException;
-import org.crossmobile.plugin.model.NObject;
-import org.crossmobile.plugin.model.NParam;
-import org.crossmobile.plugin.model.NSelector;
-import org.crossmobile.plugin.model.NType;
-import org.crossmobile.plugin.model.StaticMappingType;
-import org.crossmobile.plugin.reg.ObjectRegistry;
-import org.crossmobile.plugin.robovm.models.methods.CConstructorRMethod;
-import org.crossmobile.plugin.robovm.models.methods.ConstructorRMethod;
-import org.crossmobile.plugin.robovm.models.methods.FunctionRMethod;
-import org.crossmobile.plugin.robovm.models.methods.GlobalVariableRMethod;
-import org.crossmobile.plugin.robovm.models.methods.InterfaceRMethod;
-import org.crossmobile.plugin.robovm.models.methods.PropertyRMethod;
-import org.crossmobile.plugin.robovm.models.methods.RMethod;
-import org.crossmobile.plugin.robovm.models.methods.SelectorRMethod;
-import org.crossmobile.plugin.robovm.models.methods.StaticSelectorRMethod;
-import org.crossmobile.plugin.robovm.models.methods.StructMemberRMethod;
+import org.crossmobile.plugin.model.*;
+import org.crossmobile.plugin.reg.Registry;
+import org.crossmobile.plugin.robovm.models.methods.*;
 import org.crossmobile.plugin.robovm.models.parameters.RParam;
 import org.crossmobile.utils.CollectionUtils;
 import org.crossmobile.utils.CustomTypeClasses;
@@ -39,25 +26,27 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 
-import static org.crossmobile.plugin.robovm.ClassBuilder.wp;
 import static org.crossmobile.plugin.robovm.ParamBuilder.createParam;
 import static org.crossmobile.utils.NamingUtils.execSignature;
 
 public class MethodBuilder {
 
-    private static Class[] BLACKLIST = {CustomTypeClasses.Instance.class, CustomTypeClasses.VoidRef.class};
+    private static final Class<?>[] BLACKLIST = {CustomTypeClasses.Instance.class, CustomTypeClasses.VoidRef.class};
+
     private final NObject object;
     private final NSelector selector;
+    private final ClassBuilderFactory cbf;
     private final CtClass cclass;
     Function<Collection<RParam>, Collection<NParam>> nparams = rparams -> CollectionUtils.asList(rparams, RParam::getnParam);
     private RParam returnParam;
-    private List<RParam> parameters = new ArrayList<>();
+    private final List<RParam> parameters = new ArrayList<>();
     private RMethod method = null;
     private boolean mappingBuilt = false;
 
-    MethodBuilder(NSelector selector, NObject object, CtClass cclass) throws ClassNotFoundException, CannotCompileException, NotFoundException, IOException {
+    MethodBuilder(NSelector selector, NObject object, ClassBuilderFactory cbf, CtClass cclass) throws ClassNotFoundException, CannotCompileException, NotFoundException, IOException {
         this.object = object;
         this.selector = selector;
+        this.cbf = cbf;
         this.cclass = cclass;
         parseParameters();
         if (returnParam != null && !parameters.contains(null)) {
@@ -71,7 +60,7 @@ public class MethodBuilder {
         Parameter[] params = selector.getJavaExecutable().getParameters();
         List<NParam> selParams = selector.getParams();
 
-        returnParam = createParam(null, selector.getReturnType(), selector.isConstructor() ? null : ((Method) selector.getJavaExecutable()).getReturnType(), selector);
+        returnParam = createParam(null, selector.getReturnType(), selector.isConstructor() ? null : ((Method) selector.getJavaExecutable()).getReturnType(), selector, cbf.waterpark());
 
         int paramIndex = 0;
         int nparamIndex = 0;
@@ -81,7 +70,7 @@ public class MethodBuilder {
             while (paramIndex < params.length || nparamIndex < selParams.size()) {
                 if (selParams.get(nparamIndex).getStaticMapping().equals(StaticMappingType.NATIVE)) {
                     parameters.add(
-                            createParam(selParams.get(nparamIndex), selParams.get(nparamIndex).getNType(), null, selector));
+                            createParam(selParams.get(nparamIndex), selParams.get(nparamIndex).getNType(), null, selector, cbf.waterpark()));
                     nparamIndex++;
                     if (params.length == 0)
                         break;
@@ -91,7 +80,7 @@ public class MethodBuilder {
                     nparamIndex++;
                 } else {
                     parameters.add(
-                            createParam(selParams.get(nparamIndex), selParams.get(nparamIndex).getNType(), params[paramIndex].getType(), selector));
+                            createParam(selParams.get(nparamIndex), selParams.get(nparamIndex).getNType(), params[paramIndex].getType(), selector, cbf.waterpark()));
                     paramIndex++;
                     nparamIndex++;
                 }
@@ -107,28 +96,28 @@ public class MethodBuilder {
 
     private void buildNative(NSelector selector, RParam returnParam, List<RParam> parameters) {
         if (selector.isConstructor() && object.isStruct()) {
-            method = new CConstructorRMethod(selector, returnParam, parameters, object, cclass);
+            method = new CConstructorRMethod(selector, returnParam, parameters, object, cclass, cbf.waterpark());
         } else if (selector.isConstructor() && object.isObjCBased()) {
-            method = new ConstructorRMethod(selector, returnParam, parameters, object, cclass);
+            method = new ConstructorRMethod(selector, returnParam, parameters, object, cclass, cbf.waterpark());
         } else if (selector.isConstructor()) {
             Log.warning("Please provide more information about constructor " + execSignature(selector.getJavaExecutable()));
             return;
         } else if (object.isProtocol() || object.isTarget()) {
-            method = new InterfaceRMethod(selector, returnParam, parameters, object, cclass);
+            method = new InterfaceRMethod(selector, returnParam, parameters, object, cclass, cbf.waterpark());
         } else if (object.isObjCBased() && (selector.isGetter() || selector.isSetter())) {
-            method = new PropertyRMethod(selector, returnParam, parameters, object, cclass);
+            method = new PropertyRMethod(selector, returnParam, parameters, object, cclass, cbf.waterpark());
         } else if (object.isObjCBased() && selector.isStatic() && !Modifier.isStatic(selector.getJavaExecutable().getModifiers())) {
-            method = new FunctionRMethod(selector, returnParam, parameters, object, cclass);
+            method = new FunctionRMethod(selector, returnParam, parameters, object, cclass, cbf.waterpark());
         } else if (object.isObjCBased() && selector.isStatic()) {
-            method = new StaticSelectorRMethod(selector, returnParam, parameters, object, cclass);
+            method = new StaticSelectorRMethod(selector, returnParam, parameters, object, cclass, cbf.waterpark());
         } else if (object.isObjCBased()) {
-            method = new SelectorRMethod(selector, returnParam, parameters, object, cclass);
+            method = new SelectorRMethod(selector, returnParam, parameters, object, cclass, cbf.waterpark());
         } else if (object.isCBased() && (selector.isGetter() || selector.isSetter())) {
-            method = new StructMemberRMethod(selector, returnParam, parameters, object, cclass);
+            method = new StructMemberRMethod(selector, returnParam, parameters, object, cclass, cbf.waterpark());
         } else if (object.isCBased() && selector.getMethodType().isExternal()) {
-            method = new GlobalVariableRMethod(selector, returnParam, parameters, object, cclass);
+            method = new GlobalVariableRMethod(selector, returnParam, parameters, object, cclass, cbf.waterpark());
         } else if (object.isCBased()) {
-            method = new FunctionRMethod(selector, returnParam, parameters, object, cclass);
+            method = new FunctionRMethod(selector, returnParam, parameters, object, cclass, cbf.waterpark());
         } else {
             Log.error("Unknown handling of " + execSignature(selector.getJavaExecutable()) + " of object family : " + object.getFamily());
             return;
@@ -155,7 +144,7 @@ public class MethodBuilder {
                 parameters.add(index,
                         createParam(param, param.getNType(),
                                 getAffiliated(param).getJava(),
-                                selector));
+                                selector, cbf.waterpark()));
     }
 
     private RParam getAffiliated(NParam npram) {
@@ -166,12 +155,12 @@ public class MethodBuilder {
     }
 
     private void generateMissing(NType type) throws ClassNotFoundException, CannotCompileException, NotFoundException, IOException {
-        if (!isBlacklisted(type) && !type.isPrimitive() && !wp.contains(type.getType().getName()))
-            ClassBuilder.getClass(ObjectRegistry.retrieve(type.getType())).finaliseClass();
+        if (!isBlacklisted(type) && !type.isPrimitive() && !cbf.waterpark().contains(type.getType().getName()))
+            cbf.getClass(cbf.registry().objects().retrieve(type.getType())).finaliseClass();
     }
 
     private boolean isBlacklisted(NType returnType) {
-        for (Class aClass : BLACKLIST)
+        for (Class<?> aClass : BLACKLIST)
             if (returnType.getType().equals(aClass))
                 return true;
         return false;

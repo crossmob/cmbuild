@@ -27,6 +27,7 @@ import org.crossmobile.plugin.robovm.models.parameters.StringArrayRParam;
 import org.crossmobile.plugin.robovm.models.parameters.StringRParam;
 import org.crossmobile.plugin.robovm.models.parameters.StrongRParam;
 import org.crossmobile.plugin.robovm.models.parameters.StructRParam;
+import org.crossmobile.plugin.utils.WaterPark;
 import org.crossmobile.utils.CustomTypeClasses;
 import org.crossmobile.utils.Log;
 
@@ -34,7 +35,7 @@ import java.lang.reflect.Method;
 
 public class ParamBuilder {
 
-    public static RParam createParam(NParam nParam, NType type, Class<?> parameter, NSelector selector) {
+    public static RParam createParam(NParam nParam, NType type, Class<?> parameter, NSelector selector, WaterPark wp) {
         if(nParam != null && !nParam.getStaticMapping().equals(StaticMappingType.NATIVE) && nParam.getJavaParameter() != null && nParam.getJavaParameter().getDeclaredAnnotation(CMRef.class)!=null)
             return new StructRParam(nParam, parameter, type , nParam.getJavaParameter().getDeclaredAnnotation(CMRef.class).value());
         else if (type.getNativeType().equals("id") && type.getType().equals(parameter))
@@ -51,14 +52,14 @@ public class ParamBuilder {
         }
         else if (type.getType().equals(parameter))
             return new NativeRParam(nParam, parameter, type);
-        else if (type.isPrimitive() && objectified(type.getType()).equals(parameter) && ClassBuilder.wp.contains(parameter.getName()) )
+        else if (type.isPrimitive() && objectified(type.getType()).equals(parameter) && wp.contains(parameter.getName()) )
             return new NativeRParam(nParam, parameter, type);
         else if (type.getType().equals(CustomTypeClasses.Instance.class) && (parameter == null || parameter.equals(selector.getJavaExecutable().getDeclaringClass())))
             return new InstanceRParam(nParam, selector.getJavaExecutable().getDeclaringClass(), type);
         else if (parameter == null && type.getType().equals(selector.getJavaExecutable().getDeclaringClass()))
             return new StaticRefRParam(nParam, parameter, type);
         else if (parameter != null && parameter.equals(StrongReference.class))
-            return new StrongRParam(nParam, parameter, type);
+            return new StrongRParam(nParam, parameter, type, wp);
         // This "parameter.getCanonicalName().equals("crossmobile.ios.foundation.NSObject")" is not a misstype
         // calling NSObject.class throws exception because it cannot find NativeObject (which is not in classpool anyway)
         else if ((parameter == null || parameter.getCanonicalName().equals("crossmobile.ios.foundation.NSObject")) && type.getNativeType().equals("id"))
@@ -78,7 +79,7 @@ public class ParamBuilder {
         return null;
     }
 
-    private static Object objectified(Class type) {
+    private static Object objectified(Class<?>type) {
         if (type.equals(int.class))
             return Integer.class;
         if (type.equals(long.class))

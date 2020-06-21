@@ -10,9 +10,8 @@ import org.crossmobile.plugin.model.NObject;
 import org.crossmobile.plugin.model.NParam;
 import org.crossmobile.plugin.model.NSelector;
 import org.crossmobile.plugin.model.NType;
-import org.crossmobile.plugin.objc.ReverseImportRegistry;
 import org.crossmobile.plugin.objc.SelectorEmitterBlock;
-import org.crossmobile.plugin.reg.ObjectRegistry;
+import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.plugin.utils.Streamer;
 import org.crossmobile.plugin.utils.Texters;
 
@@ -21,12 +20,12 @@ import java.io.IOException;
 class EmitterBlock extends Emitter {
 
     private final NSelector block;
-    private final ReverseImportRegistry handleRegistry;
+    private final Registry reg;
     private final Class<?> containerObject;
     private final String containerSelector;
 
-    EmitterBlock(NParam param, ReverseImportRegistry handleRegistry, boolean forward) {
-        this(param.getName(), param.getVarname(), param.getNType(), handleRegistry,
+    EmitterBlock(NParam param, Registry reg, boolean forward) {
+        this(param.getName(), param.getVarname(), param.getNType(), reg,
                 param.getContainer().getContainer().getType(),
                 Texters.getSelectorSignature(param.getContainer()),
                 forward);
@@ -36,13 +35,13 @@ class EmitterBlock extends Emitter {
         this("", varName, type, null, null, null, forward);
     }
 
-    private EmitterBlock(String paramName, String varName, NType type, ReverseImportRegistry handleRegistry, Class<?> containerObject, String containerSelector, boolean forward) {
+    private EmitterBlock(String paramName, String varName, NType type, Registry reg, Class<?> containerObject, String containerSelector, boolean forward) {
         super(paramName, varName, type, true, forward);
-        this.handleRegistry = handleRegistry;
+        this.reg = reg;
         this.containerObject = containerObject;
         this.containerSelector = containerSelector;
         if (type.getBlock() == null) {
-            NObject nobj = ObjectRegistry.retrieve(type.getType());
+            NObject nobj = reg.objects().retrieve(type.getType());
             this.block = nobj == null || nobj.getSelectors().isEmpty() ? null : nobj.getSelectors().iterator().next();
         } else
             this.block = type.getBlock();
@@ -54,7 +53,7 @@ class EmitterBlock extends Emitter {
             return "";
         Streamer out = Streamer.asString();
         try {
-            new SelectorEmitterBlock(block, givenVar()).emitImplementation(out);
+            new SelectorEmitterBlock(block, givenVar(), reg).emitImplementation(out);
             return "(" + givenVar() + " == JAVA_NULL ? nil : ^" + out + ")";
         } catch (IOException ex) {
             return "";
@@ -63,7 +62,7 @@ class EmitterBlock extends Emitter {
 
     @Override
     protected String initReverse() {
-        String randomClass = handleRegistry.requestRandomClass(containerObject, containerSelector, block);
+        String randomClass = reg.imports().requestRandomClass(containerObject, containerSelector, block);
         return randomClass + "* " + paramVar() + " = [[" + randomClass + " alloc] initWithCMBlock:" + givenVar() + "];\n";
     }
 

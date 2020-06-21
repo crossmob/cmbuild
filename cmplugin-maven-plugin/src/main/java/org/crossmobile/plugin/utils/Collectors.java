@@ -29,8 +29,8 @@ public class Collectors {
         return types;
     }
 
-    public static List<Class> getListOfTypes(Collection<NParam> params) {
-        List<Class> classes = new ArrayList<>();
+    public static List<Class<?>> getListOfTypes(Collection<NParam> params) {
+        List<Class<?>> classes = new ArrayList<>();
         for (NParam param : params)
             classes.add(param.getNType().getType());
         return classes;

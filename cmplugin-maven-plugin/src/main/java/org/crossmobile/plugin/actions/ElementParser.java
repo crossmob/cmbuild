@@ -10,6 +10,7 @@ import crossmobile.rt.StrongReference;
 import org.crossmobile.bridge.ann.*;
 import org.crossmobile.plugin.model.*;
 import org.crossmobile.plugin.parser.AnnotationParser;
+import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.plugin.utils.Collectors;
 import org.crossmobile.plugin.utils.Factories;
 import org.crossmobile.utils.Log;
@@ -32,12 +33,18 @@ import static org.crossmobile.utils.TextUtils.*;
 
 public class ElementParser {
 
-    public static boolean parseConstructor(NObject nobj, Constructor cs, CMConstructor constr) {
+    private final Registry reg;
+
+    public ElementParser(Registry reg) {
+        this.reg = reg;
+    }
+
+    public boolean parseConstructor(NObject nobj, Constructor<?> cs, CMConstructor constr) {
         NSelector sel;
         String value = constr.value().trim();
         sel = value.startsWith("+") || value.startsWith("-")
-                ? AnnotationParser.parseSelector(constr.value())
-                : AnnotationParser.parseFunction(constr.value());
+                ? AnnotationParser.parseSelector(constr.value(), reg)
+                : AnnotationParser.parseFunction(constr.value(), reg);
         if (sel == null) {
             Log.error("Unable to parse constructor " + execSignature(cs) + " using  native code: " + constr.value());
             return false;
@@ -48,8 +55,8 @@ public class ElementParser {
         return parseSelector(nobj, sel, cs, nobj.getType());
     }
 
-    public static boolean parseMethod(NObject nobj, Method m, boolean forceStatic, String nativeCode, String sizeResolver, String sinceIos) {
-        NSelector sel = AnnotationParser.parseSelector(nativeCode);
+    public boolean parseMethod(NObject nobj, Method m, boolean forceStatic, String nativeCode, String sizeResolver, String sinceIos) {
+        NSelector sel = AnnotationParser.parseSelector(nativeCode, reg);
         if (sel == null) {
             Log.error("Unable to parse selector for method " + execSignature(m) + " using native code: " + nativeCode);
             return false;
@@ -60,8 +67,8 @@ public class ElementParser {
         }
     }
 
-    public static boolean parseGetter(NObject nobj, Method m, String nativeCode, String sizeResolver, String sinceIos) {
-        NProperty get = AnnotationParser.parseProperty(nativeCode);
+    public boolean parseGetter(NObject nobj, Method m, String nativeCode, String sizeResolver, String sinceIos) {
+        NProperty get = AnnotationParser.parseProperty(nativeCode, reg);
         if (get == null) {
             Log.error("Unable to parse getter for method " + execSignature(m) + " using native code: " + nativeCode);
             return false;
@@ -72,8 +79,8 @@ public class ElementParser {
         return parseSelector(nobj, sel, m, m.getReturnType());
     }
 
-    public static boolean parseSetter(NObject nobj, Method m, String nativeCode, String sinceIos) {
-        NProperty set = AnnotationParser.parseProperty(nativeCode);
+    public boolean parseSetter(NObject nobj, Method m, String nativeCode, String sinceIos) {
+        NProperty set = AnnotationParser.parseProperty(nativeCode, reg);
         if (set == null) {
             Log.error("Unable to parse setter for method " + execSignature(m) + " using native code: " + nativeCode);
             return false;
@@ -87,23 +94,23 @@ public class ElementParser {
         return parseSelector(nobj, sel, m, m.getReturnType());
     }
 
-    public static boolean parseFunc(NObject nobj, Method m, String nativeCode, String sizeResolver) {
-        NSelector func = AnnotationParser.parseFunction(nativeCode);
+    public boolean parseFunc(NObject nobj, Method m, String nativeCode, String sizeResolver, Registry reg) {
+        NSelector func = AnnotationParser.parseFunction(nativeCode, reg);
         StaticMappingType staticMapping = StaticMappingType.NONE;
         if (func == null) {
             Log.error("Unable to parse function for method " + execSignature(m) + " using native code: " + nativeCode);
             return false;
         } else if (!func.getParams().isEmpty()) {
             func.getReturnType().setSizeResolver(sizeResolver);
-            Class<?> firstParam = getReferencedJavaClass(func.getParams().get(0).getNType().getType());
+            Class<?> firstParam = reg.types().getReferencedJavaClass(func.getParams().get(0).getNType().getType());
             if (isAssignableFrom(firstParam, nobj.getType(), null))
                 staticMapping = StaticMappingType.NATIVE;
         }
         return parseSelector(nobj, func, m, m.getReturnType(), staticMapping);
     }
 
-    public static boolean parseBlock(NObject nobj, Method m, String nativeCode) {
-        NSelector block = AnnotationParser.parseBlock(nativeCode);
+    public boolean parseBlock(NObject nobj, Method m, String nativeCode) {
+        NSelector block = AnnotationParser.parseBlock(nativeCode, reg);
         if (!nobj.isTarget()) {
             Log.error("Block method " + execSignature(m) + " can only be defined inside target objects, please consider annotating " + getClassNameFull(nobj.getType()) + " with annotation " + annName(CMTarget.class) + " ; native code provided: " + nativeCode);
             return false;
@@ -124,17 +131,16 @@ public class ElementParser {
         return parseSelector(nobj, block, m, m.getReturnType());
     }
 
-    private static boolean parseSelector(NObject container, NSelector selector, Executable exec, Class returnType) {
+    private boolean parseSelector(NObject container, NSelector selector, Executable exec, Class<?> returnType) {
         return parseSelector(container, selector, exec, returnType, StaticMappingType.NONE);
     }
 
-    private static boolean parseSelector(NObject container, NSelector selector, Executable exec, Class returnType, StaticMappingType staticMapping) {
-
+    private boolean parseSelector(NObject container, NSelector selector, Executable exec, Class<?> returnType, StaticMappingType staticMapping) {
         if (Modifier.isStatic(exec.getModifiers()) != selector.isStatic()) {
             if (selector.isConstructor()) {
                 // Check that the return type of a static "constructor" is correct
-                Class baseType = selector.getReturnType().getType();
-                Class javaType = getReferencedJavaClass(exec.getDeclaringClass());
+                Class<?> baseType = selector.getReturnType().getType();
+                Class<?> javaType = reg.types().getReferencedJavaClass(exec.getDeclaringClass());
                 if (!isAssignableFrom(baseType, javaType, "Static native constructor `" + selector.getOriginalCode() + "` for object " + getClassNameFull(exec.getDeclaringClass()) + " is not compatible with return type " + getClassNameFull(baseType) + " of constructor " + execSignature(exec)))
                     return false;
             } else if (staticMapping == StaticMappingType.NATIVE) {
@@ -155,7 +161,7 @@ public class ElementParser {
 
         // Calculate class types, also based on converters
         List<NParam> sParams = Collectors.getJoinedParams(selector);
-        List<Class> mParams = new ArrayList<>();
+        List<Class<?>> mParams = new ArrayList<>();
         List<ParamMod> mMods = new ArrayList<>();
         int pidx = 0;
         for (Parameter p : exec.getParameters()) {
@@ -175,10 +181,10 @@ public class ElementParser {
             selector.setFakeConstructor(true);
 
         if (staticMapping != StaticMappingType.NONE && mParams.size() != sParams.size() && !selector.isFakeConstructor()) {
-            List<Class> wparam = new ArrayList<>(staticMapping == StaticMappingType.JAVA ? mParams : getListOfTypes(sParams));
+            List<Class<?>> wparam = new ArrayList<>(staticMapping == StaticMappingType.JAVA ? mParams : getListOfTypes(sParams));
             if (!wparam.isEmpty()) {
-                Class baseType = wparam.remove(0);
-                Class javaType = getReferencedJavaClass(exec.getDeclaringClass());
+                Class<?> baseType = wparam.remove(0);
+                Class<?> javaType = reg.types().getReferencedJavaClass(exec.getDeclaringClass());
                 if (!isAssignableFrom(baseType, javaType, "Static mapped parameter at position " + getParamName(0, selector, exec) + " does not match native code `" + selector.getOriginalCode() + "`, " + typesafeClassName(baseType) + " should be a superclass of " + typesafeClassName(javaType)))
                     return false;
                 if (staticMapping == StaticMappingType.JAVA) {
@@ -244,8 +250,8 @@ public class ElementParser {
         for (int i = 0; i < mParams.size(); i++) {
             NParam sParam = sParams.get(i);
             NType sType = sParam.getNType();
-            Class sClass = sType.getType();
-            Class mClass = mParams.get(i);
+            Class<?> sClass = sType.getType();
+            Class<?> mClass = mParams.get(i);
             ParamMod mMod = mMods.get(i);
             String paramName = getParamName(i, selector, exec);
 
@@ -333,7 +339,7 @@ public class ElementParser {
 
     private static final class ParamMod {
 
-        private final Class type;
+        private final Class<?> type;
         private final String convFunction;
         private final Parameter param;
         private final boolean reference;

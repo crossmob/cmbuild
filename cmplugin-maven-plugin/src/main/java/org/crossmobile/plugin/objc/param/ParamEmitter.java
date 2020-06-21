@@ -8,7 +8,7 @@ package org.crossmobile.plugin.objc.param;
 
 import crossmobile.rt.StrongReference;
 import org.crossmobile.plugin.model.*;
-import org.crossmobile.plugin.objc.ReverseImportRegistry;
+import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.plugin.utils.Texters;
 
 import java.lang.reflect.Modifier;
@@ -26,24 +26,24 @@ public class ParamEmitter {
     private final String name;
     private String instanceName;
 
-    public static ParamEmitter forward(NSelector sel, String instancename) {
-        return new ParamEmitter(sel, null, true, instancename);
+    public static ParamEmitter forward(NSelector sel, Registry reg, String instancename) {
+        return new ParamEmitter(sel, reg, true, instancename);
     }
 
-    public static ParamEmitter reverse(NSelector sel, ReverseImportRegistry handleRegistry, String instancename) {
-        return new ParamEmitter(sel, handleRegistry, false, instancename == null ? "self" : instancename);
+    public static ParamEmitter reverse(NSelector sel, Registry reg, String instancename) {
+        return new ParamEmitter(sel, reg, false, instancename == null ? "self" : instancename);
     }
 
-    private ParamEmitter(NSelector sel, ReverseImportRegistry handleRegistry, boolean forward, String instanceName) {
+    private ParamEmitter(NSelector sel, Registry reg, boolean forward, String instanceName) {
         this.instanceName = instanceName;
         this.staticObject = forward ? sel.isStatic() : Modifier.isStatic(sel.getJavaExecutable().getModifiers());
         this.name = forward ? sel.getName() : Texters.methodObjCName(sel.getJavaExecutable());
         for (NParam param : sel.getParams())
-            addEmitter(parseParam(param, sel, handleRegistry, forward));
-        this.result = new ResultEmitter(sel, forward);
+            addEmitter(parseParam(param, sel, reg, forward));
+        this.result = new ResultEmitter(sel, reg, forward);
     }
 
-    private Emitter parseParam(NParam param, NSelector sel, ReverseImportRegistry handleRegistry, boolean forward) {
+    private Emitter parseParam(NParam param, NSelector sel, Registry reg, boolean forward) {
         NType type = param.getNType();
         if (param.getAffiliation() != null)
             if (param.getAffiliation().getType().equals(NParamAffiliation.Type.MEMBLOCK))
@@ -61,7 +61,7 @@ public class ParamEmitter {
         else if (param.getJavaParameter().getType().isArray())
             return new EmitterArray(param, forward);
         else if (type.getBlock() != null || isBlockTarget(type.getType()))
-            return new EmitterBlock(param, handleRegistry, forward);
+            return new EmitterBlock(param, reg, forward);
         else if (param.getJavaParameter().getType().equals(StrongReference.class))
             return new EmitterStrongReference(param, forward);
         else if (isSelector(type.getType())) {
@@ -73,7 +73,7 @@ public class ParamEmitter {
             instanceName = emitter.getInstanceName();
             return emitter;
         } else if (isObjCBased(type.getType()) || isJavaWrapped(type.getType()))
-            return new EmitterObject(param, sel, forward);
+            return new EmitterObject(param, sel, reg, forward);
         else if (isStructReference(type.getType(), param.getJavaParameter().getType()))
             return new EmitterStructReference(param, forward);
         else {

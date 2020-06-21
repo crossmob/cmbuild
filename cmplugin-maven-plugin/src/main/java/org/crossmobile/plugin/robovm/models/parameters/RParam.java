@@ -10,6 +10,7 @@ import org.crossmobile.plugin.model.NParam;
 import org.crossmobile.plugin.model.NType;
 import org.crossmobile.plugin.reg.TypeRegistry;
 import org.crossmobile.plugin.robovm.ClassBuilder;
+import org.crossmobile.plugin.utils.WaterPark;
 import org.crossmobile.utils.JavassistAnnParam;
 
 import static org.crossmobile.plugin.bro.JavaTransformer.BLOCK_ANN;
@@ -19,14 +20,13 @@ import static org.crossmobile.plugin.bro.JavaTransformer.MSFLOAT_ANN;
 import static org.crossmobile.plugin.bro.JavaTransformer.MSSINT_ANN;
 import static org.crossmobile.plugin.bro.JavaTransformer.MSUINT_ANN;
 
-
 public abstract class RParam {
-    private final Class param;
+    private final Class<?> param;
     private final NType type;
     private final NParam nParam;
 
 
-    public RParam(NParam nParam, Class param, NType type) {
+    public RParam(NParam nParam, Class<?> param, NType type) {
         this.type = type;
         this.nParam = nParam;
         this.param = param;
@@ -36,7 +36,7 @@ public abstract class RParam {
         return !type.getType().equals(param);
     }
 
-    public Class getJava() {
+    public Class<?> getJava() {
         return param;
     }
 
@@ -100,21 +100,21 @@ public abstract class RParam {
         return "";
     }
 
-    public JavassistAnnParam[] annotationParams() {
+    public JavassistAnnParam[] annotationParams(WaterPark wp) {
         if (getType().getNativeType().contains("NSArray")) {
             return new JavassistAnnParam[]{
-                    JavassistAnnParam.toParam("value", ClassBuilder.wp.toClass("org.robovm.apple.foundation.NSArray$AsListMarshaler"))
+                    JavassistAnnParam.toParam("value", wp.toClass("org.robovm.apple.foundation.NSArray$AsListMarshaler"))
             };
 
         }
         if (getType().getNativeType().contains("NSDictionary")) {
             return new JavassistAnnParam[]{
-                    JavassistAnnParam.toParam("value", ClassBuilder.wp.toClass("org.robovm.apple.foundation.NSDictionary$AsStringMapMarshaler"))
+                    JavassistAnnParam.toParam("value", wp.toClass("org.robovm.apple.foundation.NSDictionary$AsStringMapMarshaler"))
             };
         }
         if (getType().getNativeType().contains("NSSet")) {
             return new JavassistAnnParam[]{
-                    JavassistAnnParam.toParam("value", ClassBuilder.wp.toClass("org.robovm.apple.foundation.NSSet$AsSetMarshaler"))
+                    JavassistAnnParam.toParam("value", wp.toClass("org.robovm.apple.foundation.NSSet$AsSetMarshaler"))
             };
         }
         return new JavassistAnnParam[]{};

@@ -12,6 +12,7 @@ import org.crossmobile.plugin.model.*;
 import org.crossmobile.plugin.parser.BlockListener;
 import org.crossmobile.plugin.parser.antlr.CMAnnotParser;
 import org.crossmobile.plugin.parser.antlr.CMAnnotParser.VartypeContext;
+import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.plugin.reg.TypeUnknown;
 import org.crossmobile.utils.Log;
 import org.crossmobile.utils.TextUtils;
@@ -23,29 +24,28 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.crossmobile.plugin.parser.AnnotationParser.getText;
 import static org.crossmobile.plugin.reg.TypeRegistry.blockType;
-import static org.crossmobile.plugin.reg.TypeRegistry.getJavaClass;
 import static org.crossmobile.plugin.utils.Texters.annName;
 import static org.crossmobile.utils.NamingUtils.execSignature;
 
 public class Factories {
 
-    public static NType getType(CMAnnotParser.VartypeContext vartype) {
-        return getType(vartype, null, false);
+    public static NType getType(CMAnnotParser.VartypeContext vartype, Registry reg) {
+        return getType(vartype, reg, null, false);
     }
 
-    public static NType getType(CMAnnotParser.VartypeContext vartype, VarargType vararg, boolean array) {
+    public static NType getType(CMAnnotParser.VartypeContext vartype, Registry reg, VarargType vararg, boolean array) {
         int stars = (vartype.s1 != null ? 1 : 0) + (vartype.s2 != null ? 1 : 0);
         if (vartype.type != null) {
             String typeid = vartype.type.getText();
             AtomicInteger references = new AtomicInteger();
-            NType nt = new NType(getText(vartype), getJavaClass(typeid, stars, vararg != null, array, references));
+            NType nt = new NType(getText(vartype), reg.types().getJavaClass(typeid, stars, vararg != null, array, references));
             nt.setVarArgType(vararg);
             nt.setReferences(references.get());
             nt.setConstant(vartype.constant != null);
             for (VartypeContext genericType : vartype.vartype())
-                nt.addGenericType(getType(genericType));
+                nt.addGenericType(getType(genericType, reg));
             if (stars > 1) {
-                NType gt = new NType(getText(vartype), getJavaClass(typeid, stars - 1, false, false, null));
+                NType gt = new NType(getText(vartype), reg.types().getJavaClass(typeid, stars - 1, false, false, null));
                 nt.addGenericType(gt);
             }
             return nt;
@@ -56,14 +56,14 @@ public class Factories {
                 paramSize--;
             NType nt = new NType(getText(block), blockType(paramSize, block.simple_vartype_name(0).simple_vartype().getText().equals("void")));
             NSelector sel = new NSelector();
-            BlockListener.parse(sel, vartype.block(), nt);
+            BlockListener.parse(sel, vartype.block(), nt, reg);
             nt.setBlock(sel);
             nt.setConstant(block.constant != null);
             return nt;
         } else if (vartype.protocol != null) {
             String typeid = vartype.protocol.getText();
             AtomicInteger references = new AtomicInteger();
-            NType nt = new NType(getText(vartype), getJavaClass(typeid, stars, vararg != null, array, references));
+            NType nt = new NType(getText(vartype), reg.types().getJavaClass(typeid, stars, vararg != null, array, references));
             nt.setConstant(vartype.constant != null);
             nt.setVarArgType(vararg);
             nt.setReferences(references.get());
@@ -72,23 +72,23 @@ public class Factories {
             return new NType(getText(vartype), TypeUnknown.class);
     }
 
-    public static NType getType(CMAnnotParser.Simple_vartypeContext ctx) {
+    public static NType getType(CMAnnotParser.Simple_vartypeContext ctx, Registry reg) {
         AtomicInteger references = new AtomicInteger();
-        NType type = new NType(ctx.getText(), getJavaClass(ctx.ID().getText(), ctx.s1 == null ? 0 : 1, false, false, references));
+        NType type = new NType(ctx.getText(), reg.types().getJavaClass(ctx.ID().getText(), ctx.s1 == null ? 0 : 1, false, false, references));
         type.setReferences(references.get());
         return type;
     }
 
-    public static NParam getParam(CMAnnotParser.SelectorParamContext ctx, VarargType vararg, boolean array) {
+    public static NParam getParam(CMAnnotParser.SelectorParamContext ctx, Registry reg, VarargType vararg, boolean array) {
         NParam param = new NParam();
         param.setVarname(ctx.variablename.getText());
-        param.setNType(Factories.getType(ctx.vartype(), vararg, array));
+        param.setNType(Factories.getType(ctx.vartype(), reg, vararg, array));
         return param;
     }
 
-    public static NParam getParam(CMAnnotParser.Simple_vartype_nameContext ctx) {
+    public static NParam getParam(CMAnnotParser.Simple_vartype_nameContext ctx, Registry reg) {
         NParam p = new NParam();
-        p.setNType(getType(ctx.simple_vartype()));
+        p.setNType(getType(ctx.simple_vartype(), reg));
         p.setVarname(ctx.name == null ? "" : ctx.name.getText());
         return p;
     }

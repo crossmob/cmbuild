@@ -18,6 +18,7 @@ import org.crossmobile.bridge.ann.CMGetter;
 import org.crossmobile.bridge.ann.CMReference;
 import org.crossmobile.bridge.system.BaseUtils;
 import org.crossmobile.plugin.reg.ObjectRegistry;
+import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.plugin.reg.TargetRegistry;
 import org.crossmobile.plugin.utils.ClassCollection;
 import org.crossmobile.utils.FileUtils;
@@ -51,11 +52,11 @@ public class CreateBeanAPI {
         this.cp = cp;
     }
 
-    public void beanClass(Class<?> cls, File basedir) {
+    public void beanClass(Class<?> cls, File basedir, Registry reg) {
         try {
             String name = cls.getName();
             CtClass s = cp.get(name);
-            if (TargetRegistry.getTarget(s.getName()).compile) {
+            if (reg.targets().getTarget(s.getName()).compile) {
                 boolean changed = false;
                 for (CtMethod m : s.getDeclaredMethods()) {
                     if (Modifier.isPublic(m.getModifiers()) && m.getAnnotation(CMGetter.class) != null) {

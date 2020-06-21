@@ -11,14 +11,16 @@ import javassist.CtClass;
 import javassist.CtConstructor;
 import javassist.NotFoundException;
 import org.crossmobile.plugin.model.NObject;
+import org.crossmobile.plugin.reg.Registry;
+import org.crossmobile.plugin.utils.WaterPark;
 
 import java.io.IOException;
 
 import static org.crossmobile.plugin.bro.JavaTransformer.RT_BRO;
 
 public class CObjectBuilder extends ObjectBuilder {
-    protected CObjectBuilder(NObject obj) throws IOException, CannotCompileException, NotFoundException, ClassNotFoundException {
-        super(obj);
+    protected CObjectBuilder(NObject obj, ClassBuilderFactory cbf) throws IOException, CannotCompileException, NotFoundException, ClassNotFoundException {
+        super(obj, cbf);
         addBroBind(getCclass());
     }
 

@@ -36,7 +36,11 @@ public class Plugin {
     private final Collection<PluginPod> pods = new TreeSet<>();
     private final Set<String> imports = new HashSet<>();
 
-    public Plugin(String name, boolean isExternalDependency) {
+    public static Plugin root() {
+        return new Plugin("root", false);
+    }
+
+    Plugin(String name, boolean isExternalDependency) {
         this.name = name;
         this.isExternalDependency = isExternalDependency;
     }
@@ -120,8 +124,8 @@ public class Plugin {
         return deps;
     }
 
-    void addDependency(CMLibDepends dep, Class host, boolean requireTarget) {
-        if (dep != null) depends.add(new PluginDependency(dep, host, requireTarget));
+    void addDependency(CMLibDepends dep, Class<?> host, Registry reg, boolean requireTarget) {
+        if (dep != null) depends.add(new PluginDependency(dep, host, reg, requireTarget));
     }
 
     void addPod(CMPod pod) {
@@ -142,12 +146,12 @@ public class Plugin {
         return pods;
     }
 
-    public Requirement<Plugin> getRootRequirement() {
+    public Requirement<Plugin> getRootRequirement(Registry reg) {
         Requirement<Plugin> req = new Requirement<>(this);
         Plugin child;
         for (PluginDependency dep : depends)
-            if ((child = PluginRegistry.getPluginData(dep.pluginName())) != null)
-                req.setRequires(child.getRootRequirement());
+            if ((child = reg.plugins().getPluginData(dep.pluginName())) != null)
+                req.setRequires(child.getRootRequirement(reg));
             else if (dep.isCMPlugin())
                 throw new RuntimeException("Unable to locate plugin " + dep.pluginName());
         return req;

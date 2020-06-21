@@ -8,11 +8,8 @@ package org.crossmobile.plugin.actions;
 
 import org.crossmobile.build.ArtifactInfo;
 import org.crossmobile.plugin.model.NObject;
-import org.crossmobile.plugin.objc.ReverseImportRegistry;
 import org.crossmobile.plugin.objc.ObjectEmitter;
 import org.crossmobile.plugin.reg.*;
-import org.crossmobile.plugin.utils.Streamer;
-import org.crossmobile.utils.FileUtils;
 import org.crossmobile.utils.JarUtils;
 import org.crossmobile.utils.Log;
 import org.crossmobile.utils.reqgraph.Requirement;
@@ -20,7 +17,6 @@ import org.crossmobile.utils.reqgraph.Requirement;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.jar.JarFile;
 
@@ -29,11 +25,10 @@ import static java.util.stream.Collectors.toCollection;
 import static org.crossmobile.bridge.system.BaseUtils.listFiles;
 import static org.crossmobile.build.utils.PlistUtils.isCompilable;
 import static org.crossmobile.build.utils.PlistUtils.isInclude;
-import static org.crossmobile.plugin.reg.PluginRegistry.*;
 import static org.crossmobile.plugin.utils.Streamer.asBody;
 import static org.crossmobile.plugin.utils.Streamer.asHeader;
-import static org.crossmobile.utils.NamingUtils.toObjC;
 import static org.crossmobile.utils.FileUtils.*;
+import static org.crossmobile.utils.NamingUtils.toObjC;
 import static org.crossmobile.utils.TextUtils.plural;
 import static org.crossmobile.utils.TimeUtils.time;
 
@@ -43,24 +38,26 @@ public abstract class CreateLib {
     protected static final Function<Boolean, String> PLATFORM = asIOS -> asIOS ? "native" : "uwp";
     private static final Function<String, String> IOSLibName = l -> "lib" + l + ".a";
     private static final Function<String, String> UWPLibName = l -> l + ".dll";
+    private final Registry reg;
 
-    public CreateLib(Function<ArtifactInfo, File> resolver, File target, File cache, File vendor, File IDELocation, ReverseImportRegistry handleRegistry, boolean asIOS, boolean build) throws IOException {
+    public CreateLib(Function<ArtifactInfo, File> resolver, File target, File cache, File vendor, File IDELocation, Registry reg, boolean asIOS, boolean build) {
+        this.reg = reg;
         // Create native files in the scratch folder
         Function<String, File> prodResolv = plugin -> new File(target, PLATFORM.apply(asIOS) + separator + plugin);
         final Function<String, String> LIBNAME = asIOS ? IOSLibName : UWPLibName;
 
         time("Creating " + PLATFORM.apply(asIOS) + " files", () -> {
-            for (String plugin : plugins())
+            for (String plugin : reg.plugins().plugins())
                 delete(prodResolv.apply(plugin));
-            runEmitters(prodResolv);
+            runEmitters(prodResolv, reg);
         });
 
-        time("Creating inverse block handlers", () -> handleRegistry.saveTo(prodResolv));
+        time("Creating inverse block handlers", () -> reg.imports().saveTo(prodResolv));
 
         time("Synchronizing plugins", () -> {
-            Requirement<Plugin> root = new Requirement<>(new Plugin("root", false));
-            for (Plugin p : pluginsData())
-                root.setRequires(p.getRootRequirement());
+            Requirement<Plugin> root = new Requirement<>(Plugin.root());
+            for (Plugin p : reg.plugins().pluginsData())
+                root.setRequires(p.getRootRequirement(reg));
 
             Map<String, Collection<File>> pluginIncludes = new HashMap<>();
 
@@ -99,7 +96,7 @@ public abstract class CreateLib {
                         && listFiles(prod).stream().anyMatch(f -> f.getName().endsWith(".h"))) {
                     Log.debug("Compiling native plugin " + plugin);
                     Collection<String> requirements = new HashSet<>();
-                    pData.getRootRequirement().listRequirements().stream()
+                    pData.getRootRequirement(reg).listRequirements().stream()
                             .filter(p -> p.getData() != pData)
                             .map(p -> p.getData().getName())
                             .forEach(requirements::add);
@@ -121,18 +118,18 @@ public abstract class CreateLib {
         });
     }
 
-    protected static void emitPlatformFiles(Function<String, File> prodResolv, boolean asIOS) throws IOException {
+    protected void emitPlatformFiles(Function<String, File> prodResolv, boolean asIOS) throws IOException {
         objectEmitter(prodResolv, false);
     }
 
-    protected static void objectEmitter(Function<String, File> prodResolv, boolean headersOnly) throws IOException {
-        for (NObject obj : ObjectRegistry.retrieveAll()) {
-            ObjectEmitter out = new ObjectEmitter(obj);
+    protected void objectEmitter(Function<String, File> prodResolv, boolean headersOnly) throws IOException {
+        for (NObject obj : reg.objects().retrieveAll()) {
+            ObjectEmitter out = new ObjectEmitter(obj, reg);
             String name = toObjC(obj.getType());
-            String plugin = getPlugin(obj.getType().getName());
+            String plugin = reg.plugins().getPlugin(obj.getType().getName());
             if (plugin != null) {
                 File pluginRoot = prodResolv.apply(plugin + (headersOnly ? separator + "uwpinclude" : ""));
-                out.emitAndTerminate(asHeader(pluginRoot, name), headersOnly ? null : asBody(pluginRoot, name), headersOnly, PluginRegistry.getPluginData(plugin).getImports());
+                out.emitAndTerminate(asHeader(pluginRoot, name), headersOnly ? null : asBody(pluginRoot, name), headersOnly, reg.plugins().getPluginData(plugin).getImports());
             }
         }
 //        for (String plugin : swift.keySet()) {
@@ -169,7 +166,7 @@ public abstract class CreateLib {
     }
 
     private boolean isSibling(PluginDependency dep) {
-        for (String plugin : plugins())
+        for (String plugin : reg.plugins().plugins())
             if (dep.pluginName().equals(plugin))
                 return true;
         return false;
@@ -181,7 +178,7 @@ public abstract class CreateLib {
         return compiled;
     }
 
-    protected abstract void runEmitters(Function<String, File> prodResolv) throws IOException;
+    protected abstract void runEmitters(Function<String, File> prodResolv, Registry reg) throws IOException;
 
     protected abstract void compile(File projRoot, File lib, Plugin plugin, String libname);
 

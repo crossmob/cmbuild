@@ -8,7 +8,7 @@ package org.crossmobile.plugin.actions;
 
 import org.crossmobile.bridge.ann.*;
 import org.crossmobile.plugin.model.NObject;
-import org.crossmobile.plugin.reg.ObjectRegistry;
+import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.utils.Log;
 import org.crossmobile.utils.ReflectionUtils;
 
@@ -16,7 +16,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
-import static org.crossmobile.plugin.actions.ElementParser.*;
 import static org.crossmobile.plugin.actions.FormerTests.*;
 import static org.crossmobile.plugin.utils.Texters.annName;
 import static org.crossmobile.utils.NamingUtils.execSignature;
@@ -28,12 +27,18 @@ public final class Parser {
 
     private static final String ANN_CLASS_NAMES = annName(CMClass.class) + ", " + annName(CMEnum.class) + ", " + annName(CMStruct.class) + ", " + annName(CMBundle.class) + ", " + annName(CMTarget.class) + ", " + annName(CMReference.class);
     private static final String ANN_METH_NAMES = annName(CMSelector.class) + ", " + annName(CMGetter.class) + ", " + annName(CMSetter.class) + ", " + annName(CMBlock.class) + ", " + annName(CMFunction.class);
-    private static Class last;
+    private static Class<?> last;
 
-    public static void parse(Class<?> c) {
+    private final Registry reg;
+
+    public Parser(Registry reg) {
+        this.reg = reg;
+    }
+
+    public void parse(Class<?> c) {
         if (!Modifier.isPublic(c.getModifiers()))
             return;
-        if (ObjectRegistry.retrieve(c) != null)
+        if (reg.objects().retrieve(c) != null)
             return;
 
         last = c;
@@ -80,50 +85,51 @@ public final class Parser {
             formReference(c);
     }
 
-    private static void formClass(Class c) {
+    private void formClass(Class<?> c) {
         form(c.isInterface() ? new NObject("protocol", c) : new NObject("class", c));
     }
 
-    private static void formEnum(Class c) {
+    private void formEnum(Class<?> c) {
         // no need to parse
     }
 
-    private static void formStruct(Class c) {
+    private void formStruct(Class<?> c) {
         form(new NObject("struct", c));
     }
 
-    private static void formBundle(Class c) {
+    private void formBundle(Class<?> c) {
         form(new NObject("bundle", c));
     }
 
-    private static void formTarget(Class c) {
+    private void formTarget(Class<?> c) {
         form(new NObject("target", c));
     }
 
-    private static void formReference(Class c) {
+    private void formReference(Class<?> c) {
         form(new NObject("reference object", c));
     }
 
-    private static void form(NObject nobj) {
+    private void form(NObject nobj) {
         Class<?> c = nobj.getType();
         boolean isCBased = nobj.isCBased();
         boolean isStruct = nobj.isStruct();
         NativeCode code = c.getAnnotation(NativeCode.class);
         if (code != null)
             nobj.setCode(code.value());
+        ElementParser parser = new ElementParser(reg);
 
         if (!c.isInterface())
             if (isCBased) {
                 if (nobj.isStruct()) {
                     if (!c.getSuperclass().equals(Object.class))
                         Log.error("Struct " + getClassNameFull(c) + " should directly inherit " + getClassNameFull(Object.class));
-                } else if (ObjectRegistry.getNSObject().isAssignableFrom(c))
+                } else if (reg.objects().getNSObject().isAssignableFrom(c))
                     Log.error("Class " + getClassNameFull(c) + " should not inherit NSObject");
-            } else if (!ObjectRegistry.getNSObject().isAssignableFrom(c))
+            } else if (!reg.objects().getNSObject().isAssignableFrom(c))
                 Log.error("Class " + getClassNameFull(c) + " should inherit NSObject");
 
-        for (Constructor cs : c.getConstructors()) {
-            CMConstructor constr = (CMConstructor) cs.getAnnotation(CMConstructor.class);
+        for (Constructor<?> cs : c.getConstructors()) {
+            CMConstructor constr = cs.getAnnotation(CMConstructor.class);
             if (Modifier.isPublic(cs.getModifiers())) {
                 Constructor<?> annConstr = cs;
                 while (annConstr != null && (constr == null || constr.value().isEmpty())) {
@@ -133,7 +139,7 @@ public final class Parser {
                 if (constr == null || constr.value().isEmpty())
                     Log.error("Constructor " + execSignature(cs) + " is not bound to native code on any parent class");
                 else
-                    parseConstructor(nobj, cs, constr);
+                    parser.parseConstructor(nobj, cs, constr);
             }
         }
 
@@ -154,25 +160,21 @@ public final class Parser {
                 else if (!isCBased && count == 0)
                     Log.error("Unable to locate " + ANN_METH_NAMES + " for method " + execSignature(m));
                 else if (selector != null)
-                    parseMethod(nobj, m, selector.staticMapping(), selector.value(), selector.sizeResolver(), selector.sinceIos());
+                    parser.parseMethod(nobj, m, selector.staticMapping(), selector.value(), selector.sizeResolver(), selector.sinceIos());
                 else if (getter != null)
-                    parseGetter(nobj, m, getter.value(), getter.sizeResolver(), getter.sinceIos());
+                    parser.parseGetter(nobj, m, getter.value(), getter.sizeResolver(), getter.sinceIos());
                 else if (setter != null)
-                    parseSetter(nobj, m, setter.value(), setter.sinceIos());
+                    parser.parseSetter(nobj, m, setter.value(), setter.sinceIos());
                 else if (func != null)
-                    parseFunc(nobj, m, func.value(), func.sizeResolver());
+                    parser.parseFunc(nobj, m, func.value(), func.sizeResolver(), reg);
                 else if (block != null)
-                    parseBlock(nobj, m, block.value());
+                    parser.parseBlock(nobj, m, block.value());
                 else
                     Log.error("There is something wrong with method " + execSignature(m));
             }
         }
         testSelectorsConsistency(nobj);
-        ObjectRegistry.register(nobj);
-    }
-
-    public static Class<?> last() {
-        return last;
+        reg.objects().register(nobj);
     }
 
 }
