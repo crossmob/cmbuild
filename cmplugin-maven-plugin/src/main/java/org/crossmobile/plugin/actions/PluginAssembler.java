@@ -57,6 +57,11 @@ public class PluginAssembler {
                                 boolean buildDesktop, boolean buildIos, boolean buildAndroid, boolean buildUwp, boolean buildRvm, boolean buildCore,
                                 File VStudioLocation, File report, Repository repository) {
 
+        if (!"jar".equals(root.getType())) {
+            Log.info("Skipping plugin creation for " + root.getArtifactID() + ", only JAR files supported, found " + root.getFile().getAbsolutePath());
+            return;
+        }
+
         File runtime = new File(target, "runtime");
         File runtime_rvm = new File(target, "runtime_rvm");
         File bundles = new File(target, BUNDLES);
