@@ -10,7 +10,7 @@
         <version>2.9.1</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-    <artifactId>cmbuild-plugins</artifactId>
+    <artifactId>cmplugin-maven-plugin</artifactId>
     <packaging>maven-plugin</packaging>
 
     <dependencies>
