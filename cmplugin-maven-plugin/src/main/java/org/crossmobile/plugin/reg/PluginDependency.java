@@ -9,17 +9,52 @@ package org.crossmobile.plugin.reg;
 import org.crossmobile.Version;
 import org.crossmobile.bridge.ann.CMLibDepends;
 import org.crossmobile.bridge.ann.CMLibTarget;
+import org.crossmobile.plugin.utils.Texters;
 import org.crossmobile.utils.Log;
+
+import static org.crossmobile.plugin.utils.Texters.annName;
+import static org.crossmobile.plugin.utils.Texters.typesafeClassName;
 
 public class PluginDependency implements Comparable<PluginDependency> {
 
-    private final CMLibDepends depends;
+    private final String pluginName;
+    private final String groupId;
+    private final String version;
+    private final String type;
+    private final boolean cmPlugin;
+    private final CMLibTarget givenTarget;
+
     private final String hostClassName;
     private final Registry reg;
-    private CMLibTarget target;
 
     PluginDependency(CMLibDepends depends, Class<?> host, Registry reg, boolean requireTarget) {
-        this.depends = depends;
+        this.pluginName = depends.pluginName();
+        this.groupId = depends.groupId();
+        this.type = depends.type();
+        this.givenTarget = depends.target();
+        this.cmPlugin = groupId.isEmpty();
+        /*
+         * When groupId is empty, this is considered to be a CrossMobile plugin. This means that a multi-target
+         * artifact will be attached. Otherwise a generic maven artifact will be attached.
+         *
+         * When defining a CrossMobile plugin, the version could be omitted. Then it will be considered that it matches
+         * the version of the current CrossMobile library.
+         */
+        if (cmPlugin && depends.version().isEmpty())   // if it is a crossmobile plugin AND no specific version is provided, use default version
+            version = Version.VERSION;
+        else
+            version = depends.version();
+
+        String displayName = annName(CMLibDepends.class) + " in class " + typesafeClassName(host) + " (name=" + pluginName + " groupId=" + groupId + ")";
+        if (pluginName.isEmpty())
+            Log.error("No name provided for " + displayName);
+        if (!cmPlugin && version.isEmpty())
+            Log.error("Version not defined for " + displayName + ", when considered as an external non-CrossMobile plugin");
+        if (cmPlugin && pluginName.startsWith("cm") && !version.equals(Version.VERSION)) // Plugins starting with cm are reserved for crossmobile core itself
+            Log.error("Core CrossMobile plugin from " + displayName + " has version " + version + "; expected " + Version.VERSION);
+        if (cmPlugin && !type.isEmpty())
+            Log.error("No type supported for CrossMobile plugins");
+
         this.hostClassName = host.getName();
         this.reg = reg;
         if (target() == CMLibTarget.UNKNOWN && requireTarget)
@@ -27,29 +62,27 @@ public class PluginDependency implements Comparable<PluginDependency> {
     }
 
     public CMLibTarget target() {
-        if (target == null)
-            target = depends.target() != CMLibTarget.UNKNOWN ? depends.target() : reg.targets().getTarget(hostClassName);
-        return target;
+        return givenTarget == CMLibTarget.UNKNOWN ? reg.targets().getTarget(hostClassName) : givenTarget;
     }
 
     public boolean isCMPlugin() {
-        return depends.isCMPlugin();
+        return cmPlugin;
     }
 
     public String pluginName() {
-        return depends.pluginName();
+        return pluginName;
     }
 
     public String type() {
-        return depends.type();
+        return type;
     }
 
     public String groupId() {
-        return depends.groupId();
+        return groupId;
     }
 
     public String version() {
-        return depends.version().equals("") ? Version.VERSION : depends.version();
+        return version;
     }
 
     public String info() {
@@ -71,6 +104,11 @@ public class PluginDependency implements Comparable<PluginDependency> {
 
     @Override
     public String toString() {
-        return "Dependency{" + depends + "}";
+        return "PluginDependency{" +
+                "name=" + pluginName +
+                ", groupId=" + groupId +
+                ", version=" + version +
+                ", type=" + type +
+                '}';
     }
 }

@@ -86,13 +86,13 @@ public class Texters {
         return "@" + getClassNameSimple(ann);
     }
 
-    public static String typesafeClassName(Class cls) {
+    public static String typesafeClassName(Class<?> cls) {
         return cls.equals(TypeUnknown.class) ? "<unknown>" : getClassNameFull(cls);
     }
 
     public static String methodObjCName(Executable m) {
         StringBuilder out = new StringBuilder();
-        if (m instanceof Constructor)
+        if (m instanceof Constructor<?>)
             out.append("__init_").append(toObjC(m.getDeclaringClass()));
         else
             out.append(m.getName());
