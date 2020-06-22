@@ -14,6 +14,7 @@ import org.crossmobile.plugin.reg.PackageRegistry;
 import org.crossmobile.plugin.reg.PluginRegistry;
 import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.plugin.utils.ClassCollection;
+import org.crossmobile.utils.FileUtils;
 import org.crossmobile.utils.Log;
 import org.crossmobile.utils.ReflectionUtils;
 import org.crossmobile.utils.plugin.DependencyItem;
@@ -29,14 +30,14 @@ import java.util.function.Function;
 
 import static java.io.File.separator;
 import static org.crossmobile.plugin.actions.CreateBeanAPI.OBJ_STYLE;
-import static org.crossmobile.utils.FileUtils.delete;
-import static org.crossmobile.utils.FileUtils.mkdirs;
+import static org.crossmobile.utils.FileUtils.*;
 import static org.crossmobile.utils.JarUtils.unzipJar;
 import static org.crossmobile.utils.TextUtils.plural;
 import static org.crossmobile.utils.TimeUtils.time;
 
 public class PluginAssembler {
     public static final String BUNDLES = "bundles";
+    public static final String ARTIFACTS = "artifacts";
 
     public static final BiFunction<File, String, File> compileBase = (target, plugin) -> new File(target, BUNDLES + separator + plugin + separator + "compile");
     public static final BiFunction<File, String, File> builddepBase = (target, plugin) -> new File(target, BUNDLES + separator + plugin + separator + "builddep");
@@ -59,6 +60,13 @@ public class PluginAssembler {
 
         if (!"jar".equals(root.getType())) {
             Log.info("Skipping plugin creation for " + root.getArtifactID() + ", only JAR files supported, found " + root.getFile().getAbsolutePath());
+            return;
+        }
+
+        long sourcesModified = Math.max(Math.max(getLastModified(vendorBin), getLastModified(vendorSrc)), getLastModified(srcDir));
+        long artifactsProduced = getLastModified(new File(target, ARTIFACTS));
+        if (sourcesModified < artifactsProduced) {
+            Log.info("No files to process");
             return;
         }
 

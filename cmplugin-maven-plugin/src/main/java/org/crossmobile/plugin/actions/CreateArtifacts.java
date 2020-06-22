@@ -95,7 +95,7 @@ public class CreateArtifacts {
         }
 
         Log.info("Installing plugin " + plugin + " artifacts in local repository");
-        File artBase = new File(target, "artifacts");
+        File artBase = new File(target, ARTIFACTS);
         for (PluginDependency dep : reg.plugins().getPluginData(plugin).getDependencies())
             Log.info("Found dependency " + dep.info() + " with targets " + dep.target().listTargets());
         if (buildCore) {

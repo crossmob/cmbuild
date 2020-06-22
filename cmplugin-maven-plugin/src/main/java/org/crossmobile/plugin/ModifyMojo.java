@@ -15,6 +15,8 @@ import org.crossmobile.build.utils.MojoLogger;
 import org.crossmobile.plugin.actions.AppearanceInjections;
 import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.plugin.utils.ClassCollection;
+import org.crossmobile.utils.FileUtils;
+import org.crossmobile.utils.Log;
 import org.crossmobile.utils.ReflectionUtils;
 import org.robovm.objc.block.VoidBlock1;
 
@@ -24,7 +26,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.TreeSet;
 
+import static java.io.File.separator;
 import static java.util.Arrays.asList;
+import static org.crossmobile.utils.FileUtils.getLastModified;
 import static org.crossmobile.utils.TimeUtils.time;
 
 @Mojo(name = "modify", defaultPhase = LifecyclePhase.PROCESS_CLASSES, requiresDependencyResolution = ResolutionScope.COMPILE)
@@ -41,8 +45,14 @@ public class ModifyMojo extends GenericMojo {
 
     @Override
     public void exec() {
-        Registry reg = new Registry();
         MojoLogger.register(getLog());
+        File status = new File(getProject().getBuild().getDirectory(), "maven-status" + separator + "cmplugin-maven-plugin" + separator + "last-modification");
+        File sourceDir = new File(getProject().getBuild().getSourceDirectory());
+        if (getLastModified(sourceDir) < getLastModified(status)) {
+            Log.info("No classes to modify");
+            return;
+        }
+        Registry reg = new Registry();
         time("Post-process classes", () -> {
             File classes = new File(getProject().getBuild().getDirectory(), "classes");
             ReflectionUtils.resetClassLoader();
@@ -59,6 +69,7 @@ public class ModifyMojo extends GenericMojo {
             injections.cleanup(classes);
             for (Class<?> cls : appearanceClasses)
                 injections.makeAppearance(cls);
+            FileUtils.write(status, "");
         });
     }
 }

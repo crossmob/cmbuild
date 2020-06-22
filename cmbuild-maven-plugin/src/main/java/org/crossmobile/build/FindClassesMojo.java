@@ -30,7 +30,7 @@ import static org.crossmobile.utils.ClasspathUtils.CLASS_USAGE_SIGNATURE;
 public class FindClassesMojo extends GenericMojo {
 
     @Override
-    public void exec() throws MojoExecutionException, MojoFailureException {
+    public void exec() {
         File classesDir = new File(getBuildDir(), CLASSES);
         for (String className : findAllImports(Collections.singleton(classesDir)))
             System.out.println(CLASS_USAGE_SIGNATURE + className);
