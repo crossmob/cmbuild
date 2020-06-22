@@ -8,15 +8,13 @@ package org.crossmobile.build.tools;
 
 import org.crossmobile.build.ng.CMBuildEnvironment;
 import org.crossmobile.build.utils.SynchronizeHelpers;
-import org.crossmobile.utils.AndroidInjections;
 import org.crossmobile.utils.Log;
 import org.crossmobile.utils.Param;
 import org.crossmobile.utils.PluginMetaData;
+import org.crossmobile.utils.TextUtils;
 
 import java.io.File;
-import java.util.Collection;
-import java.util.StringTokenizer;
-import java.util.TreeSet;
+import java.util.*;
 
 import static org.crossmobile.bridge.ann.CMLibParam.ParamContext.Android;
 import static org.crossmobile.build.utils.Config.*;
@@ -54,7 +52,7 @@ public class AndroidProjectCreator {
             partS[3] = partS[3].substring(0, partS[3].indexOf("."));
         for (int i = 0; i < 4; i++)
             try {
-                int part = Integer.valueOf(partS[i]);
+                int part = Integer.parseInt(partS[i]);
                 if (part > 255 || (part > 127 && i == (partS.length - 1)))
                     throw new RuntimeException("Unable to parse text version at location " + i + " (" + partS[i] + "). Number out of scope (00-FF).");
                 numversion |= part << ((3 - i) * 8);
@@ -67,15 +65,20 @@ public class AndroidProjectCreator {
 
     private static String getApplicationExtras(CMBuildEnvironment env, Iterable<PluginMetaData> metaData) {
         StringBuilder extras = new StringBuilder();
+        Map<String, String> params = new HashMap<>();   // All parameters are post-processed with current parameters
         for (Param p : env.getParamset().runtime())
-            if (p.context == Android && !p.meta.isEmpty())
+            if (p.context == Android && !p.meta.isEmpty()) {
+                String value = env.getProperties().getProperty(p.name, "");
+                params.put("${" + p.name + "}", value);
                 extras.append("        <meta-data android:name=\"").
                         append(p.meta).
                         append("\" android:value=\"").
-                        append(env.getProperties().getProperty(p.name, "")).
+                        append(value).
                         append("\"/>\n");
+            }
         for (PluginMetaData info : metaData)
             extras.append(info.getAndroidInjections().getAppSection());
+        params.forEach((key, value) -> TextUtils.replaceMultiple(extras, key, value));
         return extras.toString();
     }
 
