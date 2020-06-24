@@ -36,19 +36,17 @@ public class ClassCollection {
 
     public static void gatherClasses(Collection<String> paths, Consumer<Package> packages, Consumer<Class<?>> classes, boolean silently) {
         ClassWalker.getClasspathEntries(iterableToString(paths, pathSeparator), item -> {
-            if (!item.contains("/$")) {
-                item = item.replace('/', '.');
-                Class<?> cls;
-                try {
-                    cls = Class.forName(item, false, getClassLoader());
-                    if (packages != null)
-                        packages.accept(cls.getPackage());
-                    if (Modifier.isPublic(cls.getModifiers()) || item.endsWith("package-info") && classes != null)
-                        classes.accept(cls);
-                } catch (Throwable ex) {
-                    if (!silently)
-                        Log.warning("While instantiating class " + item + ": " + ex.toString());
-                }
+            item = item.replace('/', '.');
+            Class<?> cls;
+            try {
+                cls = Class.forName(item, false, getClassLoader());
+                if (packages != null)
+                    packages.accept(cls.getPackage());
+                if (Modifier.isPublic(cls.getModifiers()) || item.endsWith("package-info") && classes != null)
+                    classes.accept(cls);
+            } catch (Throwable ex) {
+                if (!silently)
+                    Log.warning("While instantiating class " + item + ": " + ex.toString());
             }
         }, "class");
     }

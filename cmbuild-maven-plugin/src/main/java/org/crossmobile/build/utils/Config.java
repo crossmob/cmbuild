@@ -8,8 +8,8 @@ package org.crossmobile.build.utils;
 
 import java.io.File;
 
-import static org.crossmobile.bridge.system.LauncherCommons.CROSSMOBILE_PROPERTIES;
-import static org.crossmobile.bridge.system.MaterialsCommon.MATERIALS_TAG;
+import static org.crossmobile.bridge.system.RuntimeCommons.CROSSMOBILE_PROPERTIES;
+import static org.crossmobile.bridge.system.RuntimeCommons.MATERIALS_TAG;
 
 public class Config {
 

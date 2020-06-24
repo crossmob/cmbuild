@@ -19,7 +19,7 @@ import java.net.URLDecoder;
 import java.util.Collection;
 import java.util.jar.JarFile;
 
-import static org.crossmobile.bridge.system.MaterialsCommon.MATERIALS_TAG;
+import static org.crossmobile.bridge.system.RuntimeCommons.MATERIALS_TAG;
 import static org.crossmobile.build.tools.StringsToPropertiesConverter.parseStrings;
 import static org.crossmobile.build.tools.StringsToPropertiesConverter.parseStringsDict;
 import static org.crossmobile.utils.FileUtils.forAllFiles;

@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
 
 import static java.io.File.separator;
 import static java.util.Collections.singleton;
-import static org.crossmobile.bridge.system.MaterialsCommon.MATERIALS_TAG;
+import static org.crossmobile.bridge.system.RuntimeCommons.MATERIALS_TAG;
 
 class ObjCSourceFile {
     private static final Pattern depack = Pattern.compile("crossmobile_ios_([a-zA-Z]*)_([a-zA-Z]*)");

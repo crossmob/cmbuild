@@ -21,7 +21,7 @@ import java.io.File;
 import java.lang.management.ManagementFactory;
 
 import static org.crossmobile.backend.desktop.DesktopLocations.FONT_LIST;
-import static org.crossmobile.bridge.system.LauncherCommons.CROSSMOBILE_PROPERTIES;
+import static org.crossmobile.bridge.system.RuntimeCommons.CROSSMOBILE_PROPERTIES;
 import static org.crossmobile.build.ng.CMBuildEnvironment.environment;
 import static org.crossmobile.build.utils.Config.*;
 import static org.crossmobile.utils.CollectionUtils.asList;
