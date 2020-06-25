@@ -61,7 +61,7 @@ public class PluginRegistry {
             data.setUrl(plugin.url(), annName(CMLib.class) + " property url for object" + getClassNameFull(cls));
             data.setInitializer(plugin.initializer(), annName(CMLib.class) + " property initializer for object " + getClassNameFull(cls));
             data.addAndroidInj(plugin.androidInjections());
-            data.addImports(plugin.includes());
+            data.addImports(cls, plugin.includes());
             data.setOptionalLibraryBinary(plugin.optionalLibraryBinary());
 
             for (String lib : plugin.libs())

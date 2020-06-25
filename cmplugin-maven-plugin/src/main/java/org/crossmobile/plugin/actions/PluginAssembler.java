@@ -111,8 +111,10 @@ public class PluginAssembler {
         ReverseCode codeRev = (buildIos || buildUwp) ? time("Create reverse code", () -> new ReverseCode(cc.getClassPool(), reg)) : null;
         if (buildIos || buildUwp) {
 //            time(() -> new JavaTransformer(cc.getClassPool(), runtime_rvm));
-            time("Create iOS libraries", () -> new CreateDylib(resolver, target, cachedir, vendorSrc, null, reg, buildIos));
-            time("Create UWP libraries", () -> new CreateDll(resolver, target, cachedir, vendorSrc, VStudioLocation, reg, buildUwp));
+            if (buildIos)
+                time("Create iOS libraries", () -> new CreateDylib(resolver, target, cachedir, vendorSrc, null, reg, buildIos));
+            if (buildUwp)
+                time("Create UWP libraries", () -> new CreateDll(resolver, target, cachedir, vendorSrc, VStudioLocation, reg, buildUwp));
         }
 
         time("Initialize and create stub compile-time files", () -> {

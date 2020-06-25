@@ -17,6 +17,7 @@ import org.crossmobile.utils.reqgraph.Requirement;
 
 import java.util.*;
 
+import static org.crossmobile.utils.NamingUtils.getClassNameFull;
 import static org.crossmobile.utils.TextUtils.replaceOldString;
 
 public class Plugin {
@@ -116,7 +117,7 @@ public class Plugin {
         return libs;
     }
 
-    public Collection<String> getAndroidExtraDependenciess() {
+    public Collection<String> getAndroidExtraDependencies() {
         Collection<String> deps = new HashSet<>();
         for (PluginDependency dep : depends)
             if (dep.target().android && !dep.isCMPlugin())
@@ -125,7 +126,8 @@ public class Plugin {
     }
 
     void addDependency(CMLibDepends dep, Class<?> host, Registry reg, boolean requireTarget) {
-        if (dep != null) depends.add(new PluginDependency(dep, host, reg, requireTarget));
+        if (dep != null)
+            depends.add(new PluginDependency(dep, host, reg, requireTarget));
     }
 
     void addPod(CMPod pod) {
@@ -179,8 +181,21 @@ public class Plugin {
         return name;
     }
 
-    public void addImports(String... includes) {
-        imports.addAll(Arrays.asList(includes));
+    public void addImports(Class<?> where, String... includes) {
+        for (String inc : includes) {
+            boolean isValid = false;
+            if (inc.startsWith("<") && inc.endsWith(">"))
+                isValid = true;
+            else if (inc.startsWith("\"") && inc.endsWith("\""))
+                isValid = true;
+            else if (!inc.startsWith("<") && !inc.endsWith(">") && !inc.startsWith("\"") && !inc.endsWith("\"")) {
+                inc = "\"" + inc + "\"";
+                isValid = true;
+            } else
+                Log.error("Invalid import definition at " + getClassNameFull(where) + ": " + inc);
+            if (isValid)
+                imports.add(inc);
+        }
     }
 
     public String[] getImports() {
