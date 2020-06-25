@@ -8,11 +8,7 @@ package org.crossmobile.plugin.actions;
 
 import org.crossmobile.bridge.ann.CMLibTarget;
 import org.crossmobile.bridge.ann.CMLibTarget.BaseTarget;
-import org.crossmobile.plugin.actions.CreateBundles.BundleResolver;
-import org.crossmobile.plugin.reg.PackageRegistry;
-import org.crossmobile.plugin.reg.PluginRegistry;
 import org.crossmobile.plugin.reg.Registry;
-import org.crossmobile.plugin.reg.TargetRegistry;
 import org.crossmobile.utils.Log;
 
 import java.io.File;

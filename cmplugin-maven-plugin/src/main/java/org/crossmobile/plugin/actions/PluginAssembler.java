@@ -148,8 +148,6 @@ public class PluginAssembler {
         time("Create distributions of artifacts", () -> {
             if (buildDesktop)
                 CreateBundles.bundleFiles(runtime, plugin -> desktopBase.apply(target, plugin), CreateBundles.classResolver(reg), BaseTarget.DESKTOP);
-            if (buildIos)
-                CreateBundles.bundleFiles(runtime, plugin -> iosBase.apply(target, plugin), CreateBundles.classResolver(reg), BaseTarget.IOS);
             if (buildRvm)
                 CreateBundles.bundleFiles(runtime_rvm, plugin -> rvmBase.apply(target, plugin), CreateBundles.classResolver(reg), BaseTarget.IOS);
             if (buildUwp)
@@ -157,6 +155,14 @@ public class PluginAssembler {
             if (buildAndroid)
                 CreateBundles.bundleFiles(runtime, plugin -> androidBase.apply(target, plugin), CreateBundles.classResolver(reg), BaseTarget.ANDROID);
             CreateBundles.bundleFiles(srcDir, plugin -> sourcesBase.apply(target, plugin), CreateBundles.sourceResolver(reg), BaseTarget.ALL);
+            /*
+             * iOS target does not support gathering classes and other resource files, so files are not copied.
+             * If we want int the future to add resource files (which is not supported yet), we should
+             *   (a) annotate the packages (not the files!) accordingly
+             *   (b) copy all files BUT .classes. Right now te algorithm accepts all files, *including* classes.
+             * Follows commented the old code that gathers everything (including .class):
+             * if (buildIos) CreateBundles.bundleFiles(runtime, plugin -> iosBase.apply(target, plugin), CreateBundles.classResolver(reg), BaseTarget.IOS);
+             */
 
             StringWriter writer = report == null ? null : new StringWriter();
             for (String plugin : reg.plugins().plugins())
