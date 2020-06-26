@@ -28,6 +28,7 @@ import java.util.TreeSet;
 
 import static java.io.File.separator;
 import static java.util.Arrays.asList;
+import static org.crossmobile.prefs.Config.CMPLUGIN_MAVEN_PLUGIN_SIGNATURE;
 import static org.crossmobile.utils.FileUtils.getLastModified;
 import static org.crossmobile.utils.TimeUtils.time;
 
@@ -46,7 +47,7 @@ public class ModifyMojo extends GenericMojo {
     @Override
     public void exec() {
         MojoLogger.register(getLog());
-        File status = new File(getProject().getBuild().getDirectory(), "maven-status" + separator + "cmplugin-maven-plugin" + separator + "last-modification");
+        File status = new File(getProject().getBuild().getDirectory(), "maven-status" + separator + CMPLUGIN_MAVEN_PLUGIN_SIGNATURE + separator + "last-modification");
         File sourceDir = new File(getProject().getBuild().getSourceDirectory());
         if (getLastModified(sourceDir) < getLastModified(status)) {
             Log.info("No classes to modify");

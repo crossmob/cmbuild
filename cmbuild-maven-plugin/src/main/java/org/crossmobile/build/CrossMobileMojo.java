@@ -18,9 +18,7 @@ import org.crossmobile.utils.Dependency;
 import org.crossmobile.utils.DependencyParam;
 import org.crossmobile.utils.ParamSet;
 import org.crossmobile.utils.func.Opt;
-import org.crossmobile.utils.func.ScopeUtils;
 import org.crossmobile.utils.launcher.Flavour;
-import org.crossmobile.utils.lic.LicencedItems;
 import org.crossmobile.utils.plugin.DependencyItem;
 
 import java.io.File;
@@ -52,8 +50,6 @@ public abstract class CrossMobileMojo extends GenericMojo {
         //Add generated sources directory for compile
         getProject().addCompileSourceRoot(new File(getBuildDir(), GENERATED_CMSOURCES).getAbsolutePath());
         Flavour flavour = Flavour.getFlavour(settings.getActiveProfiles());
-        String appId = getProject().getGroupId() + "." + getProject().getArtifactId();
-        LicencedItems.checkLicense(dependencies, appId, flavour);
 
         ParamSet set = getParamSet(dependencies);   // also removed invalid artifacts - needs dependencies to be populated
         Properties props = loadProperties(set);
