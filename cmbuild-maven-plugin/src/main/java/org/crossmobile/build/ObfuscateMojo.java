@@ -12,7 +12,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.crossmobile.build.tools.Obfuscator;
-import org.crossmobile.build.utils.Versions;
+import org.crossmobile.prefs.MvnVersions;
 import org.crossmobile.utils.Log;
 
 import java.io.File;
@@ -24,7 +24,7 @@ import static org.crossmobile.utils.FileUtils.copyResource;
 public class ObfuscateMojo extends GenericMojo {
 
     @Parameter(defaultValue = "${version.proguard}", readonly = true)
-    private String versionProguard = Versions.ProGuard.VERSION;
+    private String versionProguard = MvnVersions.ProGuard.VERSION;
 
     @Parameter(defaultValue = "${project.build.directory}/${project.artifactId}-${project.version}.map", readonly = true)
     private File proguardMap;
@@ -54,7 +54,7 @@ public class ObfuscateMojo extends GenericMojo {
 
         if (!copyProguardFilesOnly)
             Obfuscator.obfuscate(
-                    resolveArtifact(new ArtifactInfo(Versions.ProGuard.GROUP, Versions.ProGuard.ARTIFACT, versionProguard, "jar"))
+                    resolveArtifact(new ArtifactInfo(MvnVersions.ProGuard.GROUP, MvnVersions.ProGuard.ARTIFACT, versionProguard, "jar"))
                     , proguardMap, inputJar, outputJar, asList(crossMobConf, proguardConfig));
     }
 
