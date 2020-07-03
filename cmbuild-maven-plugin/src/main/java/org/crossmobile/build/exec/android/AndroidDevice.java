@@ -51,7 +51,8 @@ public final class AndroidDevice implements Comparable<AndroidDevice> {
         VERSION.put("26", "Oreo");
         VERSION.put("27", "Oreo");
         VERSION.put("28", "Pie");
-        VERSION.put("", "");
+        VERSION.put("29", "Android 10");
+        VERSION.put("30", "Android 11");
     }
 
     public final String deviceID;
