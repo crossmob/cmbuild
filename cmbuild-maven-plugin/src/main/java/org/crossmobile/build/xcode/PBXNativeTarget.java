@@ -29,7 +29,7 @@ public class PBXNativeTarget extends PBXAny {
     }
 
     public PBXNativeTarget(String id, NSDictionary data) {
-        //Todo null pointer handling
+        //TODO null pointer handling
         super(id, data);
         name = getPath(data, "name").toString();
         productName = getPath(data, "productName").toString();
