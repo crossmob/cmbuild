@@ -34,7 +34,8 @@ public class NSelector extends NParsable implements Comparable<NSelector> {
     private NProperty property;
     private boolean asStatic;
     private NStructField structRef;
-    private String sinceIos = "";
+    private int sinceIosMajor = 0;
+    private int sinceIosMinor = 0;
 
     /* Function info */
     public void setConstructor(boolean constructor) {
@@ -169,12 +170,32 @@ public class NSelector extends NParsable implements Comparable<NSelector> {
         return property != null && !getName().startsWith("set");
     }
 
-    public void setSinceIos(String sinceIos) {
-        this.sinceIos = sinceIos == null ? "" : sinceIos;
+    public boolean setSinceIos(String sinceIos) {
+        if (sinceIos.isEmpty())
+            return true;
+        String[] parts = sinceIos.split("\\.");
+        if (parts.length > 2 || parts.length == 0) {
+            return false;
+        }
+        try {
+            this.sinceIosMinor = parts.length == 1 ? 0 : Integer.parseInt(parts[1]);
+            this.sinceIosMajor = Integer.parseInt(parts[0]);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 
-    public String getSinceIos() {
-        return sinceIos;
+    public boolean requireIosVersion() {
+        return sinceIosMajor > 0;
+    }
+
+    public int getSinceIosMajor() {
+        return sinceIosMajor;
+    }
+
+    public int getSinceIosMinor() {
+        return sinceIosMinor;
     }
 
     @Override

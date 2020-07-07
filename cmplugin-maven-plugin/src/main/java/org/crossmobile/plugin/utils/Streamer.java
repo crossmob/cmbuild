@@ -20,6 +20,10 @@ public interface Streamer {
         return append(Character.toString(c));
     }
 
+    default Streamer append(int i) throws IOException {
+        return append(Integer.toString(i));
+    }
+
     Streamer tab();
 
     Streamer untab();

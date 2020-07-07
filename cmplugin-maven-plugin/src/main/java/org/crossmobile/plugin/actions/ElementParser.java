@@ -61,7 +61,8 @@ public class ElementParser {
             Log.error("Unable to parse selector for method " + execSignature(m) + " using native code: " + nativeCode);
             return false;
         } else {
-            sel.setSinceIos(sinceIos);
+            if (!sel.setSinceIos(sinceIos))
+                Log.error("Unable to define iOS version check for method " + execSignature(m) + " using minimum version: " + sinceIos);
             sel.getReturnType().setSizeResolver(sizeResolver);
             return parseSelector(nobj, sel, m, m.getReturnType(), forceStatic ? StaticMappingType.JAVA : StaticMappingType.NONE);
         }
@@ -75,7 +76,8 @@ public class ElementParser {
         }
         NSelector sel = Factories.getGetterSelector(get);
         sel.getReturnType().setSizeResolver(sizeResolver);
-        sel.setSinceIos(sinceIos);
+        if (!sel.setSinceIos(sinceIos))
+            Log.error("Unable to define iOS version check for method " + execSignature(m) + " using minimum version: " + sinceIos);
         return parseSelector(nobj, sel, m, m.getReturnType());
     }
 
@@ -90,7 +92,8 @@ public class ElementParser {
             return false;
         }
         NSelector sel = Factories.getSetterSelector(set);
-        sel.setSinceIos(sinceIos);
+        if (!sel.setSinceIos(sinceIos))
+            Log.error("Unable to define iOS version check for method " + execSignature(m) + " using minimum version: " + sinceIos);
         return parseSelector(nobj, sel, m, m.getReturnType());
     }
 

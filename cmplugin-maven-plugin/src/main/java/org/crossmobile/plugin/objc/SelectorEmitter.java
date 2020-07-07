@@ -50,8 +50,9 @@ public class SelectorEmitter {
     public final SelectorEmitter emitImplementation(Streamer out) throws IOException {
         emitDefinition(out);
         emitOpenBracket(out);
-        if (!selector.getSinceIos().isEmpty())
-            out.append("if (@available(iOS ").append(selector.getSinceIos()).append(", *)) {\n").tab();
+        if (selector.requireIosVersion())
+            out.append("if (isIosAtLeast(").append(selector.getSinceIosMajor())
+                    .append(",").append(selector.getSinceIosMinor()).append(")){\n").tab();
 
         if (selector.getStructRef() != null)
             emitSelectorAsStructMember(out);
@@ -83,14 +84,12 @@ public class SelectorEmitter {
             result.emit(out, selValue);
 //        emitMethodImpDefinition(out);
         }
-        if (!selector.getSinceIos().isEmpty()) {
-            if (selector.getReturnType().getType() == void.class)
-                out.untab().append("}\n");
-            else {
+        if (selector.requireIosVersion()) {
+            if (selector.getReturnType().getType() != void.class) {
                 out.untab().append("} else {\n").tab();
                 out.append("return ").append(selector.getReturnType().getDefaultValue()).append(";\n");
-                out.untab().append("}\n");
             }
+            out.untab().append("}\n");
         }
 
         emitCloseBracket(out);
