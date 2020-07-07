@@ -14,6 +14,7 @@ import org.crossmobile.build.tools.*;
 import org.crossmobile.build.tools.images.IconBuilder;
 import org.crossmobile.build.tools.images.IconBuilder.IconType;
 import org.crossmobile.utils.Log;
+import org.crossmobile.utils.ParamList;
 import org.crossmobile.utils.images.ImageHound;
 import org.crossmobile.utils.plugin.DependencyItem;
 
@@ -121,7 +122,7 @@ public class ResourcesPipeline implements Runnable {
             delete(new File(environment().getBuilddir(), "classes")); // Needed by retrolambda to work properly
             copyTemplateIfMissing("project.pbxproj",
                     new File(environment().getBasedir(), environment().getProperties().getProperty(ARTIFACT_ID.tag().name) + ".xcodeproj" + File.separator + "project.pbxproj"),
-                    "Creating missing Xcode project file", null);
+                    "Creating missing Xcode project file", new ParamList());
         } catch (Throwable ex) {
             BaseUtils.throwException(ex);
         }

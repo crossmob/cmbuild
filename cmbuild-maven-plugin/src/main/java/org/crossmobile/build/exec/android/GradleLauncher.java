@@ -92,7 +92,7 @@ public class GradleLauncher {
                 tarEntry = tis.getNextEntry();
             }
             if (cis.countBytes != cis.total)
-                error(String.format("Size mismatch, expected %d, found %d bytes", cis.total, cis.countBytes), destinationFolder);
+                error(String.format("Please try to redownload file. Size mismatch, expected %d, found %d bytes", cis.total, cis.countBytes), destinationFolder);
             Log.info("Finished downloading " + cis.countBytes + " bytes.");
         } catch (IOException e) {
             error(e.toString(), destinationFolder);
