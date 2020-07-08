@@ -39,7 +39,7 @@ public class AndroidTargetSelector extends JDialog implements AListener {
         super((JDialog) null, true);
         this.emulator = emulator;
         initComponents();
-        if (!emulator.isFile() || getEmulators().isEmpty())
+        if (emulator == null || !emulator.isFile() || getEmulators().isEmpty())
             emuLaunchB.setVisible(false);
 
         this.callback = callback;

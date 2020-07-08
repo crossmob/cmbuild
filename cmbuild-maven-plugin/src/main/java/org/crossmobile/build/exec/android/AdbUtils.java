@@ -51,10 +51,8 @@ public class AdbUtils {
             System.exit(1);
         }
         File adbFile = new File(sdkDir, "platform-tools" + File.separator + SystemDependent.Execs.ADB.filename());
-        if (!adbFile.isFile()) {
-            Log.error("Android SDK must be set to run Android");
-            System.exit(1);
-        }
+        if (!adbFile.isFile())
+            Log.error("Incomplete Android SDK; the build might fail");
         this.sdk = sdkDir.getAbsolutePath();
         this.adb = adbFile.getAbsolutePath();
         dispatcher = new ConnectedAndroidDispatcher(adb);
