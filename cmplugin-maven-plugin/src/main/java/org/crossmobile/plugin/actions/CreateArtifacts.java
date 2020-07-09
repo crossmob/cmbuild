@@ -48,7 +48,6 @@ public class CreateArtifacts {
 
         // Define targets
         File compileTarget = compileBase.apply(target, plugin);
-        File builddepTarget = builddepBase.apply(target, plugin);
         File sourcesTarget = sourcesBase.apply(target, plugin);
         File iosTarget = iosBase.apply(target, plugin);
         File desktopTarget = desktopBase.apply(target, plugin);
@@ -100,8 +99,6 @@ public class CreateArtifacts {
         if (buildCore) {
             install(installer, createJar(report, new File(artBase, "cmplugin-" + plugin + '-' + item.getVersion() + ".jar"), compileTarget),
                     plugin, "", item.getGroupID(), item.getVersion(), reg);
-            install(installer, createJar(report, new File(artBase, "cmplugin-builddep-" + plugin + '-' + item.getVersion() + ".jar"), builddepTarget),
-                    plugin, "builddep-", item.getGroupID(), item.getVersion(), reg);
             installer.accept(new ArtifactInfo(createJar(report, new File(artBase, "cmplugin-" + plugin + '-' + item.getVersion() + "-sources.jar"), sourcesTarget),
                     item.getGroupID(), "cmplugin-" + plugin, item.getVersion(), "jar", "sources", null));
         }
@@ -133,8 +130,6 @@ public class CreateArtifacts {
         for (PluginDependency dep : reg.plugins().getPluginData(plugin).getDependencies())
             if (checkTarget(dep, type))
                 addDependency(dep, groupid, type, version, packaging, deplist);
-        if (type.equals("builddep-"))
-            addDependency(groupid, "cmplugin-" + plugin, version, "jar", deplist);
 
         String dependencies = deplist.length() > 0 ? "    <dependencies>\n" + deplist.toString() + "    </dependencies>\n" : "";
 
@@ -180,8 +175,6 @@ public class CreateArtifacts {
                 return dep.target().desktop;
             case "uwp-":
                 return dep.target().uwpjava;
-            case "builddep-":
-                return dep.target().builddep | dep.target().compile;
             default:
                 return false;
         }

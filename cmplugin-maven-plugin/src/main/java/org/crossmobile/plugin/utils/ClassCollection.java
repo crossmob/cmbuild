@@ -31,7 +31,6 @@ public class ClassCollection {
     private final Collection<Class<?>> uwpnativeClasses = new HashSet<>();
     private final Collection<Class<?>> allnativeClasses = new HashSet<>();
     private final Collection<Class<?>> compileClasses = new HashSet<>();
-    private final Collection<Class<?>> builddepClasses = new HashSet<>();
     private final ClassPool cp = ClassPool.getDefault();
 
     public static void gatherClasses(Collection<String> paths, Consumer<Package> packages, Consumer<Class<?>> classes, boolean silently) {
@@ -89,8 +88,6 @@ public class ClassCollection {
                 CMLibTarget target = reg.targets().register(cls);
                 if (target.compile)
                     compileClasses.add(cls);
-                if (target.builddep)
-                    builddepClasses.add(cls);
                 if (target.iosnative)
                     iosnativeClasses.add(cls);
                 if (target.uwpnative)
@@ -118,10 +115,6 @@ public class ClassCollection {
 
     public Iterable<Class<?>> getCompileTimeClasses() {
         return compileClasses;
-    }
-
-    public Iterable<Class<?>> getBuildDependencyClasses() {
-        return builddepClasses;
     }
 
     @Override

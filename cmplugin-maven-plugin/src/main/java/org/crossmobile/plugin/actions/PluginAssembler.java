@@ -40,7 +40,6 @@ public class PluginAssembler {
     public static final String ARTIFACTS = "artifacts";
 
     public static final BiFunction<File, String, File> compileBase = (target, plugin) -> new File(target, BUNDLES + separator + plugin + separator + "compile");
-    public static final BiFunction<File, String, File> builddepBase = (target, plugin) -> new File(target, BUNDLES + separator + plugin + separator + "builddep");
     public static final BiFunction<File, String, File> sourcesBase = (target, plugin) -> new File(target, BUNDLES + separator + plugin + separator + "sources");
     public static final BiFunction<File, String, File> desktopBase = (target, plugin) -> new File(target, BUNDLES + separator + plugin + separator + "desktop");
     public static final BiFunction<File, String, File> androidBase = (target, plugin) -> new File(target, BUNDLES + separator + plugin + separator + "android");
@@ -120,7 +119,6 @@ public class PluginAssembler {
         time("Initialize and create stub compile-time files", () -> {
             for (String plugin : reg.plugins().plugins()) {
                 mkdirs(compileBase.apply(target, plugin));
-                mkdirs(builddepBase.apply(target, plugin));
                 mkdirs(sourcesBase.apply(target, plugin));
                 if (buildDesktop)
                     mkdirs(desktopBase.apply(target, plugin));
@@ -138,11 +136,8 @@ public class PluginAssembler {
             int hm = 0;
             for (Class<?> cls : cc.getCompileTimeClasses())
                 hm += skel.stripClass(cls, plugin -> compileBase.apply(target, plugin), reg, SOURCE_TYPE) ? 1 : 0;
-            for (Class<?> cls : cc.getBuildDependencyClasses())
-                hm += skel.stripClass(cls, plugin -> builddepBase.apply(target, plugin), reg, SOURCE_TYPE) ? 1 : 0;
             // Still might need to add extra resource files
             CreateBundles.bundleFilesAndReport(runtime, plugin -> compileBase.apply(target, plugin), CreateBundles.getNoClassResolver(reg), BaseTarget.COMPILE);
-            CreateBundles.bundleFiles(runtime, plugin -> builddepBase.apply(target, plugin), CreateBundles.getNoClassResolver(reg), BaseTarget.BUILDDEP);
             Log.debug(hm + " class" + plural(hm, "es") + " stripped");
         });
         time("Create distributions of artifacts", () -> {
