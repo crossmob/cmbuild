@@ -6,6 +6,7 @@
 
 package org.crossmobile.plugin.actions;
 
+import org.crossmobile.Version;
 import org.crossmobile.build.ArtifactInfo;
 import org.crossmobile.plugin.model.NObject;
 import org.crossmobile.plugin.objc.ObjectEmitter;
@@ -151,7 +152,7 @@ public abstract class CreateLib {
         File f;
         for (PluginDependency dep : pData.getDependencies())
             if (!isSibling(dep) && ((dep.target().iosnative && asIOS) || (dep.target().uwpnative && !asIOS))) {
-                String groupid = dep.isCMPlugin() ? "org.crossmobile" : dep.groupId();
+                String groupid = dep.isCMPlugin() ? Version.GROUPID : dep.groupId();
                 String artifactid = "cmplugin-" + (asIOS ? "ios-" : "uwp-") + dep.pluginName();
                 ArtifactInfo ai = new ArtifactInfo(groupid, artifactid, dep.version(), dep.type().isEmpty() ? "jar" : dep.type());
                 try {

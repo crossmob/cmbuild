@@ -6,11 +6,10 @@
 
 package org.crossmobile.plugin.actions;
 
-import crossmobile.rt.StrongReference;
-import org.crossmobile.plugin.Repository;
+import org.crossmobile.Version;
+import org.crossmobile.plugin.PluginRegistryFile;
 import org.crossmobile.plugin.reg.Plugin;
 import org.crossmobile.plugin.reg.PluginParam;
-import org.crossmobile.plugin.reg.PluginRegistry;
 import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.utils.FileUtils;
 import org.crossmobile.utils.XMLWalker;
@@ -19,54 +18,10 @@ import org.crossmobile.utils.plugin.DependencyItem;
 import static org.crossmobile.bridge.ann.CMLibParam.ParamContext.Regular;
 
 public class XMLPluginWriter {
-    public static void updateXML(Repository repository, DependencyItem root, Registry reg) {
-        if (repository == null)
-            return;
-        if (repository.getFile() == null)
-            throw new NullPointerException("Please provide the filename of the repository");
-
-        // Load XML if exists
-        FileUtils.mkdirs(repository.getFile().getParentFile());
-        XMLWalker walker = repository.getFile().isFile() ? XMLWalker.load(repository.getFile()) : null;
-        if (walker == null)
-            walker = new XMLWalker();
-        StrongReference<String> name = new StrongReference<>("");
-        StrongReference<String> url = new StrongReference<>("");
-
-        // Find old entries
-        walker.node("repositories");
-        walker.filterNodes("repository", n -> {
-            name.set(n.attribute("name"));
-            url.set(n.attribute("url"));
-            if (repository.isCleanEntries()) {
-                n.remove();
-                n.add("repository").tag();
-            } else
-                n.tag();
-        }, p -> repository.getId().equals(p.attribute("id")));
-
-        // Sanity checks
-        if (!walker.hasTag())   // Didn't find it - should create it
-            walker.node("/repositories").add("repository").tag();
-        if (repository.getUrl() != null && !repository.getUrl().trim().isEmpty())
-            url.set(repository.getUrl().trim());
-        if (repository.getName() != null && !repository.getName().trim().isEmpty())
-            name.set(repository.getName().trim());
-        if (url.get().isEmpty())
-            throw new NullPointerException("Please provide the URL of the repository");
-        if (name.get().isEmpty())
-            throw new NullPointerException("Please provide the name of the repository");
-
-        // Set Repository configuration
-        walker.toTag().setAttribute("id", repository.getId()).
-                setAttribute("name", name.get()).
-                setAttribute("url", url.get());
-        // Create Plugins node
-        walker.toTag().execIf(p -> !p.nodeExists("plugin"), e -> e.add("plugins"));
-        walker.toTag().node("plugins").tag();
-
+    public static void storeForPlugin(PluginRegistryFile regFile, DependencyItem root, Registry reg) {
+        XMLWalker walker = prepare(regFile);
         for (String pluginName : reg.plugins().plugins()) {
-            if (pluginName.equals("cmioslayer"))
+            if (pluginName.equals(Version.ARTIFACTID))
                 continue;
             Plugin plugin = reg.plugins().getPluginData(pluginName);
             walker.toTag().add("plugin").tag("p");
@@ -88,6 +43,26 @@ public class XMLPluginWriter {
                     walker.toTag("m").add("context").setText(param.getContext().name().toLowerCase());
             }
         }
-        walker.store(repository.getFile(), true);
+        walker.store(regFile.file, true);
+    }
+
+    public static void storeForTheme(PluginRegistryFile regFile, String groupId, String artifactId, String version, String name, String description) {
+        XMLWalker walker = prepare(regFile);
+        walker.toTag().add("plugin").tag("p");
+        walker.toTag("p").add("groupId").setText(groupId);
+        walker.toTag("p").add("artifactId").setText(artifactId);
+        walker.toTag("p").add("version").setText(version);
+        walker.toTag("p").add("name").setText(name);
+        walker.toTag("p").add("description").setText(description);
+        walker.store(regFile.file, true);
+    }
+
+    private static XMLWalker prepare(PluginRegistryFile regFile) {
+        FileUtils.mkdirs(regFile.file.getParentFile());
+        if (regFile.file.exists() && !regFile.file.delete())
+            throw new RuntimeException("Unable to delete file " + regFile.file.getAbsolutePath());
+        XMLWalker walker = new XMLWalker();
+        walker.add("plugins").tag().setAttribute("type", regFile.type.name());
+        return walker;
     }
 }

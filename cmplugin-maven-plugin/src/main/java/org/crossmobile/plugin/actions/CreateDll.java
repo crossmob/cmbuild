@@ -9,6 +9,7 @@ package org.crossmobile.plugin.actions;
 import difflib.DiffUtils;
 import difflib.Patch;
 import difflib.PatchFailedException;
+import org.crossmobile.Version;
 import org.crossmobile.build.ArtifactInfo;
 import org.crossmobile.plugin.model.NObject;
 import org.crossmobile.plugin.objc.ReverseImportRegistry;
@@ -105,7 +106,7 @@ public class CreateDll extends CreateLib {
                 if (!libdef.exists()) {
                     builder.append("LIBRARY ").append(plugin).append("\n")
                             .append("EXPORTS\n").append("\n");
-                    if (plugin.equals("cmioslayer"))
+                    if (plugin.equals(Version.ARTIFACTID))
                         builder.append(LIB_DEF).append("\n").append("\n");
                     openOption = StandardOpenOption.CREATE;
                 }

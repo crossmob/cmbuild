@@ -9,12 +9,9 @@ package org.crossmobile.plugin.actions;
 import org.crossmobile.bridge.ann.CMLibTarget.BaseTarget;
 import org.crossmobile.build.ArtifactInfo;
 import org.crossmobile.plugin.Packages;
-import org.crossmobile.plugin.Repository;
-import org.crossmobile.plugin.reg.PackageRegistry;
-import org.crossmobile.plugin.reg.PluginRegistry;
+import org.crossmobile.plugin.PluginRegistryFile;
 import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.plugin.utils.ClassCollection;
-import org.crossmobile.utils.FileUtils;
 import org.crossmobile.utils.Log;
 import org.crossmobile.utils.ReflectionUtils;
 import org.crossmobile.utils.plugin.DependencyItem;
@@ -34,6 +31,7 @@ import static org.crossmobile.utils.FileUtils.*;
 import static org.crossmobile.utils.JarUtils.unzipJar;
 import static org.crossmobile.utils.TextUtils.plural;
 import static org.crossmobile.utils.TimeUtils.time;
+import static org.crossmobile.utils.func.ScopeUtils.with;
 
 public class PluginAssembler {
     public static final String BUNDLES = "bundles";
@@ -55,7 +53,7 @@ public class PluginAssembler {
                                 Function<ArtifactInfo, File> resolver,
                                 File cachedir, Packages[] packs,
                                 boolean buildDesktop, boolean buildIos, boolean buildAndroid, boolean buildUwp, boolean buildRvm, boolean buildCore,
-                                File VStudioLocation, File report, Repository repository) {
+                                File VStudioLocation, File report, PluginRegistryFile pluginRegistry) {
 
         if (!"jar".equals(root.getType())) {
             Log.info("Skipping plugin creation for " + root.getArtifactID() + ", only JAR files supported, found " + root.getFile().getAbsolutePath());
@@ -86,13 +84,10 @@ public class PluginAssembler {
                         if (pack != null)
                             reg.packages().register(pack.getName(), pack.getPlugin(), pack.getTarget());
                 registry.register(root, embedlibs, cc, reg);
+                XMLPluginWriter.storeForPlugin(pluginRegistry, root, reg);
             });
-            time("Gather native API", () -> {
-                Parser parser = new Parser(reg);
-                for (Class<?> cls : buildUwp ? cc.getUWPNativeClasses() : cc.getIOsNativeClasses())
-                    parser.parse(cls);
-                XMLPluginWriter.updateXML(repository, root, reg);
-            });
+            time("Gather native API", () -> with(new Parser(reg),
+                    p -> (buildUwp ? cc.getUWPNativeClasses() : cc.getIOsNativeClasses()).forEach(p::parse)));
 //            // This should be done source-level
 //            time("Create bean classes", () -> {
 //                CreateBeanAPI bean = new CreateBeanAPI(cc.getClassPool());

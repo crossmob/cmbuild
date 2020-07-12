@@ -6,7 +6,6 @@
 
 package org.crossmobile.plugin;
 
-import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -58,13 +57,10 @@ public class InstallMojo extends GenericMojo {
     private boolean skipCore;
 
     @Parameter(defaultValue = "gen/report.txt", readonly = true)
-    File report;
+    private File report;
 
     @Parameter(defaultValue = "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Community\\VC\\Auxiliary\\Build", readonly = true)
     private File VStudioLocation;
-
-    @Parameter(readonly = true)
-    private Repository repository;
 
     @Override
     public void exec() {
@@ -87,7 +83,7 @@ public class InstallMojo extends GenericMojo {
                 new File(getProject().getBasedir(), "lib/main/vendor"),
                 this::installAndKeepJar, this::resolveArtifact, new File(getProject().getBasedir(), "gen"), packages,
                 !skipDesktop, !skipIos, !skipAndroid, !skipUwp, !skipRvm, !skipCore,
-                VStudioLocation, report, repository
+                VStudioLocation, report, PluginRegistryFile.forPlugin(mavenProject)
         );
     }
 
