@@ -7,6 +7,7 @@
 package org.crossmobile.plugin.reg;
 
 import org.crossmobile.plugin.objc.ReverseImportRegistry;
+import org.crossmobile.plugin.utils.ClassCollection;
 
 public class Registry {
 
@@ -16,6 +17,9 @@ public class Registry {
     private final PluginRegistry pluginRegistry = new PluginRegistry(this);
     private final TargetRegistry targetRegistry = new TargetRegistry(this);
     private final TypeRegistry typeRegistry = new TypeRegistry(this);
+    private final ClassCollection classCollection = new ClassCollection();
+    private final ReverseCode reverseCode = new ReverseCode(classCollection.getClassPool(), this);
+
 
     public ObjectRegistry objects() {
         return objectRegistry;
@@ -39,5 +43,13 @@ public class Registry {
 
     public ReverseImportRegistry imports() {
         return importRegistry;
+    }
+
+    public ReverseCode reverse() {
+        return reverseCode;
+    }
+
+    public ClassCollection getClassCollection() {
+        return classCollection;
     }
 }

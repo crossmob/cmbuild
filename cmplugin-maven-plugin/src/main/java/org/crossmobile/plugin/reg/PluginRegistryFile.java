@@ -4,14 +4,15 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-package org.crossmobile.plugin;
+package org.crossmobile.plugin.reg;
 
 import org.apache.maven.project.MavenProject;
 import org.crossmobile.Version;
 
 import java.io.File;
 
-import static org.crossmobile.plugin.PluginRegistryFile.RegistryType.*;
+import static java.io.File.separator;
+import static org.crossmobile.plugin.reg.PluginRegistryFile.RegistryType.*;
 
 public final class PluginRegistryFile {
 
@@ -28,7 +29,7 @@ public final class PluginRegistryFile {
 
     private PluginRegistryFile(RegistryType type, MavenProject project) {
         this.type = type;
-        this.file = new File(project.getBuild().getDirectory(), project.getGroupId() + "." + project.getArtifactId() + "-" + project.getVersion() + ".plugins.xml");
+        this.file = new File(project.getBuild().getOutputDirectory(), "META-INF" + separator + "crossmobile" + separator + "plugins.xml");
     }
 
     public enum RegistryType {

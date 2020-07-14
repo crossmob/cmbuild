@@ -7,7 +7,7 @@
 package org.crossmobile.plugin.actions;
 
 import org.crossmobile.Version;
-import org.crossmobile.plugin.PluginRegistryFile;
+import org.crossmobile.plugin.reg.PluginRegistryFile;
 import org.crossmobile.plugin.reg.Plugin;
 import org.crossmobile.plugin.reg.PluginParam;
 import org.crossmobile.plugin.reg.Registry;

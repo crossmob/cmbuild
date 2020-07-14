@@ -12,6 +12,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.crossmobile.build.GenericMojo;
 import org.crossmobile.plugin.actions.XMLPluginWriter;
+import org.crossmobile.plugin.reg.PluginRegistryFile;
 
 @Mojo(name = "theme", defaultPhase = LifecyclePhase.COMPILE)
 public class ThemeMojo extends GenericMojo {

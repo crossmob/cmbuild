@@ -11,17 +11,11 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.crossmobile.build.ArtifactInfo;
-import org.crossmobile.build.GenericMojo;
-import org.crossmobile.build.utils.MojoLogger;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashSet;
+import org.crossmobile.plugin.reg.Registry;
 
 @Mojo(name = "deploy", defaultPhase = LifecyclePhase.DEPLOY, requiresDependencyResolution = ResolutionScope.COMPILE)
-public class DeployMojo extends GenericMojo {
+public class DeployMojo extends GenericPluginMojo {
 
-    static final Collection<ArtifactInfo> deployableArtifacts = new LinkedHashSet<>();
     @Parameter(property = "repositoryId")
     private String repositoryId;
 
@@ -29,20 +23,12 @@ public class DeployMojo extends GenericMojo {
     private String url;
 
     @Override
-    public void exec() {
-        MojoLogger.register(getLog());
-
+    public void exec(Registry reg) {
         if (repositoryId == null)
             repositoryId = getProject().getDistributionManagementArtifactRepository().getId();
         if (url == null)
             url = getProject().getDistributionManagementArtifactRepository().getUrl();
-
-        Collection<ArtifactInfo> toDeploy = new ArrayList<>();
-        synchronized (deployableArtifacts) {
-            toDeploy.addAll(deployableArtifacts);
-            deployableArtifacts.clear();
-        }
-        for (ArtifactInfo info : toDeploy)
+        for (ArtifactInfo info : getDeployArtifacts())
             if (!deployArtifact(info, repositoryId, url))
                 break;
     }

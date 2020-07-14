@@ -9,9 +9,9 @@ package org.crossmobile.plugin.actions;
 import org.crossmobile.bridge.ann.CMLibTarget.BaseTarget;
 import org.crossmobile.build.ArtifactInfo;
 import org.crossmobile.plugin.Packages;
-import org.crossmobile.plugin.PluginRegistryFile;
+import org.crossmobile.plugin.reg.PluginRegistryFile;
 import org.crossmobile.plugin.reg.Registry;
-import org.crossmobile.plugin.utils.ClassCollection;
+import org.crossmobile.plugin.reg.ReverseCode;
 import org.crossmobile.utils.Log;
 import org.crossmobile.utils.ReflectionUtils;
 import org.crossmobile.utils.plugin.DependencyItem;
@@ -28,7 +28,7 @@ import java.util.function.Function;
 import static java.io.File.separator;
 import static org.crossmobile.plugin.actions.CreateBeanAPI.OBJ_STYLE;
 import static org.crossmobile.utils.FileUtils.*;
-import static org.crossmobile.utils.JarUtils.unzipJar;
+import static org.crossmobile.utils.JarUtils.explodeClasspath;
 import static org.crossmobile.utils.TextUtils.plural;
 import static org.crossmobile.utils.TimeUtils.time;
 import static org.crossmobile.utils.func.ScopeUtils.with;
@@ -47,18 +47,13 @@ public class PluginAssembler {
 
     private static final byte SOURCE_TYPE = OBJ_STYLE;
 
-    public static void assemble(File target, DependencyItem root,
-                                String[] embedlibs, File srcDir, File vendorSrc, File vendorBin,
-                                Consumer<ArtifactInfo> installer,
-                                Function<ArtifactInfo, File> resolver,
-                                File cachedir, Packages[] packs,
-                                boolean buildDesktop, boolean buildIos, boolean buildAndroid, boolean buildUwp, boolean buildRvm, boolean buildCore,
-                                File VStudioLocation, File report, PluginRegistryFile pluginRegistry) {
-
-        if (!"jar".equals(root.getType())) {
-            Log.info("Skipping plugin creation for " + root.getArtifactID() + ", only JAR files supported, found " + root.getFile().getAbsolutePath());
-            return;
-        }
+    public static void assembleFiles(Registry reg, File target, DependencyItem root,
+                                     String[] embedlibs, File srcDir, File vendorSrc, File vendorBin,
+                                     Function<ArtifactInfo, File> resolver,
+                                     File cachedir, Packages[] packs,
+                                     boolean buildDesktop, boolean buildIos, boolean buildAndroid, boolean buildUwp, boolean buildRvm,
+                                     File VStudioLocation, PluginRegistryFile pluginRegistry) {
+        File runtime = new File(target, "runtime");
 
         long sourcesModified = Math.max(Math.max(getLastModified(vendorBin), getLastModified(vendorSrc)), getLastModified(srcDir));
         long artifactsProduced = getLastModified(new File(target, ARTIFACTS));
@@ -67,13 +62,9 @@ public class PluginAssembler {
             return;
         }
 
-        File runtime = new File(target, "runtime");
-        File runtime_rvm = new File(target, "runtime_rvm");
         File bundles = new File(target, BUNDLES);
         delete(bundles);
-        Registry reg = new Registry();
 
-        ClassCollection cc = new ClassCollection();
         ReflectionUtils.resetClassLoader();
         ProjectRegistry registry = new ProjectRegistry();
         time("API processing", () -> {
@@ -83,32 +74,25 @@ public class PluginAssembler {
                     for (Packages pack : packs)
                         if (pack != null)
                             reg.packages().register(pack.getName(), pack.getPlugin(), pack.getTarget());
-                registry.register(root, embedlibs, cc, reg);
+                registry.register(root, embedlibs, reg.getClassCollection(), reg);
                 XMLPluginWriter.storeForPlugin(pluginRegistry, root, reg);
             });
             time("Gather native API", () -> with(new Parser(reg),
-                    p -> (buildUwp ? cc.getUWPNativeClasses() : cc.getIOsNativeClasses()).forEach(p::parse)));
-//            // This should be done source-level
-//            time("Create bean classes", () -> {
-//                CreateBeanAPI bean = new CreateBeanAPI(cc.getClassPool());
-//                for (Class<?> cls : cc.getCompileTimeClasses())
-//                    bean.beanClass(cls, runtime);
-//            });
+                    p -> (buildIos ? reg.getClassCollection().getIOsNativeClasses() : reg.getClassCollection().getUWPNativeClasses()).forEach(p::parse)));
         });
 
         if (buildIos || buildDesktop || buildUwp || buildAndroid)
             time("Extract embedded jars", () -> {
                 for (File f : registry.getAppjars().toArray(new File[0]))
-                    unzipJar(f, runtime);
+                    explodeClasspath(f, runtime);
             });
 
-        ReverseCode codeRev = (buildIos || buildUwp) ? time("Create reverse code", () -> new ReverseCode(cc.getClassPool(), reg)) : null;
         if (buildIos || buildUwp) {
 //            time(() -> new JavaTransformer(cc.getClassPool(), runtime_rvm));
-            if (buildIos)
-                time("Create iOS libraries", () -> new CreateDylib(resolver, target, cachedir, vendorSrc, null, reg, buildIos));
-            if (buildUwp)
-                time("Create UWP libraries", () -> new CreateDll(resolver, target, cachedir, vendorSrc, VStudioLocation, reg, buildUwp));
+            time("Create reverse code", () -> reg.reverse().produce());
+            // do not use if (buildIos), since we always need to create the source files. The optimization is embedded in the function itself
+            time("Create iOS libraries", () -> new CreateDylib(resolver, target, cachedir, vendorSrc, null, reg, buildIos));
+            time("Create UWP libraries", () -> new CreateDll(resolver, target, cachedir, vendorSrc, VStudioLocation, reg, buildUwp));
         }
 
         time("Initialize and create stub compile-time files", () -> {
@@ -127,14 +111,21 @@ public class PluginAssembler {
                     mkdirs(rvmBase.apply(target, plugin));
             }
 
-            CreateSkeleton skel = new CreateSkeleton(cc.getClassPool());
+            CreateSkeleton skel = new CreateSkeleton(reg.getClassCollection().getClassPool());
             int hm = 0;
-            for (Class<?> cls : cc.getCompileTimeClasses())
+            for (Class<?> cls : reg.getClassCollection().getCompileTimeClasses())
                 hm += skel.stripClass(cls, plugin -> compileBase.apply(target, plugin), reg, SOURCE_TYPE) ? 1 : 0;
             // Still might need to add extra resource files
             CreateBundles.bundleFilesAndReport(runtime, plugin -> compileBase.apply(target, plugin), CreateBundles.getNoClassResolver(reg), BaseTarget.COMPILE);
             Log.debug(hm + " class" + plural(hm, "es") + " stripped");
         });
+    }
+
+    public static void packageFiles(Registry reg, File target, File srcDir,
+                                    boolean buildDesktop, boolean buildIos, boolean buildAndroid, boolean buildUwp, boolean buildRvm) {
+        File runtime = new File(target, "runtime");
+        File runtime_rvm = new File(target, "runtime_rvm");
+
         time("Create distributions of artifacts", () -> {
             if (buildDesktop)
                 CreateBundles.bundleFiles(runtime, plugin -> desktopBase.apply(target, plugin), CreateBundles.classResolver(reg), BaseTarget.DESKTOP);
@@ -153,10 +144,19 @@ public class PluginAssembler {
              * Follows commented the old code that gathers everything (including .class):
              * if (buildIos) CreateBundles.bundleFiles(runtime, plugin -> iosBase.apply(target, plugin), CreateBundles.classResolver(reg), BaseTarget.IOS);
              */
+        });
+    }
 
+    public static void installFiles(Registry reg, File target, DependencyItem root,
+                                    Consumer<ArtifactInfo> installer,
+                                    File vendorSrc, File vendorBin, File cachedir,
+                                    boolean buildDesktop, boolean buildIos, boolean buildAndroid, boolean buildUwp, boolean buildRvm, boolean buildCore,
+                                    File report
+    ) {
+        time("Install artifacts", () -> {
             StringWriter writer = report == null ? null : new StringWriter();
             for (String plugin : reg.plugins().plugins())
-                CreateArtifacts.installPlugin(installer, plugin, target, root, cachedir, vendorSrc, vendorBin, codeRev,
+                CreateArtifacts.installPlugin(installer, plugin, target, root, cachedir, vendorSrc, vendorBin, reg.reverse(),
                         buildDesktop, buildIos, buildUwp, buildAndroid, buildRvm, buildCore, writer, reg);
             CreateArtifacts.installJavadoc(installer, root, reg);
             report.getParentFile().mkdirs();
@@ -169,5 +169,4 @@ public class PluginAssembler {
                 }
         });
     }
-
 }

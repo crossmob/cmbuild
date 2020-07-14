@@ -16,6 +16,10 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.dependency.graph.DependencyGraphBuilder;
+import org.crossmobile.build.utils.DependencyDigger;
+import org.crossmobile.build.utils.MojoLogger;
+import org.crossmobile.utils.func.Opt;
+import org.crossmobile.utils.plugin.DependencyItem;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.resolution.ArtifactRequest;
@@ -23,11 +27,17 @@ import org.eclipse.aether.resolution.ArtifactResult;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.function.Supplier;
 
 import static org.crossmobile.bridge.system.BaseUtils.throwExceptionAndReturn;
+import static org.crossmobile.utils.func.ScopeUtils.with;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.*;
 
 public abstract class GenericMojo extends AbstractMojo {
+
+    protected static final String CM_DEPLOY_ARTIFACTS = "CM_DEPLOY_ARTIFACTS";
+    protected static final String CM_REGISTRY = "CM_REGISTRY";
+    private static final String CM_PROJ_DEPS = "CM_PROJECT_DEPS";
 
     @Component(hint = "default")
     protected DependencyGraphBuilder dependencyGraphBuilder;
@@ -54,6 +64,7 @@ public abstract class GenericMojo extends AbstractMojo {
     public final void execute() throws MojoExecutionException, MojoFailureException {
         if (skip)
             return;
+        MojoLogger.register(getLog());
         exec();
     }
 
@@ -140,6 +151,16 @@ public abstract class GenericMojo extends AbstractMojo {
         } catch (MojoExecutionException ex) {
             return throwExceptionAndReturn(ex);
         }
+    }
+
+    protected <T> T getContextData(String tag, Supplier<T> supplier) {
+        return Opt.of(getProject().getContextValue(tag)).map(o -> (T) o).
+                mapMissing(() -> with(supplier.get(), r -> getProject().setContextValue(tag, r))).get();
+    }
+
+    public DependencyItem getRootDependency(boolean shouldResolveRoot) {
+        return getContextData(CM_PROJ_DEPS + "_RESOLVED_" + Boolean.toString(shouldResolveRoot).toUpperCase(),
+                () -> DependencyDigger.getDependencyTree(getProject(), getSession(), getDependencyGraph(), this::resolveArtifact, shouldResolveRoot));
     }
 
     public MavenProject getProject() {

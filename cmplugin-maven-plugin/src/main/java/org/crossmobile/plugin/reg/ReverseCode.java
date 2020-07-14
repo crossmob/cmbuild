@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-package org.crossmobile.plugin.actions;
+package org.crossmobile.plugin.reg;
 
 import javassist.ClassPool;
 import org.crossmobile.bridge.system.BaseUtils;
@@ -35,6 +35,9 @@ public final class ReverseCode {
     public ReverseCode(ClassPool cp, Registry reg) {
         this.cp = cp;
         this.reg = reg;
+    }
+
+    public void produce() {
         for (NObject obj : reg.objects().retrieveAll())
             if (obj.needsOverrideBindings()) {
                 String plugin = reg.plugins().getPlugin(obj.getType().getName());
@@ -47,7 +50,7 @@ public final class ReverseCode {
         return reverse == null ? "{}" : reverse.toString();
     }
 
-    Iterable<String> getListOfClasses(String plugin) {
+    public Iterable<String> getListOfClasses(String plugin) {
         Factory reverse = entries.get(plugin);
         return reverse == null ? Collections.emptyList() : reverse.codeCollection.getClassMethodCode().keySet();
     }

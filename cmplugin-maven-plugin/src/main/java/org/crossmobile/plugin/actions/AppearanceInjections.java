@@ -95,7 +95,8 @@ public class AppearanceInjections {
                     Log.debug("Deleting file " + file.getAbsolutePath());
             }
         });
-        Log.info("Removing " + howMany.get() + " file" + plural(howMany.get()));
+        if (howMany.get() != 0)
+            Log.info("Removing " + howMany.get() + " file" + plural(howMany.get()));
     }
 
     public void makeAppearance(Class<?> cls) {

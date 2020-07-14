@@ -10,14 +10,11 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.settings.Settings;
 import org.crossmobile.build.ng.CMBuildEnvironment;
-import org.crossmobile.build.utils.DependencyDigger;
-import org.crossmobile.build.utils.MojoLogger;
 import org.crossmobile.prefs.MvnVersions.RetroLambda;
 import org.crossmobile.prefs.MvnVersions.XMLVM;
 import org.crossmobile.utils.Dependency;
 import org.crossmobile.utils.DependencyParam;
 import org.crossmobile.utils.ParamSet;
-import org.crossmobile.utils.func.Opt;
 import org.crossmobile.utils.launcher.Flavour;
 import org.crossmobile.utils.plugin.DependencyItem;
 
@@ -26,12 +23,8 @@ import java.util.*;
 
 import static org.crossmobile.build.utils.Config.GENERATED_CMSOURCES;
 import static org.crossmobile.utils.ParamsCommon.*;
-import static org.crossmobile.utils.func.ScopeUtils.with;
 
 public abstract class CrossMobileMojo extends GenericMojo {
-
-    private static final String CM_PROJ_DEPS = "CM_PROJECT_DEPS";
-
     @Parameter(defaultValue = "${settings}", readonly = true)
     private Settings settings;
 
@@ -40,11 +33,8 @@ public abstract class CrossMobileMojo extends GenericMojo {
     public void exec() throws MojoExecutionException {
         if (getProject().getArtifactId().equals("cmproject") || getProject().getArtifactId().equals("cmproject-debug"))
             return;
-        MojoLogger.register(getLog());
 
-        DependencyItem dependencies = Opt.of(getProject().getContextValue(CM_PROJ_DEPS)).map(d -> (DependencyItem) d)
-                .mapMissing(() -> with(DependencyDigger.getDependencyTree(getProject(), getSession(), getDependencyGraph(), this::resolveArtifact, false),
-                        d -> getProject().setContextValue(CM_PROJ_DEPS, d))).get();
+        DependencyItem dependencies = getRootDependency(false);
         File basedir = getProject().getBasedir();
 
         //Add generated sources directory for compile

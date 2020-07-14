@@ -10,8 +10,6 @@ import javassist.ClassPool;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.crossmobile.build.GenericMojo;
-import org.crossmobile.build.utils.MojoLogger;
 import org.crossmobile.plugin.actions.AppearanceInjections;
 import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.plugin.utils.ClassCollection;
@@ -32,8 +30,9 @@ import static org.crossmobile.prefs.Config.CMPLUGIN_MAVEN_PLUGIN_SIGNATURE;
 import static org.crossmobile.utils.FileUtils.getLastModified;
 import static org.crossmobile.utils.TimeUtils.time;
 
-@Mojo(name = "modify", defaultPhase = LifecyclePhase.PROCESS_CLASSES, requiresDependencyResolution = ResolutionScope.COMPILE)
-public class ModifyMojo extends GenericMojo {
+@Mojo(name = "source", defaultPhase = LifecyclePhase.PROCESS_CLASSES, requiresDependencyResolution = ResolutionScope.COMPILE)
+public class SourceMojo extends GenericPluginMojo {
+
     private final static Comparator<Class<?>> classComparator = (o1, o2) -> {
         if (o1 == o2)
             return 0;
@@ -45,15 +44,13 @@ public class ModifyMojo extends GenericMojo {
     };
 
     @Override
-    public void exec() {
-        MojoLogger.register(getLog());
+    public void exec(Registry reg) {
         File status = new File(getProject().getBuild().getDirectory(), "maven-status" + separator + CMPLUGIN_MAVEN_PLUGIN_SIGNATURE + separator + "last-modification");
         File sourceDir = new File(getProject().getBuild().getSourceDirectory());
         if (getLastModified(sourceDir) < getLastModified(status)) {
             Log.info("No classes to modify");
             return;
         }
-        Registry reg = new Registry();
         time("Post-process classes", () -> {
             File classes = new File(getProject().getBuild().getDirectory(), "classes");
             ReflectionUtils.resetClassLoader();
@@ -63,7 +60,7 @@ public class ModifyMojo extends GenericMojo {
             List<String> classPath = asList(classes.getAbsolutePath(), VoidBlock1.class.getProtectionDomain().getCodeSource().getLocation().getFile());
             ClassCollection.addClassPaths(cp, classPath);
             ClassCollection.gatherClasses(classPath, null, e -> {
-                if (reg.objects().isUIAppearanceClass(e) && !e.isInterface())
+                if (!e.isInterface() && reg.objects().isUIAppearanceClass(e))
                     appearanceClasses.add(e);
             }, true);
             AppearanceInjections injections = new AppearanceInjections(cp, classes.getAbsolutePath());
@@ -72,5 +69,13 @@ public class ModifyMojo extends GenericMojo {
                 injections.makeAppearance(cls);
             FileUtils.write(status, "");
         });
+
+//            // This should be done source-level
+//            time("Create bean classes", () -> {
+//                CreateBeanAPI bean = new CreateBeanAPI(cc.getClassPool());
+//                for (Class<?> cls : cc.getCompileTimeClasses())
+//                    bean.beanClass(cls, runtime);
+//            });
+
     }
 }

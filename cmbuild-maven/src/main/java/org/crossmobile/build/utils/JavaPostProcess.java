@@ -51,7 +51,7 @@ public class JavaPostProcess {
                 File plugin = dep.getFile();
                 if (plugin.isFile()) {
                     Log.debug("Extracting dependency " + plugin.getAbsolutePath());
-                    JarUtils.unzipJar(plugin, classesDir, (entry, file) -> !file.exists() || file.lastModified() < entry.getTime());  // Extract only newer files; can't do it yet since retrolambda deletes everything
+                    JarUtils.explodeClasspath(plugin, classesDir, (entry, file) -> !file.exists() || file.lastModified() < entry.getTime());  // Extract only newer files; can't do it yet since retrolambda deletes everything
                 } else
                     Log.warning("Dependency not supported: " + plugin.getAbsolutePath());
             }
