@@ -12,6 +12,8 @@ import org.crossmobile.utils.PluginMetaData;
 
 import java.io.File;
 
+import static java.io.File.separator;
+import static org.crossmobile.plugin.actions.PluginAssembler.compileBase;
 import static org.crossmobile.plugin.reg.PluginRegistryFile.RegistryType.*;
 import static org.crossmobile.utils.PluginMetaData.CURRENT_PLUGIN_REGISTRY;
 
@@ -30,7 +32,9 @@ public final class PluginRegistryFile {
 
     private PluginRegistryFile(RegistryType type, MavenProject project) {
         this.type = type;
-        this.file = new File(project.getBuild().getOutputDirectory(), CURRENT_PLUGIN_REGISTRY);
+        this.file = type == theme
+                ? new File(project.getBuild().getOutputDirectory(), CURRENT_PLUGIN_REGISTRY)
+                : new File(compileBase.apply(new File(project.getBuild().getDirectory()), project.getArtifactId()), CURRENT_PLUGIN_REGISTRY);
     }
 
     public enum RegistryType {

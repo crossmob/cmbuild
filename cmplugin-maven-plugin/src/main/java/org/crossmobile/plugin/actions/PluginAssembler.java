@@ -75,7 +75,8 @@ public class PluginAssembler {
                         if (pack != null)
                             reg.packages().register(pack.getName(), pack.getPlugin(), pack.getTarget());
                 registry.register(root, embedlibs, reg.getClassCollection(), reg);
-                XMLPluginWriter.storeForPlugin(pluginRegistry, root, reg);
+                if (!reg.plugins().pluginExists(root.getArtifactID()))
+                    Log.error("Required plugin " + root.getArtifactID() + " not defined˝");
             });
             time("Gather native API", () -> with(new Parser(reg),
                     p -> (buildIos ? reg.getClassCollection().getIOsNativeClasses() : reg.getClassCollection().getUWPNativeClasses()).forEach(p::parse)));
@@ -110,6 +111,7 @@ public class PluginAssembler {
                 if (buildRvm)
                     mkdirs(rvmBase.apply(target, plugin));
             }
+            XMLPluginWriter.storeForPlugin(pluginRegistry, root, reg);
 
             CreateSkeleton skel = new CreateSkeleton(reg.getClassCollection().getClassPool());
             int hm = 0;

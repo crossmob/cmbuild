@@ -124,17 +124,17 @@ public class DeclaredPluginRegistry {
         return name;
     }
 
-    public String getPlugin(String cls) {
+    public String getPlugin(String className) {
         if (dirty)
             checkRegistry();
-        String plugin = classes.get(cls);
+        String plugin = classes.get(className);
         if (plugin != null && !plugin.isEmpty())
             return plugin;
-        plugin = reg.packages().getPlugin(NamingUtils.getPackageName(cls));
+        plugin = reg.packages().getPlugin(NamingUtils.getPackageName(className));
         if (plugin != null && !plugin.isEmpty())
             return plugin;
-        if (!mightIgnoreItem(cls))
-            Log.error("Unable to locate registered plugin name of class " + cls);
+        if (!mightIgnoreItem(className))
+            Log.error("Unable to locate registered plugin name of class " + className);
         return null;
     }
 
