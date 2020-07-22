@@ -21,7 +21,7 @@ import static java.util.regex.Pattern.compile;
 import static org.crossmobile.plugin.utils.Texters.annName;
 import static org.crossmobile.utils.NamingUtils.getClassNameFull;
 
-public class PluginRegistry {
+public class DeclaredPluginRegistry {
 
     private static final Collection<Pattern> BLACKLIST = Arrays.asList(compile("\\.netbeans_automatic_build"),
             compile("java\\..*"),
@@ -33,7 +33,7 @@ public class PluginRegistry {
     private final Registry reg;
     private boolean dirty = true;
 
-    PluginRegistry(Registry reg) {
+    DeclaredPluginRegistry(Registry reg) {
         this.reg = reg;
     }
 

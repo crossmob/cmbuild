@@ -14,7 +14,7 @@ public class Registry {
     private final ObjectRegistry objectRegistry = new ObjectRegistry(this);
     private final ReverseImportRegistry importRegistry = new ReverseImportRegistry(this);
     private final PackageRegistry packageRegistry = new PackageRegistry(this);
-    private final PluginRegistry pluginRegistry = new PluginRegistry(this);
+    private final DeclaredPluginRegistry declaredPluginRegistry = new DeclaredPluginRegistry(this);
     private final TargetRegistry targetRegistry = new TargetRegistry(this);
     private final TypeRegistry typeRegistry = new TypeRegistry(this);
     private final ClassCollection classCollection = new ClassCollection();
@@ -29,8 +29,8 @@ public class Registry {
         return packageRegistry;
     }
 
-    public PluginRegistry plugins() {
-        return pluginRegistry;
+    public DeclaredPluginRegistry plugins() {
+        return declaredPluginRegistry;
     }
 
     public TargetRegistry targets() {

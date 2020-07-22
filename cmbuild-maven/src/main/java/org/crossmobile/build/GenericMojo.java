@@ -37,6 +37,7 @@ public abstract class GenericMojo extends AbstractMojo {
 
     protected static final String CM_DEPLOY_ARTIFACTS = "CM_DEPLOY_ARTIFACTS";
     protected static final String CM_REGISTRY = "CM_REGISTRY";
+    protected static final String CM_PLUGIN_REGISTRY = "CM_PLUGIN_REGISTRY";
     private static final String CM_PROJ_DEPS = "CM_PROJECT_DEPS";
 
     @Component(hint = "default")

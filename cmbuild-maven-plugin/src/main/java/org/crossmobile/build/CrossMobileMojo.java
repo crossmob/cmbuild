@@ -15,6 +15,7 @@ import org.crossmobile.prefs.MvnVersions.XMLVM;
 import org.crossmobile.utils.Dependency;
 import org.crossmobile.utils.DependencyParam;
 import org.crossmobile.utils.ParamSet;
+import org.crossmobile.utils.PluginRegistry;
 import org.crossmobile.utils.launcher.Flavour;
 import org.crossmobile.utils.plugin.DependencyItem;
 
@@ -23,8 +24,10 @@ import java.util.*;
 
 import static org.crossmobile.build.utils.Config.GENERATED_CMSOURCES;
 import static org.crossmobile.utils.ParamsCommon.*;
+import static org.crossmobile.utils.PluginMetaData.CURRENT_PLUGIN_REGISTRY;
 
 public abstract class CrossMobileMojo extends GenericMojo {
+    @SuppressWarnings("unused")
     @Parameter(defaultValue = "${settings}", readonly = true)
     private Settings settings;
 
@@ -36,6 +39,12 @@ public abstract class CrossMobileMojo extends GenericMojo {
 
         DependencyItem dependencies = getRootDependency(false);
         File basedir = getProject().getBasedir();
+
+        getContextData(CM_PLUGIN_REGISTRY, () -> {
+            for (DependencyItem dep : dependencies.getCompileOnlyDependencies(true))
+                PluginRegistry.importJarPlugin(dep.getFile(), CURRENT_PLUGIN_REGISTRY);
+            return true;
+        });
 
         //Add generated sources directory for compile
         getProject().addCompileSourceRoot(new File(getBuildDir(), GENERATED_CMSOURCES).getAbsolutePath());
@@ -63,13 +72,6 @@ public abstract class CrossMobileMojo extends GenericMojo {
 
     protected abstract Runnable initCoreWorker();
 
-    private boolean isRelease(List<String> profiles) {
-        for (String prof : profiles)
-            if ("release".equals(prof.toLowerCase()))
-                return true;
-        return false;
-    }
-
     private Properties loadProperties(ParamSet paramset) {
         Properties prop = paramset.getDefaults();
         prop.putAll(getProject().getProperties());
@@ -82,12 +84,12 @@ public abstract class CrossMobileMojo extends GenericMojo {
 
     /* Implies Dependencies as parameter */
     private ParamSet getParamSet(DependencyItem root) {
-        Map<String, Collection<DependencyParam>> possibleparams = new HashMap<>();
-        for (Dependency dep : Dependency.getSystemPlugins())
-            possibleparams.put(dep.groupId + "." + dep.artifactId, dep.getConfigParams());
+        Map<String, Collection<DependencyParam>> possibleParams = new HashMap<>();
+        for (Dependency dep : PluginRegistry.getSystemPlugins())
+            possibleParams.put(dep.groupId + "." + dep.artifactId, dep.getConfigParams());
         ParamSet p = new ParamSet();
         for (DependencyItem item : root.getCompiletimeDependencies(true))
-            for (DependencyParam param : possibleparams.getOrDefault(item.getGroupID() + "." + item.getArtifactID(), (List<DependencyParam>) Collections.EMPTY_LIST))
+            for (DependencyParam param : possibleParams.getOrDefault(item.getGroupID() + "." + item.getArtifactID(), Collections.emptyList()))
                 p.register(param.param);
         return p;
     }

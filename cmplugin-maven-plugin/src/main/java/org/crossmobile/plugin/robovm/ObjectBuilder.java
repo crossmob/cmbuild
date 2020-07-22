@@ -14,8 +14,6 @@ import org.crossmobile.bridge.ann.CMClass;
 import org.crossmobile.bridge.ann.CMReference;
 import org.crossmobile.bridge.ann.CMStruct;
 import org.crossmobile.plugin.model.NObject;
-import org.crossmobile.plugin.reg.PluginRegistry;
-import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.utils.Log;
 
 import java.io.IOException;

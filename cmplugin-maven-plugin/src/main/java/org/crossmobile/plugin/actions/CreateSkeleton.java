@@ -14,9 +14,7 @@ import javassist.bytecode.ParameterAnnotationsAttribute;
 import javassist.bytecode.annotation.Annotation;
 import org.crossmobile.bridge.ann.CMLibTarget;
 import org.crossmobile.bridge.system.BaseUtils;
-import org.crossmobile.plugin.reg.PluginRegistry;
 import org.crossmobile.plugin.reg.Registry;
-import org.crossmobile.plugin.reg.TargetRegistry;
 
 import javax.annotation.processing.SupportedAnnotationTypes;
 import java.io.File;

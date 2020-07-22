@@ -7,7 +7,6 @@
 package org.crossmobile.plugin.objc;
 
 import org.crossmobile.plugin.model.NSelector;
-import org.crossmobile.plugin.reg.PluginRegistry;
 import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.utils.FileUtils;
 

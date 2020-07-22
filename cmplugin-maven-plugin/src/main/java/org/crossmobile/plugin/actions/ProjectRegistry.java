@@ -7,10 +7,7 @@
 package org.crossmobile.plugin.actions;
 
 import org.crossmobile.build.utils.DependencyJarResolver;
-import org.crossmobile.plugin.reg.PackageRegistry;
-import org.crossmobile.plugin.reg.PluginRegistry;
 import org.crossmobile.plugin.reg.Registry;
-import org.crossmobile.plugin.reg.TypeRegistry;
 import org.crossmobile.plugin.utils.ClassCollection;
 import org.crossmobile.utils.plugin.DependencyItem;
 
