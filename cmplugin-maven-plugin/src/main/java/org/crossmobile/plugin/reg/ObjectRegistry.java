@@ -6,6 +6,7 @@
 
 package org.crossmobile.plugin.reg;
 
+import org.crossmobile.bridge.system.LazyProperty;
 import org.crossmobile.plugin.model.NObject;
 import org.crossmobile.utils.ReflectionUtils;
 
@@ -20,9 +21,9 @@ public class ObjectRegistry {
     public static final String UIAppearanceClassName = "crossmobile.ios.uikit.UIAppearance";
     private final Registry reg;
 
-    private Class<?> NSObjectClass;
-    private Class<?> UIAppearanceClass;
-    private Class<?> CFTypeClass;
+    private final LazyProperty<Class<?>> NSObjectClass = new LazyProperty<>(() -> ReflectionUtils.getClassForName(NSObjectClassName));
+    private final LazyProperty<Class<?>> CFTypeClass = new LazyProperty<>(() -> ReflectionUtils.getClassForName(CFTypeClassName));
+    private final LazyProperty<Class<?>> UIAppearanceClass = new LazyProperty<>(() -> ReflectionUtils.getClassForName(UIAppearanceClassName));
 
     private final Map<Class<?>, NObject> objects = new TreeMap<>(Comparator.comparing(Class::getName));
 
@@ -39,11 +40,11 @@ public class ObjectRegistry {
     }
 
     public Class<?> getNSObject() {
-        return NSObjectClass = getClassNamed(NSObjectClass, NSObjectClassName);
+        return NSObjectClass.get();
     }
 
     public Class<?> getCFType() {
-        return CFTypeClass = getClassNamed(CFTypeClass, CFTypeClassName);
+        return CFTypeClass.get();
     }
 
     ObjectRegistry(Registry reg) {
@@ -51,7 +52,7 @@ public class ObjectRegistry {
     }
 
     public boolean isUIAppearanceClass(Class<?> classToCheck) {
-        return (UIAppearanceClass = getClassNamed(UIAppearanceClass, UIAppearanceClassName)).isAssignableFrom(classToCheck);
+        return UIAppearanceClass.get().isAssignableFrom(classToCheck);
     }
 
     public boolean contains(String className) {
@@ -59,11 +60,5 @@ public class ObjectRegistry {
             if (aClass.getName().equals(className))
                 return true;
         return false;
-    }
-
-    private Class<?> getClassNamed(Class<?> cached, String className) {
-        if (cached == null && (cached = ReflectionUtils.getClassForName(className)) == null)
-            throw new RuntimeException("Unable to locate class " + className + " in classpath");
-        return cached;
     }
 }

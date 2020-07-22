@@ -16,13 +16,11 @@ import org.crossmobile.plugin.utils.ClassCollection;
 import org.crossmobile.utils.FileUtils;
 import org.crossmobile.utils.Log;
 import org.crossmobile.utils.ReflectionUtils;
+import org.crossmobile.utils.plugin.DependencyItem;
 import org.robovm.objc.block.VoidBlock1;
 
 import java.io.File;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
-import java.util.TreeSet;
+import java.util.*;
 
 import static java.io.File.separator;
 import static java.util.Arrays.asList;
@@ -57,16 +55,25 @@ public class SourceMojo extends GenericPluginMojo {
             ClassPool cp = ClassPool.getDefault();
             Collection<Class<?>> appearanceClasses = new TreeSet<>(classComparator);
 
-            List<String> classPath = asList(classes.getAbsolutePath(), VoidBlock1.class.getProtectionDomain().getCodeSource().getLocation().getFile());
+            // Create classpath
+            List<String> classPath = new ArrayList<>();
+            classPath.add(classes.getAbsolutePath());
+            for (DependencyItem dep : getRootDependency(false).getCompiletimeDependencies(true))
+                classPath.add(dep.getFile().getAbsolutePath());
             ClassCollection.addClassPaths(cp, classPath);
-            ClassCollection.gatherClasses(classPath, null, e -> {
+
+            // Find classes needed to attach appearance methods
+            ClassCollection.gatherClasses(Collections.singletonList(classes.getAbsolutePath()), null, e -> {
                 if (!e.isInterface() && reg.objects().isUIAppearanceClass(e))
                     appearanceClasses.add(e);
-            }, true);
-            AppearanceInjections injections = new AppearanceInjections(cp, classes.getAbsolutePath());
-            injections.cleanup(classes);
-            for (Class<?> cls : appearanceClasses)
-                injections.makeAppearance(cls);
+            }, false);
+
+            if (!appearanceClasses.isEmpty()) {
+                AppearanceInjections injections = new AppearanceInjections(cp, classes.getAbsolutePath());
+                injections.cleanup(classes);
+                for (Class<?> cls : appearanceClasses)
+                    injections.makeAppearance(cls);
+            }
             FileUtils.write(status, "");
         });
 

@@ -37,7 +37,7 @@ public class DependencyJarResolver {
                 if (embedlib != null && !embedlib.trim().isEmpty())
                     try {
                         patterns.add(Pattern.compile(embedlib));
-                    } catch (Exception ex) {
+                    } catch (Exception ignored) {
                     }
         Collection<DependencyItem> embeditems = CollectionUtils.asCollection(TreeSet.class, asRuntime ? root.getRuntimeDependencies(true) : root.getCompiletimeDependencies(true));
         Collection<DependencyItem> libitems = new TreeSet<>();
