@@ -85,7 +85,7 @@ public abstract class CrossMobileMojo extends GenericMojo {
     /* Implies Dependencies as parameter */
     private ParamSet getParamSet(DependencyItem root) {
         Map<String, Collection<DependencyParam>> possibleParams = new HashMap<>();
-        for (Dependency dep : PluginRegistry.getSystemPlugins())
+        for (Dependency dep : PluginRegistry.getPlugins())
             possibleParams.put(dep.groupId + "." + dep.artifactId, dep.getConfigParams());
         ParamSet p = new ParamSet();
         for (DependencyItem item : root.getCompiletimeDependencies(true))
