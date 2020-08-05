@@ -85,11 +85,11 @@ public abstract class RealElement extends Element {
     }
 
     protected void appendEnumAttribute(StringBuilder out, String attribute, String enumClass) {
-        append(out, "set" + capitalize(attribute), attr(attribute) == null ? null :enumClass + "." + attr(attribute));
+        append(out, "set" + capitalize(attribute), attr(attribute) == null ? null : enumClass + "." + attr(attribute));
     }
 
     protected void appendEnumAttributeTo(StringBuilder out, String to, String attribute, String enumClass) {
-        appendTo(out, to, "set" + capitalize(attribute),  attr(attribute) == null ? null :enumClass + "." + attr(attribute));
+        appendTo(out, to, "set" + capitalize(attribute), attr(attribute) == null ? null : enumClass + "." + attr(attribute));
     }
 
     protected void appendAttribute(StringBuilder out, String attribute) {
@@ -134,6 +134,11 @@ public abstract class RealElement extends Element {
 
     protected void appendListAttributeTo(StringBuilder out, String to, String baseClass, String attribute) {
         appendTo(out, to, "set" + capitalize(attribute), baseClass + "." + capitalize(attrName(attribute)));
+    }
+
+    protected void append(StringBuilder out, String methodname) {
+        // like append, but without data
+        out.append(I4).append(variable()).append(".").append(methodname).append("();").append(NEWLINE);
     }
 
     protected void append(StringBuilder out, String methodname, String data) {
