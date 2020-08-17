@@ -59,7 +59,7 @@ public class PluginsLauncher {
             String classname = info.getJavaInitializer();
             if (classname != null && !classname.isEmpty()) {
                 result.append("        try {\n"
-                        + "            Class pluginClass = Class.forName(\"" + classname + "\");\n"
+                        + "            Class<?> pluginClass = Class.forName(\"" + classname + "\");\n"
                         + "            pluginClass.getMethod(\"" + methodName + "\""
                         + (argType == null ? "" : ", " + argType + ".class") + ").invoke(pluginClass.newInstance()"
                         + (argType == null ? "" : ", context") + ");\n"
