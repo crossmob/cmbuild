@@ -17,6 +17,9 @@ import org.crossmobile.utils.XMLWalker;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.crossmobile.build.AnnotationConfig.GENERATED_EXT;
 import static org.crossmobile.utils.FileUtils.Predicates.extensions;
@@ -27,11 +30,27 @@ import static org.crossmobile.utils.TextUtils.plural;
 
 public class IBObjectsCreator {
 
-    public static XIBList parse(File materials, File ann) {
+    public static Collection<File> getXibFiles(File materials, File ibobjects) {
+        LinkedList<File> result = new LinkedList<>();
+        long genDate = ibobjects != null && ibobjects.isFile() ? ibobjects.lastModified() : 0;
+        AtomicBoolean needsUpdate = new AtomicBoolean(false);
+        forAllFiles(materials, noHidden().and(extensions(".xib", ".storyboard")), (path, srcfile) -> {
+            result.add(srcfile);   // the creation of the ibobjects file is all or nothing. This file might be older, but next might be newer. So we need to keep track of all files in case the ibobjects file needs to be created.
+            if (srcfile.lastModified() >= genDate)
+                needsUpdate.set(true);
+        });
+        if (result.isEmpty())
+            Log.debug("No XIB/StoryBoard files found");
+        else if (!needsUpdate.get())
+            Log.debug("No changes required for XIB/StoryBoard files");
+        return needsUpdate.get() ? result : null;
+    }
+
+    public static XIBList parse(File materials, Collection<File> xibs, File ann) {
         ann.mkdirs();
         forAllFiles(ann, f -> f.getName().equals(GENERATED_EXT), (path, file) -> file.delete());
         XIBList root = new XIBList(new IBParserMeta(ann));
-        forAllFiles(materials, noHidden().and(extensions(".xib", ".storyboard")), (path, file) -> {
+        xibs.forEach(file -> {
             root.getMeta().beginFile(file, materials);
             XMLWalker walker = XMLWalker.load(file).node("document");
             String type = walker.attribute("type").toLowerCase();

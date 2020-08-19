@@ -20,6 +20,7 @@ import org.crossmobile.utils.plugin.DependencyItem;
 
 import java.io.File;
 import java.lang.management.ManagementFactory;
+import java.util.Collection;
 
 import static org.crossmobile.backend.desktop.DesktopLocations.FONT_LIST;
 import static org.crossmobile.bridge.system.RuntimeCommons.CROSSMOBILE_PROPERTIES;
@@ -64,9 +65,13 @@ public class ResourcesPipeline implements Runnable {
         File info = new File(app, "Info.plist");
         File cacheBase = new File(env.getBuilddir(), PROJECT_CACHES);
 
-        XIBList xibList = IBObjectsCreator.parse(env.getMaterialsDir(), ann);
-        MaterialsManager.parseMaterials(xibList.getMeta(), env.getMaterialsDir(), new File(env.getBuilddir(), APP));
-        IBObjectsCreator.createJavaSource(xibList, new File(generated, IBOBJECTS), new File(cacheBase, IBOBJECTS));
+        File ibobjects = new File(generated, IBOBJECTS);
+        Collection<File> xibs = IBObjectsCreator.getXibFiles(env.getMaterialsDir(), ibobjects);
+        if (xibs != null) {
+            XIBList xibList = IBObjectsCreator.parse(env.getMaterialsDir(), xibs, ann);
+            MaterialsManager.parseMaterials(xibList.getMeta(), env.getMaterialsDir(), new File(env.getBuilddir(), APP));
+            IBObjectsCreator.createJavaSource(xibList, ibobjects, new File(cacheBase, IBOBJECTS));
+        }
 
         IconBuilder.copyIcons(IconBuilder.getDefaultHound(env.getBasedir()), new File(env.getBuilddir(), SYS), IconType.DESKTOP);
         new PropertiesCreator(env.getProperties(),
@@ -92,9 +97,13 @@ public class ResourcesPipeline implements Runnable {
                 env.root());
         AndroidProjectCreator.execute(env);
 
-        XIBList xibList = IBObjectsCreator.parse(env.getMaterialsDir(), ann);
-        MaterialsManager.parseMaterials(xibList.getMeta(), env.getMaterialsDir(), andrAsset);
-        IBObjectsCreator.createJavaSource(xibList, new File(generated, IBOBJECTS), new File(cacheBase, IBOBJECTS));
+        File ibobjects = new File(generated, IBOBJECTS);
+        Collection<File> xibs = IBObjectsCreator.getXibFiles(env.getMaterialsDir(), ibobjects);
+        if (xibs != null) {
+            XIBList xibList = IBObjectsCreator.parse(env.getMaterialsDir(), xibs, ann);
+            MaterialsManager.parseMaterials(xibList.getMeta(), env.getMaterialsDir(), andrAsset);
+            IBObjectsCreator.createJavaSource(xibList, ibobjects, new File(cacheBase, IBOBJECTS));
+        }
 
         MaterialsManager.copyAndroidSys(asList(env.root().getRuntimeDependencies(true), DependencyItem::getFile), andrAsset, andrRes);
 

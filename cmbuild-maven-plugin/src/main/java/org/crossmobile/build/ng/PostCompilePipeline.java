@@ -27,6 +27,7 @@ import static java.io.File.separator;
 import static org.crossmobile.bridge.system.BaseUtils.listFiles;
 import static org.crossmobile.build.AnnotationConfig.ANN_LOCATION;
 import static org.crossmobile.build.ng.CMBuildEnvironment.environment;
+import static org.crossmobile.build.tools.IBObjectsCreator.getXibFiles;
 import static org.crossmobile.build.tools.InfoPListCreator.getPlist;
 import static org.crossmobile.build.tools.ObjCPostProcess.updateObjCFiles;
 import static org.crossmobile.build.tools.SynchronizeFiles.syncChangedObjCFiles;
@@ -95,8 +96,11 @@ public class PostCompilePipeline implements Runnable {
         Map<String, File> xmfontsValue = FontExtractor.findFonts(env.getMaterialsDir());
 
         // Parse IB to check for errors & update localizations
-        XIBList xibList = IBObjectsCreator.parse(env.getMaterialsDir(), ann);
-        MaterialsManager.parseMaterials(xibList.getMeta(), env.getMaterialsDir(), null);
+        Collection<File> xibs = getXibFiles(env.getMaterialsDir(), null);
+        if (xibs != null) {
+            XIBList xibList = IBObjectsCreator.parse(env.getMaterialsDir(), xibs, ann);
+            MaterialsManager.parseMaterials(xibList.getMeta(), env.getMaterialsDir(), null);
+        }
 
         // Create Info.plist files
         new InfoPListCreator(env.getProperties(),
@@ -177,8 +181,11 @@ public class PostCompilePipeline implements Runnable {
         Map<String, File> xmfontsValue = FontExtractor.findFonts(env.getMaterialsDir());
 
         // Parse IB to check for errors & update localizations
-        XIBList xibList = IBObjectsCreator.parse(env.getMaterialsDir(), ann);
-        MaterialsManager.parseMaterials(xibList.getMeta(), env.getMaterialsDir(), null);
+        Collection<File> xibs = getXibFiles(env.getMaterialsDir(), null);
+        if (xibs != null) {
+            XIBList xibList = IBObjectsCreator.parse(env.getMaterialsDir(), xibs, ann);
+            MaterialsManager.parseMaterials(xibList.getMeta(), env.getMaterialsDir(), null);
+        }
 
         // Create Info.plist files
         new InfoPListCreator(env.getProperties(),
