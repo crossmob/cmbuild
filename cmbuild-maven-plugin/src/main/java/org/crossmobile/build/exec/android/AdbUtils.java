@@ -123,6 +123,7 @@ public class AdbUtils {
     }
 
     public void installApk(String fileLocation) {
+        Log.info("Installing " + new File(fileLocation).getName());
         exec(adb, "-s", device, "install", "-r", fileLocation);
     }
 

@@ -66,7 +66,7 @@ public class AndroidTargetSelector extends JDialog implements AListener {
             synchronized (this) {
                 if (device != null)
                     Preferences.userNodeForPackage(AndroidTargetSelector.class).put(LAST_DEVICE, device);
-                setVisible(false);
+                SwingUtilities.invokeLater(() -> setVisible(false));
                 callback.accept(device);
                 callback = null;
                 notifyAll();
