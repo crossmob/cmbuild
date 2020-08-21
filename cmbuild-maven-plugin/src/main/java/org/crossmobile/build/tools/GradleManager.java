@@ -37,15 +37,15 @@ public class GradleManager {
                     FileUtils.move(gradle, new File(gradle.getParentFile(), "build.v1.old.gradle"), null);
             }
 
-            ParamList list = new ParamList();
             StringBuilder deps = new StringBuilder();
             StringBuilder groot = new StringBuilder();
             for (PluginMetaData info : env.root().getPluginMetaData()) {
                 deps.append(info.getAndroidInjections().getGradleBuildDep());
                 groot.append(info.getAndroidInjections().getGradleExt());
             }
-            list.put(ParamsCommon.ANDROID_GRADLE_DEPS.tag(), deps.toString());
-            list.put(ParamsCommon.ANDROID_GRADLE_ROOT.tag(), groot.toString());
+            ParamList list = new ParamList().
+                    put(ParamsCommon.ANDROID_GRADLE_DEPS.tag(), deps.toString()).
+                    put(ParamsCommon.ANDROID_GRADLE_ROOT.tag(), groot.toString());
             copyTemplateIfMissing(GRADLE, gradle, "Creating missing build.gradle file", list);
         } catch (Exception ex) {
             BaseUtils.throwException(ex);

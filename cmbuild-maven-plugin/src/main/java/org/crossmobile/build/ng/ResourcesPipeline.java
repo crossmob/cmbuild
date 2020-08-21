@@ -129,9 +129,11 @@ public class ResourcesPipeline implements Runnable {
     private void resourcesIOS() {
         try {
             delete(new File(environment().getBuilddir(), "classes")); // Needed by retrolambda to work properly
+            ParamList paramList = new ParamList().
+                    put(IPHONEOS_DEPLOYMENT_TARGET.tag(), environment().getProperties().getProperty(IPHONEOS_DEPLOYMENT_TARGET.tag().name));
             copyTemplateIfMissing("project.pbxproj",
                     new File(environment().getBasedir(), environment().getProperties().getProperty(ARTIFACT_ID.tag().name) + ".xcodeproj" + File.separator + "project.pbxproj"),
-                    "Creating missing Xcode project file", new ParamList());
+                    "Creating missing Xcode project file", paramList);
         } catch (Throwable ex) {
             BaseUtils.throwException(ex);
         }
