@@ -41,14 +41,6 @@ public class InfoPlist {
         text = text.replace("PROPERTY_BUNDLEDISPLAYNAME", name);
     }
 
-    public void setStatusBarHidden(String statusbarhidden) {
-        text = text.replace("PROPERTY_STATUSBARHIDDEN", toBoolean(statusbarhidden));
-    }
-
-    public void setViewControlledStatusBar(String viewcontrolledstatusbar) {
-        text = text.replace("PROPERTY_VIEWCONTROLLED_STATUSBAR", toBoolean(viewcontrolledstatusbar));
-    }
-
     public void setFileSharing(String filesharingenabled) {
         text = text.replace("PROPERTY_FILESHARINGENABLED", toBoolean(filesharingenabled));
     }

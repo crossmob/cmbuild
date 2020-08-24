@@ -40,8 +40,6 @@ public class InfoPListCreator extends GenericPropertiesCreator {
         info.setIdentifier(prop(GROUP_ID.tag().name) + "." + prop(ARTIFACT_ID.tag().name));
         info.setVersion(prop(BUNDLE_VERSION.tag().name));
         info.setDisplayName(prop(DISPLAY_NAME.tag().name));
-        info.setStatusBarHidden(prop(STATUSBARHIDDEN.tag().name));
-        info.setViewControlledStatusBar(prop(VIEWCONTROLLED_STATUSBAR.tag().name));
         info.setFileSharing(prop(FILESHARINGENABLED.tag().name));
         info.setDefaultOrientation(prop(ORIENTATIONS_INITIAL.tag().name));
         info.setSupportedOrientations(prop(ORIENTATIONS_SUPPORTED.tag().name));
