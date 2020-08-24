@@ -106,7 +106,7 @@ public class CreateBeanAPI {
                         " in class " + s.getName() + ", but this method already exists" +
                         (found.getDeclaringClass().equals(s) ? "" : " in class " + found.getDeclaringClass().getName())));
         } catch (NotFoundException ignore) {
-            // Throwing an exception is the expected behaviour. If not, *then* it is an error.
+            // Throwing an exception is the expected behavior. If not, *then* it is an error.
         }
 
         Log.debug(s.getName() + "." + currentName + "() => " + beanName + "()");
