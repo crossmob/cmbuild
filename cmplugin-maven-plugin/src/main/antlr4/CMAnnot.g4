@@ -40,6 +40,7 @@ propertydef
     : 'atomic'
     | 'nonatomic'
     | 'readwrite'
+    | 'nullable'
     | clazz='class'
     | strong='retain'
     | strong='strong'
