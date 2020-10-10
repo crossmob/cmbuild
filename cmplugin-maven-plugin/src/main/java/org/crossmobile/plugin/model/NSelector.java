@@ -78,6 +78,8 @@ public class NSelector extends NParsable implements Comparable<NSelector> {
     public void addParam(NParam param) {
         if (param.getNType().getType().equals(void.class))
             return;
+        if (param.getVarname().isEmpty())
+            param.setVarname("_unnamed_parameter_" + params.size());
         params.add(param);
         param.setContainer(this);
     }
@@ -101,7 +103,7 @@ public class NSelector extends NParsable implements Comparable<NSelector> {
         return deps;
     }
 
-    private void addType(Set<String> deps, Class javaType, Class nativeType, boolean forceBoxed) {
+    private void addType(Set<String> deps, Class<?> javaType, Class<?> nativeType, boolean forceBoxed) {
         if (javaType.equals(void.class))
             return;
         if (forceBoxed)
@@ -110,7 +112,7 @@ public class NSelector extends NParsable implements Comparable<NSelector> {
             deps.add(toObjC(javaType));
     }
 
-    public void setJavaExecutable(Executable javaMethod, Class javaReturn) {
+    public void setJavaExecutable(Executable javaMethod, Class<?> javaReturn) {
         this.java = javaMethod;
         this.javaReturn = javaReturn;
     }

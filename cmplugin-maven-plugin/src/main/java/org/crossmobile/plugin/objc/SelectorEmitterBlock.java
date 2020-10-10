@@ -21,7 +21,7 @@ public class SelectorEmitterBlock extends SelectorEmitterReverse {
     }
 
     @Override
-    protected void emitDefinition(Streamer out) throws IOException {
+    protected void emitDefinition(Streamer out) {
         forEach(selector.getParams()).onHead(p -> out.append("(")).
                 onTail(p -> out.append(", ")).
                 onAny(p -> out.append(p.getNType().getNativeType()).append(" ").append(p.getVarname())).
