@@ -54,7 +54,7 @@ public class ObjCPostProcess {
                         ReverseMethod data = methodData.a;
                         CtClass baseClass = methodData.b;
                         mAppend.append(data.getReverse());
-                        data.getReverseImports().forEach(i -> mIncludes.append("#import").append(i));
+                        data.getReverseImports().forEach(i -> mIncludes.append("#import \"").append(i).append(".h\"\n"));
 
                         if (!baseClass.isInterface()) {
                             superImports.add(toObjC(baseClass.getName()));
