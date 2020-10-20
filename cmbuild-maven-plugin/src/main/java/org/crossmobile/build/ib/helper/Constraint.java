@@ -46,7 +46,7 @@ public class Constraint extends Element {
                 .append(", NSLayoutRelation.").append(relation)
                 .append(", ").append(secondItem)
                 .append(", NSLayoutAttribute.").append(secondAttribute)
-                .append(", ").append(multiplier)
+                .append(", ").append(multiplier.contains(":") ? multiplier.replace(":", "f/") : multiplier)
                 .append("f, ").append(constant).append("f)");
         if (priority != null) {
             out.append(";").append(NEWLINE);
