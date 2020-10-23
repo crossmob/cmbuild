@@ -21,7 +21,7 @@ public class TableView extends ScrollView {
         super.addSupported();
 
         addSupportedAttribute("style", new Value.Selections(new String[]{"plain", "grouped"}));
-        addSupportedAttribute("separatorStyle", new Value.Selections(new String[]{"default", "none", "singleLine", "singleLineEtched"}));
+        addSupportedAttribute("separatorStyle", new Value.Selections(new String[]{"none", "singleLine", "singleLineEtched"}));
         addSupportedChild("separatorColor", Elements.Color);
         addSupportedAttribute("minX", Values.Integer);
         addSupportedAttribute("minY", Values.Integer);
@@ -72,6 +72,7 @@ public class TableView extends ScrollView {
         out.append(super.toCode());
         appendAttribute(out, "rowHeight");
         appendAttribute(out, "allowsSelection");
+        appendAttribute(out, "separatorStyle");
         return out.toString();
     }
 
