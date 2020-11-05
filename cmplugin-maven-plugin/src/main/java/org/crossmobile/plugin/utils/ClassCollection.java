@@ -10,7 +10,6 @@ import javassist.ClassPool;
 import javassist.NotFoundException;
 import org.crossmobile.bridge.ann.CMLibTarget;
 import org.crossmobile.plugin.reg.Registry;
-import org.crossmobile.plugin.reg.TargetRegistry;
 import org.crossmobile.utils.Log;
 
 import java.io.File;

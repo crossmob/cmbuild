@@ -34,11 +34,11 @@ public class FontExtractor {
             try {
                 Font font = Font.createFont(Font.TRUETYPE_FONT, fonts.get(fontfile));
                 String family = font.getFamily();
-                String fontname = font.getFontName();
+                String psname = font.getPSName();
                 boolean bold = font.isBold();
                 boolean italic = font.isItalic();
                 Map<String, FontInfo> familygroup = fontlist.computeIfAbsent(family, k -> new LinkedHashMap<>());
-                FontInfo obsolete = familygroup.get(fontname);
+                FontInfo obsolete = familygroup.get(psname);
                 FontInfo current = new FontInfo(fontfile, bold, italic);
                 if (obsolete != null) {
                     // Keep font closer to root, swap if older is better
@@ -48,10 +48,10 @@ public class FontExtractor {
                         obsolete = swap;
                     }
                     Log.warning("Font located at " + obsolete.location
-                            + (current.bold == obsolete.bold && current.italic == obsolete.italic ? "" : " with diferent weights")
+                            + (current.bold == obsolete.bold && current.italic == obsolete.italic ? "" : " with different weights")
                             + " has been already registered at " + current.location + ". Ignoring.");
                 }
-                familygroup.put(fontname, current);
+                familygroup.put(psname, current);
             } catch (Exception ex) {
                 Log.error("Unable to parse font file " + fonts.get(fontfile), ex);
             }
@@ -60,11 +60,11 @@ public class FontExtractor {
         out.append("<fontlist>\n");
         for (String family : fontlist.keySet()) {
             Map<String, FontInfo> familygroup = fontlist.get(family);
-            for (String fontname : familygroup.keySet()) {
-                FontInfo info = familygroup.get(fontname);
+            for (String psname : familygroup.keySet()) {
+                FontInfo info = familygroup.get(psname);
                 out.append("  <font file=\"").append(safeXML(info.location)).
                         append("\" family=\"").append(safeXML(family)).
-                        append("\" name=\"").append(safeXML(fontname)).
+                        append("\" psname=\"").append(safeXML(psname)).
                         append("\" bold=\"").append(info.bold ? "true" : "false").
                         append("\" italic=\"").append(info.italic ? "true" : "false").
                         append("\"/>\n");
