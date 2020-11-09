@@ -8,6 +8,7 @@ package org.crossmobile.build.ib.helper;
 
 import org.crossmobile.build.ib.Element;
 import org.crossmobile.build.ib.Values;
+import org.crossmobile.utils.Log;
 
 public class Color extends Element {
 
@@ -22,6 +23,7 @@ public class Color extends Element {
         addSupportedAttribute("cocoaTouchSystemColor", Values.Method);
         addSupportedAttribute("colorSpace", Values.String);
         addSupportedAttribute("customColorSpace", Values.String);
+        addSupportedAttribute("systemColor", Values.String);
     }
 
     @Override
@@ -33,6 +35,9 @@ public class Color extends Element {
             return "UIColor.colorWithRedGreenBlueAlpha(" + value + ", " + attr("green") + ", " + attr("blue") + ", " + attr("alpha") + ")";
         if ((value = attr("cocoaTouchSystemColor")) != null)
             return "UIColor." + value;
-        return "UIColor.white()";   // failsafe
+        if ((value = attrName("systemColor")) != null)
+            return "Resources.getColor" + capitalize(value) + "()";
+        Log.error("Unable to create color with attributes white/red/cocoaTouchSystemColor/systemColor; defaulting to white");
+        return "UIColor.whiteColor()";   // failsafe
     }
 }

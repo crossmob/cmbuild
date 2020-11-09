@@ -7,11 +7,13 @@
 package org.crossmobile.build.ib.helper;
 
 
+import org.crossmobile.build.ib.Elements;
+
 public class XibClassEnd extends Objects {
 
     @Override
     protected void addSupported() {
-
+        addSupportedChild(Elements.Resources);
     }
 
     @Override
@@ -27,6 +29,11 @@ public class XibClassEnd extends Objects {
         out.append(I3).append("}").append(NEWLINE);
         out.append(I3).append("return null;").append(NEWLINE);
         out.append(I2).append("}").append(NEWLINE);
+        out.append(NEWLINE);
+
+        for (Resources item : parts(Elements.Resources))
+            out.append(item.toCode());
+
         out.append(I1).append("}").append(NEWLINE);
         VCIDENT.clear();
         return out.toString();

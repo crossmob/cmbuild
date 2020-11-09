@@ -104,12 +104,15 @@ public final class Elements {
     public static final Window Window = dec("Window", new Window());
     public static final XibClassEnd XibClassEnd = dec("XibClassEnd", new XibClassEnd());
     public static final XibClassStart XibClassStart = dec("XibClassStart", new XibClassStart());
+    public static final Resources Resources = dec("Resources", new Resources());
+    public static final Image Image = dec("Image", new Image());
+    public static final SystemColor SystemColor = dec("SystemColor", new SystemColor());
     public static final XIBList XIBList = dec("XIBList", new XIBList(null));
 
-    private static final Set<String> ignoreList = new HashSet<>(Arrays.asList("point", "resources", "dependencies", "simulatedStatusBarMetrics", "simulatedNavigationBarMetrics", "simulatedToolbarMetrics", "simulatedOrientationMetrics", "simulatedScreenMetrics", "device"));
+    private static final Set<String> ignoreList = new HashSet<>(Arrays.asList("point", "dependencies", "simulatedStatusBarMetrics", "simulatedNavigationBarMetrics", "simulatedToolbarMetrics", "simulatedOrientationMetrics", "simulatedScreenMetrics", "device"));
 
     static {
-        Class elementClass = Element.class;
+        Class<?> elementClass = Element.class;
         for (Field f : Elements.class.getDeclaredFields())
             if (elementClass.isAssignableFrom(f.getType()))
                 try {

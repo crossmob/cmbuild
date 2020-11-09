@@ -12,6 +12,7 @@ import org.crossmobile.build.ib.helper.Action;
 import org.crossmobile.build.ib.helper.Connections;
 import org.crossmobile.build.ib.helper.RealElement;
 import org.crossmobile.build.ib.helper.Segue;
+import org.crossmobile.utils.Log;
 
 public class BarButtonItem extends RealElement {
 
@@ -23,6 +24,7 @@ public class BarButtonItem extends RealElement {
         addSupportedAttribute("key", Values.String);
         addSupportedAttribute("style", Values.Enum);
         addSupportedAttribute("systemItem", Values.Enum);
+        addSupportedAttribute("catalog", Values.String);
     }
 
     public String variable() {
@@ -34,7 +36,16 @@ public class BarButtonItem extends RealElement {
         StringBuilder out = new StringBuilder();
 
         if (attr("image") != null) {
-            out.append("new ").append(getClassName()).append("(UIImage.imageNamed(").append(attr("image")).append("), UIBarButtonItemStyle.").append(attr("style", "plain")).append(", ()->{").append(NEWLINE);
+            String catalog = attrName("catalog");
+            String image;
+            if (catalog != null) {
+                Log.warning("Catalog images for Bar Button Items not supported yet");
+                image = "\"IMG\"";
+            } else {
+                image = "UIImage.imageNamed(" + attr("image") + ")";
+            }
+
+            out.append("new ").append(getClassName()).append("(").append(image).append(", UIBarButtonItemStyle.").append(attr("style", "plain")).append(", ()->{").append(NEWLINE);
             for (Connections c : parts(Elements.Connections)) {
                 for (Action o : c.parts(Elements.Action))
                     appendLambda(out, o.getAction(variable()));
@@ -60,11 +71,12 @@ public class BarButtonItem extends RealElement {
                     appendLambda(out, o.getSegway(variable()));
             }
             out.append(I4).append("})");
-        }
+        } else
+            Log.warning("Unknown Bar Button Item type");
         return out.toString();
     }
 
-    private void appendLambda(StringBuilder out, String value){
+    private void appendLambda(StringBuilder out, String value) {
         out.append(I5).append(value).append(";").append(NEWLINE);
     }
 

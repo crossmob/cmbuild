@@ -35,6 +35,6 @@ public class NavigationController extends ViewController {
         for (Connections c : parts(Elements.Connections))
             for (Segue s : c.parts(Elements.Segue))
                 destination = (s.getKind().equals("relationship") && s.getRelation().equals("rootViewController")) ? s.getDestination() : destination;
-        return destination.isEmpty() ? "" : "super(new " + variableFromID(destination) + "());" + NEWLINE;
+        return destination.isEmpty() ? "" : I4 + "super(new " + variableFromID(destination) + "());" + NEWLINE;
     }
 }

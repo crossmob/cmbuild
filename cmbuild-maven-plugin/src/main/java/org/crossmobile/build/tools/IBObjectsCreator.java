@@ -59,9 +59,10 @@ public class IBObjectsCreator {
 
                 classStart.setFilename(toFilename(materials, file));
                 classStart.setInitialViewController(walker.attribute("initialViewController"));
-                walker.node("scenes").nodes(node -> construct(root, node));
+                walker.tag().node("scenes").nodes(node -> construct(root, node)).toTag();
 
-                root.addChild("xibclassend", null, root.getMeta());
+                Element classEnd = root.addChild("xibclassend", null, root.getMeta());
+                walker.execIf(w -> w.nodeExists("resources"), w -> resources(classEnd, w.node("resources")));
             } else if (type.endsWith(".cocoatouch.xib"))
                 walker.nodes(node -> construct(root, node));
             root.getMeta().endFile();
@@ -76,6 +77,19 @@ public class IBObjectsCreator {
                 node.attributes(child::setAttribute);
                 child.performChecks();
                 child.applyLocalizations(parent);
+                construct(child, node);
+            }
+        });
+    }
+
+    private static void resources(Element parent, XMLWalker walker) {
+        Element resources = parent.addChild(walker.name(), null, parent.getMeta());
+        walker.nodes(node -> {
+            Element child = resources.addChild(node.name(), null, parent.getMeta());
+            if (child != null) {
+                node.attributes(child::setAttribute);
+                child.performChecks();
+                child.applyLocalizations(resources);
                 construct(child, node);
             }
         });

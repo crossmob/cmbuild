@@ -19,13 +19,13 @@ import static org.crossmobile.build.ib.i18n.TranslationElement.toKey;
 
 public abstract class Element {
 
-    protected static final String I1 = "  ";
-    protected static final String I2 = "    ";
-    protected static final String I3 = "      ";
-    protected static final String I4 = "        ";
-    protected static final String I5 = "          ";
-    protected static final String I6 = "            ";
-    protected static final String I7 = "              ";
+    protected static final String I1 = "    ";
+    protected static final String I2 = "        ";
+    protected static final String I3 = "            ";
+    protected static final String I4 = "                ";
+    protected static final String I5 = "                    ";
+    protected static final String I6 = "                        ";
+    protected static final String I7 = "                            ";
     protected static final String NEWLINE = "\n";
 
     private final Map<String, Value> supportedAttributes = new HashMap<>();
@@ -146,7 +146,7 @@ public abstract class Element {
 
     public <T extends Element> Collection<T> parts(T filter) {
         Collection<T> result = new ArrayList<>();
-        Class filterClass = filter == null ? null : filter.getClass();
+        Class<?> filterClass = filter == null ? null : filter.getClass();
         for (Element el : unnamed)
             if (filterClass == null || filterClass.isAssignableFrom(el.getClass()))
                 result.add((T) el);
@@ -155,7 +155,7 @@ public abstract class Element {
 
     public <T extends Element> Collection<T> namedParts(T filter) {
         Collection<T> result = new ArrayList<>();
-        Class filterClass = filter == null ? null : filter.getClass();
+        Class<?> filterClass = filter == null ? null : filter.getClass();
         for (Element el : named.values())
             if (filterClass == null || filterClass.isAssignableFrom(el.getClass()))
                 result.add((T) el);

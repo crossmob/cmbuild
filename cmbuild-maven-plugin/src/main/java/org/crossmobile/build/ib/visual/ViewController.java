@@ -6,6 +6,7 @@
 
 package org.crossmobile.build.ib.visual;
 
+import org.crossmobile.build.ib.Element;
 import org.crossmobile.build.ib.Elements;
 import org.crossmobile.build.ib.Values;
 import org.crossmobile.build.ib.helper.LayoutGuides;
@@ -20,9 +21,11 @@ public class ViewController extends RealElement {
         addSupportedAttribute("storyboardIdentifier", Values.String);
         addSupportedAttribute("sceneMemberID", Values.String);
         addSupportedAttribute("restorationIdentifier", Values.String);
+        addSupportedAttribute("automaticallyAdjustsScrollViewInsets", Values.Boolean);
         addSupportedChild("view", Elements.View);
         addSupportedAttribute("title", Values.LocalizedString);
         addSupportedChild("navigationItem", Elements.NavigationItem);
+        addSupportedChild("tabBarItem", Elements.TabBarItem);
         addSupportedChild(Elements.LayoutGuides);
 
     }
@@ -42,9 +45,13 @@ public class ViewController extends RealElement {
     public String toCode() {
         Objects.addVC(attrName("storyboardIdentifier"), variable());
         StringBuilder out = new StringBuilder(toCodeBare());
-        NavigationItem navItem;
-        if ((navItem = (NavigationItem) item("navigationItem")) != null)
+        Element navItem;
+        if ((navItem = item("navigationItem")) != null)
             out.append(navItem.toCode());
+        Element tabItem;
+        if ((tabItem = item("tabBarItem")) != null)
+            out.append(tabItem.toCode());
+        appendAttributeCall(out, "tabBarItem");
         appendAttributeCall(out, "title");
         appendAttributeCall(out, "restorationIdentifier");
         out.append(I4).append("org.crossmobile.build.StoryBoardBinder.bindStoryboardWithViewController(").append(variable()).append(".this, ").append("get_Storyboard());").append(NEWLINE);
@@ -60,7 +67,7 @@ public class ViewController extends RealElement {
         out.append(I4).append("return this;").append(NEWLINE);
         out.append(I3).append("}").append(NEWLINE).append(I3);
         constructorOverrides(out);
-        out.append(I3).append(super.publicConstructor());
+        out.append(super.publicConstructor());
         return out.toString();
     }
 
