@@ -39,6 +39,11 @@
             <artifactId>jtar</artifactId>
             <version>2.3</version>
         </dependency>
+        <dependency>
+            <groupId>com.panayotis</groupId>
+            <artifactId>appenh</artifactId>
+            <version>${version.appenh}</version>
+        </dependency>
     </dependencies>
 
     <build>
