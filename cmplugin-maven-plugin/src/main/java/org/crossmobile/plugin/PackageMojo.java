@@ -27,7 +27,6 @@ public class PackageMojo extends GenericPluginMojo {
 
     @Override
     public void exec(Registry reg) {
-        skipIos |= !SystemDependent.canMakeIos();
         skipUwp |= !SystemDependent.canMakeUwp();
         if (skipDesktop && skipIos && skipAndroid && skipUwp) {
             Log.info("Skipping all targets");
