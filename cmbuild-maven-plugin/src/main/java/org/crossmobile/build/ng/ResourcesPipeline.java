@@ -6,7 +6,6 @@
 
 package org.crossmobile.build.ng;
 
-import com.panayotis.appenh.EnhancerManager;
 import org.crossmobile.bridge.system.BaseUtils;
 import org.crossmobile.build.AnnotationConfig;
 import org.crossmobile.build.exec.android.AdbUtils;
@@ -59,8 +58,6 @@ public class ResourcesPipeline implements Runnable {
 
     private void resourcesDesktop() {
         CMBuildEnvironment env = environment();
-        if (env.isRun())
-            EnhancerManager.getDefault().fixDPI();  // should fix DPI to run App as soon as possible
         File generated = new File(env.getBuilddir(), GENERATED_CMSOURCES);
         File app = new File(env.getBuilddir(), APP);
         File ann = new File(env.getBuilddir(), AnnotationConfig.ANN_LOCATION);
