@@ -13,6 +13,7 @@ import org.crossmobile.utils.Log;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -124,7 +125,7 @@ public class ExecDesktopMojo extends ExecGenericMojo {
                 Class<?> bootClass = Thread.currentThread().getContextClassLoader().loadClass(mainClass);
                 bootClass.getMethod("main", String[].class).invoke(null, (Object) new String[]{});
             } catch (Throwable throwable) {
-                BaseUtils.throwException(throwable);
+                BaseUtils.throwException(throwable instanceof InvocationTargetException ? throwable.getCause() : throwable);
             }
         }
 
