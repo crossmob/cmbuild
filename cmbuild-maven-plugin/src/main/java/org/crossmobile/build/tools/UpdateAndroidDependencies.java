@@ -14,6 +14,7 @@ import org.crossmobile.utils.plugin.DependencyItem;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -21,7 +22,7 @@ import static org.crossmobile.utils.TextUtils.NL;
 
 public class UpdateAndroidDependencies {
 
-    private static final Set<String> blackList = new HashSet<>(Arrays.asList("cmtheme-", "cmbuild-annproc"));
+    private static final Set<String> blackList = new HashSet<>(Collections.singletonList("cmbuild-annproc"));
 
     public static void execute(File crossmobileGradle, String appId, DependencyItem root) {
         StringBuilder deplist = new StringBuilder();
