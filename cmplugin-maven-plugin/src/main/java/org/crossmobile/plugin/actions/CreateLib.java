@@ -10,9 +10,12 @@ import org.crossmobile.Version;
 import org.crossmobile.build.ArtifactInfo;
 import org.crossmobile.plugin.model.NObject;
 import org.crossmobile.plugin.objc.ObjectEmitter;
-import org.crossmobile.plugin.reg.*;
+import org.crossmobile.plugin.reg.Plugin;
+import org.crossmobile.plugin.reg.PluginDependency;
+import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.utils.JarUtils;
 import org.crossmobile.utils.Log;
+import org.crossmobile.utils.SystemDependent;
 import org.crossmobile.utils.reqgraph.Requirement;
 
 import java.io.File;
@@ -111,8 +114,12 @@ public abstract class CreateLib {
                     });
                     File proj = createProj(target, plugin);
                     updateProj(proj, pData, includeDir, headerSearchPaths, compiled, requirements);    // Update project with project files and includes
-                    if (build)
-                        compile(proj, asIOS ? lib : IDELocation, pData, LIBNAME.apply(plugin));
+                    if (build) {
+                        if (asIOS && SystemDependent.hasXcode())
+                            compile(proj, lib, pData, LIBNAME.apply(plugin));
+                        if (!asIOS)
+                            compile(proj, IDELocation, pData, LIBNAME.apply(plugin));
+                    }
                 } else
                     Log.debug("Plugin " + plugin + " is in sync with native cache files");
             });
