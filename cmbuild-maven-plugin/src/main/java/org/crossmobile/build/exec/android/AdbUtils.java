@@ -138,7 +138,7 @@ public class AdbUtils {
         if (debug) {
             for (int port = 39622; port < 65000; port++) {
                 try {
-                    new ServerSocket(port);
+                    new ServerSocket(port).close();
                     exec(adb, "forward", "tcp:" + port, "jdwp:" + pid);
                     return String.valueOf(port);
                 } catch (IOException ex) { // Loop until a valid port is found
@@ -220,6 +220,7 @@ public class AdbUtils {
         exec(true, terminateOnError, out, null, cmds);
     }
 
+    @SuppressWarnings("Convert2MethodRef")
     private void exec(boolean displayCommand, boolean quitOnError, Consumer<String> out, Consumer<String> err, String... cmds) {
         Commander cmd = new Commander(cmds);
         cmd.setCurrentDir(baseDir);
