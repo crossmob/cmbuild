@@ -28,6 +28,7 @@ public class Statics {
             + "</project>\n";
 
     static {
-        COPYRIGHT = "// (c) " + Calendar.getInstance().get(Calendar.YEAR) + " under LGPL by CrossMobile plugin tools\n\n";
+        COPYRIGHT = "// (c) " + Calendar.getInstance().get(Calendar.YEAR) + " by CrossMobile plugin tools\n" +
+                "// SPDX-License-Identifier: LGPL-3.0-only\n\n";
     }
 }
