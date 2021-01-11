@@ -144,7 +144,7 @@ public class Templates {
             + "    <application android:hardwareAccelerated=\"true\" android:name=\"" + BUNDLEID_ANCHOR + "." + CURRENT_APPLICATION + "\" android:icon=\"@mipmap/" + ANDROID_ICON + "\"  android:label=\"" + DISPLAYNAME_ANCHOR + "\" android:theme=\"@style/Theme.NoBackground.Fullscreen\" " + DEBUGGABLE_ANCHOR + ">\n"
             + "        <provider\n"
             + "            android:name=\"org.crossmobile.backend.android.CMFileProvider\"\n"
-            + "            android:authorities=\"" + BUNDLEID_ANCHOR + ".provider\"\n"
+            + "            android:authorities=\"" + BUNDLEID_ANCHOR + ".fileprovider\"\n"
             + "            android:exported=\"false\"\n"
             + "            android:grantUriPermissions=\"true\">\n"
             + "            <meta-data\n"
