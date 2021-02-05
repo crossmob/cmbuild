@@ -1,4 +1,6 @@
 package org.crossmobile.backend.android;
 
-public class MainApplication {
+import android.app.Application;
+
+public class MainApplication extends Application {
 }
