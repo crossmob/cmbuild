@@ -16,6 +16,7 @@ import org.crossmobile.build.xcode.XcodeTargetRegistry;
 import org.crossmobile.build.xcode.resources.ObjCLibrary;
 import org.crossmobile.build.xcode.resources.ResourceItem;
 import org.crossmobile.utils.*;
+import org.crossmobile.utils.launcher.Flavour;
 import org.crossmobile.utils.plugin.DependencyItem;
 
 import java.io.File;
@@ -45,14 +46,8 @@ public class PostCompilePipeline implements Runnable {
 
     @Override
     public void run() {
-        switch (environment().getFlavour()) {
-            case IOS:
-                postCompileIOS();
-                break;
-            case UWP:
-                postCompileUwp();
-                break;
-        }
+        if (environment().getFlavour() == Flavour.IOS)
+            postCompileIOS();
     }
 
     private void postCompileUwp() {

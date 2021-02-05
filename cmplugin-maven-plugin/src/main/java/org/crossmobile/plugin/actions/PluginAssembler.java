@@ -11,7 +11,6 @@ import org.crossmobile.build.ArtifactInfo;
 import org.crossmobile.plugin.Packages;
 import org.crossmobile.plugin.reg.PluginRegistryFile;
 import org.crossmobile.plugin.reg.Registry;
-import org.crossmobile.plugin.reg.ReverseCode;
 import org.crossmobile.utils.Log;
 import org.crossmobile.utils.ReflectionUtils;
 import org.crossmobile.utils.plugin.DependencyItem;
@@ -39,7 +38,8 @@ public class PluginAssembler {
 
     public static final BiFunction<File, String, File> compileBase = (target, plugin) -> new File(target, BUNDLES + separator + plugin + separator + "compile");
     public static final BiFunction<File, String, File> sourcesBase = (target, plugin) -> new File(target, BUNDLES + separator + plugin + separator + "sources");
-    public static final BiFunction<File, String, File> desktopBase = (target, plugin) -> new File(target, BUNDLES + separator + plugin + separator + "desktop");
+    public static final BiFunction<File, String, File> swingBase = (target, plugin) -> new File(target, BUNDLES + separator + plugin + separator + "swing");
+    public static final BiFunction<File, String, File> avianBase = (target, plugin) -> new File(target, BUNDLES + separator + plugin + separator + "avian");
     public static final BiFunction<File, String, File> androidBase = (target, plugin) -> new File(target, BUNDLES + separator + plugin + separator + "android");
     public static final BiFunction<File, String, File> iosBase = (target, plugin) -> new File(target, BUNDLES + separator + plugin + separator + "ios");
     public static final BiFunction<File, String, File> uwpBase = (target, plugin) -> new File(target, BUNDLES + separator + plugin + separator + "uwp");
@@ -51,7 +51,7 @@ public class PluginAssembler {
                                      String[] embedlibs, File srcDir, File vendorSrc, File vendorBin,
                                      Function<ArtifactInfo, File> resolver,
                                      File cachedir, Packages[] packs,
-                                     boolean buildDesktop, boolean buildIos, boolean buildAndroid, boolean buildUwp, boolean buildRvm,
+                                     boolean buildSwing, boolean buildAvian, boolean buildIos, boolean buildAndroid, boolean buildUwp, boolean buildRvm,
                                      File VStudioLocation, PluginRegistryFile pluginRegistry) {
         File runtime = new File(target, "runtime");
 
@@ -82,7 +82,7 @@ public class PluginAssembler {
                     p -> (buildIos ? reg.getClassCollection().getIOsNativeClasses() : reg.getClassCollection().getUWPNativeClasses()).forEach(p::parse)));
         });
 
-        if (buildIos || buildDesktop || buildUwp || buildAndroid)
+        if (buildIos || buildSwing || buildAvian || buildUwp || buildAndroid)
             time("Extract embedded jars", () -> {
                 for (File f : registry.getAppjars().toArray(new File[0]))
                     explodeClasspath(f, runtime);
@@ -93,15 +93,18 @@ public class PluginAssembler {
             time("Create reverse code", () -> reg.reverse().produce());
             // do not use if (buildIos), since we always need to create the source files. The optimization is embedded in the function itself
             time("Create iOS libraries", () -> new CreateDylib(resolver, target, cachedir, vendorSrc, null, reg, buildIos));
-            time("Create UWP libraries", () -> new CreateDll(resolver, target, cachedir, vendorSrc, VStudioLocation, reg, buildUwp));
+            if (buildUwp)
+                time("Create UWP libraries", () -> new CreateDll(resolver, target, cachedir, vendorSrc, VStudioLocation, reg, buildUwp));
         }
 
         time("Initialize and create stub compile-time files", () -> {
             for (String plugin : reg.plugins().plugins()) {
                 mkdirs(compileBase.apply(target, plugin));
                 mkdirs(sourcesBase.apply(target, plugin));
-                if (buildDesktop)
-                    mkdirs(desktopBase.apply(target, plugin));
+                if (buildSwing)
+                    mkdirs(swingBase.apply(target, plugin));
+                if (buildAvian)
+                    mkdirs(avianBase.apply(target, plugin));
                 if (buildAndroid)
                     mkdirs(androidBase.apply(target, plugin));
                 if (buildIos)
@@ -124,13 +127,15 @@ public class PluginAssembler {
     }
 
     public static void packageFiles(Registry reg, File target, File srcDir,
-                                    boolean buildDesktop, boolean buildIos, boolean buildAndroid, boolean buildUwp, boolean buildRvm) {
+                                    boolean buildSwing, boolean buildAvian, boolean buildIos, boolean buildAndroid, boolean buildUwp, boolean buildRvm) {
         File runtime = new File(target, "runtime");
         File runtime_rvm = new File(target, "runtime_rvm");
 
         time("Create distributions of artifacts", () -> {
-            if (buildDesktop)
-                CreateBundles.bundleFiles(runtime, plugin -> desktopBase.apply(target, plugin), CreateBundles.classResolver(reg), BaseTarget.DESKTOP);
+            if (buildSwing)
+                CreateBundles.bundleFiles(runtime, plugin -> swingBase.apply(target, plugin), CreateBundles.classResolver(reg), BaseTarget.SWING);
+            if (buildAvian)
+                CreateBundles.bundleFiles(runtime, plugin -> avianBase.apply(target, plugin), CreateBundles.classResolver(reg), BaseTarget.AVIAN);
             if (buildRvm)
                 CreateBundles.bundleFiles(runtime_rvm, plugin -> rvmBase.apply(target, plugin), CreateBundles.classResolver(reg), BaseTarget.IOS);
             if (buildUwp)
@@ -152,14 +157,14 @@ public class PluginAssembler {
     public static void installFiles(Registry reg, File target, DependencyItem root,
                                     Consumer<ArtifactInfo> installer,
                                     File vendorSrc, File vendorBin, File cachedir,
-                                    boolean buildDesktop, boolean buildIos, boolean buildAndroid, boolean buildUwp, boolean buildRvm, boolean buildCore,
+                                    boolean buildSwing, boolean buildAvian, boolean buildIos, boolean buildAndroid, boolean buildUwp, boolean buildRvm, boolean buildCore,
                                     File report
     ) {
         time("Install artifacts", () -> {
             StringWriter writer = report == null ? null : new StringWriter();
             for (String plugin : reg.plugins().plugins())
                 CreateArtifacts.installPlugin(installer, plugin, target, root, cachedir, vendorSrc, vendorBin, reg.reverse(),
-                        buildDesktop, buildIos, buildUwp, buildAndroid, buildRvm, buildCore, writer, reg);
+                        buildSwing, buildAvian, buildIos, buildUwp, buildAndroid, buildRvm, buildCore, writer, reg);
             CreateArtifacts.installJavadoc(installer, root, reg);
             report.getParentFile().mkdirs();
             if (writer != null)

@@ -8,9 +8,6 @@ package org.crossmobile.plugin;
 
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.settings.Settings;
-import org.crossmobile.build.utils.DependencyDigger;
 import org.crossmobile.plugin.actions.PluginAssembler;
 import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.utils.FileUtils;
@@ -28,7 +25,7 @@ public class PackageMojo extends GenericPluginMojo {
     @Override
     public void exec(Registry reg) {
         skipUwp |= !SystemDependent.canMakeUwp();
-        if (skipDesktop && skipIos && skipAndroid && skipUwp) {
+        if (skipSwing && skipAvian && skipIos && skipAndroid && skipUwp) {
             Log.info("Skipping all targets");
             return;
         }
@@ -39,7 +36,7 @@ public class PackageMojo extends GenericPluginMojo {
             getPluginDescriptor().getClassRealm().addURL(toURL(dep.getFile()));
 
         PluginAssembler.packageFiles(reg, new File(getProject().getBuild().getDirectory()), new File(getProject().getBuild().getSourceDirectory()),
-                !skipDesktop, !skipIos, !skipAndroid, !skipUwp, !skipRvm
+                !skipSwing, !skipAvian, !skipIos, !skipAndroid, !skipUwp, !skipRvm
         );
     }
 }

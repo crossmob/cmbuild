@@ -44,10 +44,11 @@ public class ResourcesPipeline implements Runnable {
             case ANDROID:
                 resourcesAndroid();
                 break;
-            case UWP:
-                resourcesUWP();
-            default:
-                resourcesDesktop();
+            case SWING:
+                resourcesSwing();
+                break;
+            case AVIAN:
+                resourcesAvian();
                 break;
         }
     }
@@ -56,7 +57,11 @@ public class ResourcesPipeline implements Runnable {
         resourcesIOS();
     }
 
-    private void resourcesDesktop() {
+    private void resourcesAvian() {
+        resourcesSwing();
+    }
+
+    private void resourcesSwing() {
         CMBuildEnvironment env = environment();
         File generated = new File(env.getBuilddir(), GENERATED_CMSOURCES);
         File app = new File(env.getBuilddir(), APP);

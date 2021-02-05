@@ -21,8 +21,8 @@ import java.util.Collection;
 
 import static org.crossmobile.utils.ParamsCommon.MAIN_CLASS;
 
-@Mojo(name = "execdesktop", defaultPhase = LifecyclePhase.INSTALL)
-public class ExecDesktopMojo extends ExecGenericMojo {
+@Mojo(name = "execavian", defaultPhase = LifecyclePhase.INSTALL)
+public class ExecAvianMojo extends ExecGenericMojo {
 
     private static final int DaemonTimeout = 3000;
 
@@ -31,7 +31,7 @@ public class ExecDesktopMojo extends ExecGenericMojo {
         if (!isRunnable())
             return;
 
-        File baseJar = new File(getProject().getProperties().getProperty("cm.launch.desktop"));
+        File baseJar = new File(getProject().getProperties().getProperty("cm.launch.avian"));
         if (!baseJar.isFile())
             BaseUtils.throwException(new IOException("Unable to locate JAR file " + baseJar.getAbsolutePath()));
 
@@ -39,8 +39,8 @@ public class ExecDesktopMojo extends ExecGenericMojo {
         if (mainClass == null)
             throw new NullPointerException("Unable to find main class, using property 'main.class'");
 
-        DesktopThreadGroup threadGroup = new DesktopThreadGroup();
-        DesktopThread baseThread = new DesktopThread(threadGroup, mainClass);
+        ExecAvianMojo.DesktopThreadGroup threadGroup = new ExecAvianMojo.DesktopThreadGroup();
+        ExecAvianMojo.DesktopThread baseThread = new ExecAvianMojo.DesktopThread(threadGroup, mainClass);
         baseThread.setFileClassLoader(baseJar);
         baseThread.start();
         threadGroup.waitFor();
@@ -114,7 +114,7 @@ public class ExecDesktopMojo extends ExecGenericMojo {
     private static final class DesktopThread extends Thread {
         private final String mainClass;
 
-        public DesktopThread(DesktopThreadGroup threadGroup, String mainClass) {
+        public DesktopThread(ExecAvianMojo.DesktopThreadGroup threadGroup, String mainClass) {
             super(threadGroup, "DesktopLaunch");
             this.mainClass = mainClass;
         }

@@ -22,7 +22,10 @@ import java.util.Collection;
 public abstract class GenericPluginMojo extends GenericMojo {
 
     @Parameter(defaultValue = "false", readonly = true)
-    protected boolean skipDesktop;
+    protected boolean skipSwing;
+
+    @Parameter(defaultValue = "false", readonly = true)
+    protected boolean skipAvian;
 
     @Parameter(defaultValue = "false", readonly = true)
     protected boolean skipIos;
@@ -30,11 +33,11 @@ public abstract class GenericPluginMojo extends GenericMojo {
     @Parameter(defaultValue = "false", readonly = true)
     protected boolean skipAndroid;
 
-    @Parameter(defaultValue = "false", readonly = true)
-    protected boolean skipUwp;
+    @Parameter(defaultValue = "true", readonly = true)
+    protected boolean skipUwp = true;
 
-    @Parameter(defaultValue = "false", readonly = true)
-    protected boolean skipRvm;
+    @Parameter(defaultValue = "true", readonly = true)
+    protected boolean skipRvm = true;
 
     @Parameter(defaultValue = "false", readonly = true)
     protected boolean skipCore;

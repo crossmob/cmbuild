@@ -42,7 +42,7 @@ public class CreateArtifacts {
 
     public static void installPlugin(Consumer<ArtifactInfo> installer,
                                      String plugin, File target, DependencyItem item, File cache, File vendorSrc, File vendorBin, ReverseCode rc,
-                                     boolean buildDesktop, boolean buildIos, boolean buildUwp, boolean buildAndroid, boolean buildRvm, boolean buildCore,
+                                     boolean buildSwing, boolean buildAvian, boolean buildIos, boolean buildUwp, boolean buildAndroid, boolean buildRvm, boolean buildCore,
                                      Writer report, Registry reg) {
         // Get plugin data
         Plugin pluginData = reg.plugins().getPluginData(plugin);
@@ -51,7 +51,8 @@ public class CreateArtifacts {
         File compileTarget = compileBase.apply(target, plugin);
         File sourcesTarget = sourcesBase.apply(target, plugin);
         File iosTarget = iosBase.apply(target, plugin);
-        File desktopTarget = desktopBase.apply(target, plugin);
+        File swingTarget = swingBase.apply(target, plugin);
+        File avianTarget = avianBase.apply(target, plugin);
         File uwpTarget = uwpBase.apply(target, plugin);
         File androidTarget = androidBase.apply(target, plugin);
         File rvmTarget = rvmBase.apply(target, plugin);
@@ -109,9 +110,12 @@ public class CreateArtifacts {
         if (buildUwp)
             install(installer, createJar(report, new File(artBase, "cmplugin-uwp-" + plugin + "-" + item.getVersion() + ".jar"), uwpTarget),
                     plugin, "uwp-", item.getGroupID(), item.getVersion(), reg);
-        if (buildDesktop)
-            install(installer, createJar(report, new File(artBase, "cmplugin-desktop-" + plugin + "-" + item.getVersion() + ".jar"), desktopTarget),
-                    plugin, "desktop-", item.getGroupID(), item.getVersion(), reg);
+        if (buildSwing)
+            install(installer, createJar(report, new File(artBase, "cmplugin-swing-" + plugin + "-" + item.getVersion() + ".jar"), swingTarget),
+                    plugin, "swing-", item.getGroupID(), item.getVersion(), reg);
+        if (buildAvian)
+            install(installer, createJar(report, new File(artBase, "cmplugin-avian-" + plugin + "-" + item.getVersion() + ".jar"), avianTarget),
+                    plugin, "avian-", item.getGroupID(), item.getVersion(), reg);
         if (buildAndroid)
             install(installer, createJar(report, new File(artBase, "cmplugin-android-" + plugin + "-" + item.getVersion() + ".jar"), androidTarget),
                     plugin, "android-", item.getGroupID(), item.getVersion(), reg);
@@ -172,8 +176,10 @@ public class CreateArtifacts {
                 if (!dep.isCMPlugin())
                     return false;
                 return dep.target().android;
-            case "desktop-":
-                return dep.target().desktop;
+            case "swing-":
+                return dep.target().swing;
+            case "avian-":
+                return dep.target().avian;
             case "uwp-":
                 return dep.target().uwpjava;
             default:

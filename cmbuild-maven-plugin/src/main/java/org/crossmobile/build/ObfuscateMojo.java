@@ -29,7 +29,7 @@ public class ObfuscateMojo extends GenericMojo {
     @Parameter(defaultValue = "${project.build.directory}/${project.artifactId}-${project.version}.map", readonly = true)
     private File proguardMap;
 
-    @Parameter(defaultValue = "${project.build.directory}/${project.artifactId}-${project.version}-desktop.jar", readonly = true)
+    @Parameter(defaultValue = "${project.build.directory}/${project.artifactId}-${project.version}-swing.jar", readonly = true)
     private File inputJar;
 
     @Parameter(defaultValue = "${project.build.directory}/${project.artifactId}-${project.version}-trimmed.jar", readonly = true)
