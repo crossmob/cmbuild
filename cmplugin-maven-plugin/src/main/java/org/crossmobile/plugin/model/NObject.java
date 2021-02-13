@@ -23,17 +23,17 @@ public final class NObject {
     private final Collection<NObject> parentProtocols = new HashSet<>();
     private final Collection<NSelector> selectors = new TreeSet<>();
     private final String family;
-    private final Class type;
+    private final Class<?> type;
     private final Collection<NStructField> structFields;
     private String code;
 
-    public NObject(String family, Class type) {
+    public NObject(String family, Class<?> type) {
         this.family = family;
         this.type = type;
         structFields = NStructField.find(type);
     }
 
-    public Class getType() {
+    public Class<?> getType() {
         return type;
     }
 

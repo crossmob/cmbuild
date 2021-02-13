@@ -19,7 +19,7 @@ public class Registry {
     private final TypeRegistry typeRegistry = new TypeRegistry(this);
     private final ClassCollection classCollection = new ClassCollection();
     private final ReverseCode reverseCode = new ReverseCode(classCollection.getClassPool(), this);
-
+    private final NativeMethodRegistry nativeMethodRegistry = new NativeMethodRegistry();
 
     public ObjectRegistry objects() {
         return objectRegistry;
@@ -51,5 +51,9 @@ public class Registry {
 
     public ClassCollection getClassCollection() {
         return classCollection;
+    }
+
+    public NativeMethodRegistry natives() {
+        return nativeMethodRegistry;
     }
 }

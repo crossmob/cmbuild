@@ -15,7 +15,9 @@ import org.crossmobile.utils.Log;
 import java.io.File;
 import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.function.Consumer;
 
 import static java.io.File.pathSeparator;

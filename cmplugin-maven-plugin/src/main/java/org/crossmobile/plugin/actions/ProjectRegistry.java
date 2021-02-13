@@ -38,8 +38,10 @@ public class ProjectRegistry {
 
         cc.addClassPaths(asList(getAppjars(), File::getAbsolutePath));
         cc.register(reg, false);
-        for (Class<?> cls : cc.getAllClasses())
-            reg.plugins().register(cls);
+        for (Class<?> cls : cc.getAllClasses()) {
+            reg.plugins().register(cls);    // register classes per plugin
+            reg.natives().register(cls);    // register native methods
+        }
         for (Class<?> cls : cc.getAllNativeClasses())
             reg.types().register(cls);
 
