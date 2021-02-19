@@ -22,11 +22,4 @@ public class NativeMethodRegistry {
             }
         }
     }
-
-    @Override
-    public String toString() {
-        return "NativeMethodRegistry{" +
-                "withNativeCode=" + withNativeCode +
-                '}';
-    }
 }

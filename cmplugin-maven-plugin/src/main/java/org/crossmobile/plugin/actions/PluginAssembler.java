@@ -78,8 +78,12 @@ public class PluginAssembler {
                 if (!reg.plugins().pluginExists(root.getArtifactID()))
                     Log.error("Required plugin " + root.getArtifactID() + " not defined˝");
             });
-            time("Gather native API", () -> with(new Parser(reg),
+            time("Gather iOS native API", () -> with(new Parser(reg),
                     p -> (buildIos ? reg.getClassCollection().getIOsNativeClasses() : reg.getClassCollection().getUWPNativeClasses()).forEach(p::parse)));
+            time("Create native bindings", ()->{
+
+                System.exit(1);
+            });
         });
 
         if (buildIos || buildSwing || buildAvian || buildUwp || buildAndroid)
@@ -145,9 +149,9 @@ public class PluginAssembler {
             CreateBundles.bundleFiles(srcDir, plugin -> sourcesBase.apply(target, plugin), CreateBundles.sourceResolver(reg), BaseTarget.ALL);
             /*
              * iOS target does not support gathering classes and other resource files, so files are not copied.
-             * If we want int the future to add resource files (which is not supported yet), we should
+             * If we want in the future to add resource files (which is not supported yet), we should
              *   (a) annotate the packages (not the files!) accordingly
-             *   (b) copy all files BUT .classes. Right now te algorithm accepts all files, *including* classes.
+             *   (b) copy all files BUT .classes. Right now the algorithm accepts all files, *including* classes.
              * Follows commented the old code that gathers everything (including .class):
              * if (buildIos) CreateBundles.bundleFiles(runtime, plugin -> iosBase.apply(target, plugin), CreateBundles.classResolver(reg), BaseTarget.IOS);
              */

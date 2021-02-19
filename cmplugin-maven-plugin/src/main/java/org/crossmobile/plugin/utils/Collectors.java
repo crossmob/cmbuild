@@ -45,7 +45,7 @@ public class Collectors {
         return null;
     }
 
-    public static List<Method> getAbstractMethods(Class c) {
+    public static List<Method> getAbstractMethods(Class<?> c) {
         List<Method> methods = new ArrayList<>();
         for (Method m : c.getDeclaredMethods())
             if (Modifier.isAbstract(m.getModifiers()))
@@ -53,7 +53,7 @@ public class Collectors {
         return methods;
     }
 
-    public static Collection<Field> getNonPrimitivePublicFields(Class c) {
+    public static Collection<Field> getNonPrimitivePublicFields(Class<?> c) {
         Collection<Field> fields = new ArrayList<>();
         for (Field f : c.getFields())
             if (!f.getType().isPrimitive())
