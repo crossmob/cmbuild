@@ -8,9 +8,10 @@ package org.crossmobile.plugin.actions;
 
 import org.crossmobile.bridge.ann.CMLibTarget.BaseTarget;
 import org.crossmobile.build.ArtifactInfo;
-import org.crossmobile.plugin.Packages;
 import org.crossmobile.plugin.reg.PluginRegistryFile;
 import org.crossmobile.plugin.reg.Registry;
+import org.crossmobile.plugin.structs.Target;
+import org.crossmobile.plugin.structs.Packages;
 import org.crossmobile.utils.Log;
 import org.crossmobile.utils.ReflectionUtils;
 import org.crossmobile.utils.plugin.DependencyItem;
@@ -20,6 +21,7 @@ import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -52,7 +54,8 @@ public class PluginAssembler {
                                      Function<ArtifactInfo, File> resolver,
                                      File cachedir, Packages[] packs,
                                      boolean buildSwing, boolean buildAvian, boolean buildIos, boolean buildAndroid, boolean buildUwp, boolean buildRvm,
-                                     File VStudioLocation, PluginRegistryFile pluginRegistry) {
+                                     File VStudioLocation, File javahLocation, Collection<Target> targets,
+                                     PluginRegistryFile pluginRegistry) {
         File runtime = new File(target, "runtime");
 
         long sourcesModified = Math.max(Math.max(getLastModified(vendorBin), getLastModified(vendorSrc)), getLastModified(srcDir));
@@ -80,10 +83,14 @@ public class PluginAssembler {
             });
             time("Gather iOS native API", () -> with(new Parser(reg),
                     p -> (buildIos ? reg.getClassCollection().getIOsNativeClasses() : reg.getClassCollection().getUWPNativeClasses()).forEach(p::parse)));
-            time("Create native bindings", ()->{
 
-                System.exit(1);
-            });
+            if (buildAvian)
+                time("Create native bindings", () -> {
+                    File classpath = new File(target, "classes");
+                    File srcOut = new File(cachedir, "natives");
+                    File binOut = new File(target, "native" + separator + "jni");
+                    NativeBindings.createNativeBinding(reg.natives(), classpath, srcOut, binOut, javahLocation, targets);
+                });
         });
 
         if (buildIos || buildSwing || buildAvian || buildUwp || buildAndroid)

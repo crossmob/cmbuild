@@ -9,10 +9,13 @@ package org.crossmobile.plugin.reg;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.TreeSet;
+import java.util.stream.Stream;
+
+import static java.util.Comparator.comparing;
 
 public class NativeMethodRegistry {
-    private final Collection<Class<?>> withNativeCode = new HashSet<>();
+    private final Collection<Class<?>> withNativeCode = new TreeSet<>(comparing(Class::getName));
 
     public void register(Class<?> cls) {
         for (Method method : cls.getDeclaredMethods()) {
@@ -21,5 +24,13 @@ public class NativeMethodRegistry {
                 break;
             }
         }
+    }
+
+    public Stream<Class<?>> stream() {
+        return withNativeCode.stream();
+    }
+
+    public boolean hasNatives() {
+        return !withNativeCode.isEmpty();
     }
 }

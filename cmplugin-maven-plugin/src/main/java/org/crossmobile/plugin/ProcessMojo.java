@@ -13,12 +13,15 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.crossmobile.plugin.actions.PluginAssembler;
 import org.crossmobile.plugin.reg.PluginRegistryFile;
 import org.crossmobile.plugin.reg.Registry;
+import org.crossmobile.plugin.structs.Packages;
+import org.crossmobile.plugin.structs.Target;
 import org.crossmobile.utils.FileUtils;
 import org.crossmobile.utils.Log;
 import org.crossmobile.utils.SystemDependent;
 import org.crossmobile.utils.plugin.DependencyItem;
 
 import java.io.File;
+import java.util.Collection;
 
 import static org.crossmobile.utils.FileUtils.toURL;
 
@@ -33,6 +36,12 @@ public class ProcessMojo extends GenericPluginMojo {
 
     @Parameter(defaultValue = "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Community\\VC\\Auxiliary\\Build", readonly = true)
     private File VStudioLocation;
+
+    @Parameter(defaultValue = "", readonly = true)
+    private File javah;
+
+    @Parameter(readonly = true)
+    private Collection<Target> targets;
 
     @Override
     public void exec(Registry reg) {
@@ -51,7 +60,7 @@ public class ProcessMojo extends GenericPluginMojo {
                 embedlibs, new File(getProject().getBuild().getSourceDirectory()), getVendorSource(), getVendorBin(),
                 this::resolveArtifact, getCachedDir(), packages,
                 !skipSwing, !skipAvian, !skipIos, !skipAndroid, !skipUwp, !skipRvm,
-                VStudioLocation, PluginRegistryFile.forPlugin(mavenProject)
+                VStudioLocation, javah, targets, PluginRegistryFile.forPlugin(mavenProject)
         );
     }
 }

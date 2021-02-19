@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-package org.crossmobile.plugin;
+package org.crossmobile.plugin.structs;
 
 public class Packages {
 
