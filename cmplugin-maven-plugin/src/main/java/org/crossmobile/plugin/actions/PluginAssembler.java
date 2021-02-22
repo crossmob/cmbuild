@@ -10,8 +10,8 @@ import org.crossmobile.bridge.ann.CMLibTarget.BaseTarget;
 import org.crossmobile.build.ArtifactInfo;
 import org.crossmobile.plugin.reg.PluginRegistryFile;
 import org.crossmobile.plugin.reg.Registry;
-import org.crossmobile.plugin.structs.Target;
 import org.crossmobile.plugin.structs.Packages;
+import org.crossmobile.plugin.structs.Target;
 import org.crossmobile.utils.Log;
 import org.crossmobile.utils.ReflectionUtils;
 import org.crossmobile.utils.plugin.DependencyItem;
@@ -87,9 +87,8 @@ public class PluginAssembler {
             if (buildAvian)
                 time("Create native bindings", () -> {
                     File classpath = new File(target, "classes");
-                    File srcOut = new File(cachedir, "natives");
-                    File binOut = new File(target, "native" + separator + "jni");
-                    NativeBindings.createNativeBinding(reg.natives(), classpath, srcOut, binOut, javahLocation, targets);
+                    File srcOut = new File(srcDir.getParentFile(), "jni");
+                    NativeBindings.createNativeBinding(reg.natives(), classpath, srcOut, target, javahLocation, targets);
                 });
         });
 
@@ -133,6 +132,8 @@ public class PluginAssembler {
                 hm += skel.stripClass(cls, plugin -> compileBase.apply(target, plugin), reg, SOURCE_TYPE) ? 1 : 0;
             // Still might need to add extra resource files
             CreateBundles.bundleFilesAndReport(runtime, plugin -> compileBase.apply(target, plugin), CreateBundles.getNoClassResolver(reg), BaseTarget.COMPILE);
+            if (buildAvian)
+                NativeBindings.createArchive(target, reg, targets);
             Log.debug(hm + " class" + plural(hm, "es") + " stripped");
         });
     }

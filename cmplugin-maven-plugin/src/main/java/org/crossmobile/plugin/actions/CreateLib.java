@@ -13,9 +13,11 @@ import org.crossmobile.plugin.objc.ObjectEmitter;
 import org.crossmobile.plugin.reg.Plugin;
 import org.crossmobile.plugin.reg.PluginDependency;
 import org.crossmobile.plugin.reg.Registry;
+import org.crossmobile.plugin.structs.Target;
 import org.crossmobile.utils.JarUtils;
 import org.crossmobile.utils.Log;
 import org.crossmobile.utils.SystemDependent;
+import org.crossmobile.utils.func.TriFunction;
 import org.crossmobile.utils.reqgraph.Requirement;
 
 import java.io.File;
@@ -40,15 +42,18 @@ public abstract class CreateLib {
 
     protected static final String LIB_ANCHOR = "CMPLUGIN";
     protected static final Function<Boolean, String> PLATFORM = asIOS -> asIOS ? "native" : "uwp";
-    private static final Function<String, String> IOSLibName = l -> "lib" + l + ".a";
-    private static final Function<String, String> UWPLibName = l -> l + ".dll";
     private final Registry reg;
+
+    static final Target iOSTarget = new Target("ios", "all");
+    static final Target uwpTarget = new Target("windows", "x86_64");
+
+    static final TriFunction<File, String, Target, File> libLocation =
+            (cache, plugin, target) -> new File(cache, "lib" + separator + target.getName() + separator + target.getLibName(plugin));
 
     public CreateLib(Function<ArtifactInfo, File> resolver, File target, File cache, File vendor, File IDELocation, Registry reg, boolean asIOS, boolean build) {
         this.reg = reg;
         // Create native files in the scratch folder
         Function<String, File> prodResolv = plugin -> new File(target, PLATFORM.apply(asIOS) + separator + plugin);
-        final Function<String, String> LIBNAME = asIOS ? IOSLibName : UWPLibName;
 
         time("Creating " + PLATFORM.apply(asIOS) + " files", () -> {
             for (String plugin : reg.plugins().plugins())
@@ -73,7 +78,7 @@ public abstract class CreateLib {
                     //noinspection ResultOfMethodCallIgnored
                     prod.mkdirs();
                 File cached = new File(cache, plugin + separator + PLATFORM.apply(asIOS));
-                File lib = new File(cache, "lib" + separator + LIBNAME.apply(plugin));
+                File lib = libLocation.apply(cache, plugin, asIOS ? iOSTarget : uwpTarget);
                 File vendorFiles = new File(vendor, plugin);
                 int howMany = sync(prod, cached, null, true, f -> !f.getName().equals("patches"));
                 if (howMany == 0)
@@ -116,9 +121,9 @@ public abstract class CreateLib {
                     updateProj(proj, pData, includeDir, headerSearchPaths, compiled, requirements);    // Update project with project files and includes
                     if (build) {
                         if (asIOS && SystemDependent.hasXcode())
-                            compile(proj, lib, pData, LIBNAME.apply(plugin));
+                            compile(proj, lib, pData, iOSTarget.getLibName(plugin));
                         if (!asIOS)
-                            compile(proj, IDELocation, pData, LIBNAME.apply(plugin));
+                            compile(proj, IDELocation, pData, iOSTarget.getLibName(plugin));
                     }
                 } else
                     Log.debug("Plugin " + plugin + " is in sync with native cache files");

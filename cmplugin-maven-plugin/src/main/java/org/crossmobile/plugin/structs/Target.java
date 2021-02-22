@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 
 public class Target {
     private final static Collection<String> validOS = Arrays.asList("linux", "windows", "macosx", "ios", "freebsd");
@@ -22,6 +23,14 @@ public class Target {
     private List<String> ccflags;
     private List<String> lflags;
     private List<File> libraries;
+
+    public Target() {
+    }
+
+    public Target(String os, String arch) {
+        this.os = os;
+        this.arch = arch;
+    }
 
     public String getOs() {
         return os;
@@ -49,6 +58,19 @@ public class Target {
 
     public String getName() {
         return os + "-" + arch;
+    }
+
+    static final Function<String, String> IOSLibName = l -> "lib" + l + ".a";
+    static final Function<String, String> UWPLibName = l -> l + ".dll";
+
+    public String getLibName(String baseName) {
+        switch (os) {
+            case "uwp":
+                return baseName + ".dll";
+            default:
+            case "ios":
+                return "lib" + baseName + ".a";
+        }
     }
 
     public Target asserted() {

@@ -7,6 +7,7 @@
 package org.crossmobile.plugin.actions;
 
 import org.crossmobile.plugin.reg.NativeMethodRegistry;
+import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.plugin.structs.Target;
 import org.crossmobile.utils.Commander;
 import org.crossmobile.utils.FileUtils;
@@ -16,20 +17,26 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static java.io.File.separator;
 import static java.util.Objects.requireNonNull;
 import static org.crossmobile.bridge.system.BaseUtils.throwException;
-import static org.crossmobile.utils.FileUtils.mkdirs;
-import static org.crossmobile.utils.FileUtils.removeExtension;
+import static org.crossmobile.plugin.actions.PluginAssembler.avianBase;
+import static org.crossmobile.utils.FileUtils.*;
 import static org.crossmobile.utils.SystemDependent.Execs.JAVAH;
 
 public class NativeBindings {
 
     private static final Pattern methodP = Pattern.compile("JNIEXPORT\\s+(.*?)\\s+JNICALL\\s+(.*?)\\s*\\(\\s*" +
             "JNIEnv\\s*\\*\\s*,\\s*(.*?)\\);");
+
+    static BiFunction<File, Target, File> oDir = (targetDir, target) -> mkdirs(new File(targetDir, "jni" + separator + "build" + separator + target.getName()));
+    static Function<File, File> javaIncludeDir = (targetDir) -> mkdirs(new File(targetDir, "jni" + separator + "include"));
 
     private static File guessJavah(File given) {
         if (given != null && given.isFile())
@@ -38,11 +45,11 @@ public class NativeBindings {
         if (!javaHome.isDirectory())
             throw new RuntimeException("Unable to find JAVA_HOME under '" + javaHome.getAbsolutePath() + "'");
 
-        File javah = new File(javaHome, "bin" + File.separator + JAVAH.filename());
+        File javah = new File(javaHome, "bin" + separator + JAVAH.filename());
         if (javah.isFile())
             return javah;
         if (javaHome.getName().equals("jre")) {
-            javah = new File(javaHome.getParent(), "bin" + File.separator + JAVAH.filename());
+            javah = new File(javaHome.getParent(), "bin" + separator + JAVAH.filename());
             if (javah.isFile())
                 return javah;
         }
@@ -60,7 +67,7 @@ public class NativeBindings {
         throw new RuntimeException("Unable to locate gcc compiler");
     }
 
-    public static void createNativeBinding(NativeMethodRegistry reg, File classpath, File srcOut, File binOut, File javahLocation, Collection<Target> targets) {
+    public static void createNativeBinding(NativeMethodRegistry reg, File classpath, File srcOut, File targetDir, File javahLocation, Collection<Target> targets) {
         if (!reg.hasNatives())
             return;
         javahLocation = guessJavah(javahLocation);
@@ -94,21 +101,20 @@ public class NativeBindings {
 
         // Compile JNI files
         if (!targets.isEmpty()) {
-            File binOutputDir = new File(binOut, "build");
-            File javaIncludeDir = new File(binOut, "include");
+            File javaIncludeDir = NativeBindings.javaIncludeDir.apply(targetDir);
             if (!new File(javaIncludeDir, "jni.h").isFile()) {
                 FileUtils.delete(javaIncludeDir);
                 FileUtils.unzip(NativeBindings.class.getResourceAsStream("/org/crossmobile/plugin/jni.zip"), javaIncludeDir);
             }
             // Compile for all required targets
             for (Target target : targets)
-                compileForArch(target.asserted(), cFiles, hLocation, javaIncludeDir, binOutputDir);
+                compileForArch(target.asserted(), cFiles, hLocation, javaIncludeDir, targetDir);
         }
     }
 
-    private static void compileForArch(Target target, Collection<File> cFiles, File hLocation, File javaIncludeDir, File binOutputDir) {
+    private static void compileForArch(Target target, Collection<File> cFiles, File hLocation, File javaIncludeDir, File targetDir) {
         String cc = guessCCompiler(target).getAbsolutePath();
-        File oDir = mkdirs(new File(binOutputDir, target.getName()));
+        File oDir = NativeBindings.oDir.apply(targetDir, target);
 
         // Compile JNI files to target architecture */
         File osIncludeDir = new File(javaIncludeDir, target.getOs());
@@ -207,5 +213,17 @@ public class NativeBindings {
         }
         FileUtils.write(cFile, out.toString());
         return cFile;
+    }
+
+    public static void createArchive(File targetDir, Registry reg, Collection<Target> targets) {
+        for (Target target : targets) {
+            File inDir = oDir.apply(targetDir, target);
+            reg.natives().stream().forEach(c -> {
+                File inFile = new File(inDir, getBaseName(c) + ".o");
+                File outFile = new File(avianBase.apply(targetDir, reg.plugins().getPlugin(c.getName())),
+                        "native" + separator + target.getName() + separator + inFile.getName());
+                copy(inFile, outFile);
+            });
+        }
     }
 }

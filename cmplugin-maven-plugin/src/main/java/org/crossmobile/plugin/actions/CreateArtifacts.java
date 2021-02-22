@@ -27,6 +27,7 @@ import static java.io.File.separator;
 import static org.crossmobile.bridge.system.BaseUtils.listFiles;
 import static org.crossmobile.build.utils.Locations.NATIVE_PATH;
 import static org.crossmobile.build.utils.PlistUtils.isInclude;
+import static org.crossmobile.plugin.actions.CreateLib.libLocation;
 import static org.crossmobile.plugin.actions.PluginAssembler.*;
 import static org.crossmobile.plugin.utils.Statics.*;
 import static org.crossmobile.prefs.Config.REVERSE_INF;
@@ -69,7 +70,7 @@ public class CreateArtifacts {
             Log.debug("Installing native files of plugin " + plugin);
 
             if (buildIos) {
-                File lib = new File(cache, "lib" + separator + "lib" + plugin + ".a");
+                File lib = libLocation.apply(cache, plugin, CreateLib.iOSTarget);
                 if (copy(lib, new File(iosTarget, NATIVE_PATH + separator + plugin + ".a")) == 0)
                     if (pluginData.hasOptionalLibraryBinary())
                         Log.info("Native library not found but ignored as noted: " + lib.getAbsolutePath());
@@ -79,7 +80,7 @@ public class CreateArtifacts {
                         .forEach(f -> copy(f, new File(iosTarget, NATIVE_PATH + separator + f.getName())));
             }
             if (buildUwp) {
-                File dll = new File(cache, "lib" + separator + "lib" + plugin + ".dll");
+                File dll = libLocation.apply(cache, plugin, CreateLib.uwpTarget);
                 if (copy(dll, new File(uwpTarget, NATIVE_PATH + separator + plugin + ".dll")) == 0)
                     if (pluginData.hasOptionalLibraryBinary())
                         Log.info("Native library not found but ignored as noted: " + dll.getAbsolutePath());
