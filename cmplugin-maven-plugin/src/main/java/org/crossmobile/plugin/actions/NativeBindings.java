@@ -60,7 +60,7 @@ public class NativeBindings {
         if (given != null && given.getCc() != null && given.getCc().isFile())
             return given.getCc();
         for (String path : new String[]{"/usr/bin", "/opt/bin", "/usr/local/bin"}) {
-            File gcc = new File(path, "g++");
+            File gcc = new File(path, "clang");
             if (gcc.isFile())
                 return gcc;
         }
