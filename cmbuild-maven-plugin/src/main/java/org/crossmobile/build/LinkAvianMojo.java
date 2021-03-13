@@ -48,7 +48,8 @@ public class LinkAvianMojo extends ExecGenericMojo {
         File baseJar = new File(getProject().getProperties().getProperty("cm.launch.avian"));
 
         try {
-            compileAvian(mainClass, getProject().getArtifactId(), avianLocation, baseJar, target, "linux", "x86_64");
+            File exec = compileAvian(mainClass, getProject().getArtifactId(), avianLocation, baseJar, target, "linux", "x86_64");
+            getProject().getProperties().setProperty("cm.launch.avian.exec", exec.getAbsolutePath());
         } catch (IOException e) {
             BaseUtils.throwException(e);
         }

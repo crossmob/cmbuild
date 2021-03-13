@@ -8,18 +8,7 @@ package org.crossmobile.build;
 
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
-import org.crossmobile.bridge.system.BaseUtils;
-import org.crossmobile.utils.Log;
-
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-
-import static org.crossmobile.utils.ParamsCommon.MAIN_CLASS;
+import org.crossmobile.utils.Commander;
 
 @Mojo(name = "execavian", defaultPhase = LifecyclePhase.INSTALL)
 public class ExecAvianMojo extends ExecGenericMojo {
@@ -30,113 +19,11 @@ public class ExecAvianMojo extends ExecGenericMojo {
     public void exec() {
         if (!isRunnable())
             return;
-
-        File baseJar = new File(getProject().getProperties().getProperty("cm.launch.avian"));
-        if (!baseJar.isFile())
-            BaseUtils.throwException(new IOException("Unable to locate JAR file " + baseJar.getAbsolutePath()));
-
-        String mainClass = getProject().getProperties().getProperty(MAIN_CLASS.tag().name);
-        if (mainClass == null)
-            throw new NullPointerException("Unable to find main class, using property 'main.class'");
-
-        ExecAvianMojo.DesktopThreadGroup threadGroup = new ExecAvianMojo.DesktopThreadGroup();
-        ExecAvianMojo.DesktopThread baseThread = new ExecAvianMojo.DesktopThread(threadGroup, mainClass);
-        baseThread.setFileClassLoader(baseJar);
-        baseThread.start();
-        threadGroup.waitFor();
-        threadGroup.kill();
-    }
-
-    private static final class DesktopThreadGroup extends ThreadGroup {
-        private DesktopThreadGroup() {
-            super("cm.thread.group");
-        }
-
-        public void waitFor() {
-            boolean found;
-            do {
-                found = false;
-                for (Thread thread : getActiveThreads()) {
-                    found = true;
-                    join(thread);
-                }
-            }
-            while (found);
-        }
-
-        private Collection<Thread> getActiveThreads() {
-            return getThreadsImpl(false);
-        }
-
-        private Collection<Thread> getAllThreads() {
-            return getThreadsImpl(true);
-        }
-
-        private Collection<Thread> getThreadsImpl(boolean alsoDaemons) {
-            Thread[] threads = new Thread[activeCount()];
-            Collection<Thread> result = new ArrayList<>(enumerate(threads));
-            for (Thread thread : threads)
-                if (thread != null && (alsoDaemons || !thread.isDaemon()))
-                    result.add(thread);
-            return result;
-        }
-
-        private void join(Thread thread) {
-            join(thread, 0);
-        }
-
-        private void join(Thread thread, long baseTime) {
-            try {
-                if (thread.isDaemon()) {
-                    long timeout = (baseTime + DaemonTimeout) - System.currentTimeMillis();
-                    if (timeout > 0)
-                        thread.join(timeout);
-                } else
-                    thread.join(0);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
-
-        private void kill() {
-            long baseTime = System.currentTimeMillis();
-            for (Thread thread : getAllThreads())
-                thread.interrupt();
-            for (Thread thread : getAllThreads())
-                join(thread, baseTime);
-            for (Thread thread : getAllThreads())
-                if (thread.isAlive())
-                    Log.error("Thread still alive: " + thread.getName());
-            destroy();
-        }
-    }
-
-    private static final class DesktopThread extends Thread {
-        private final String mainClass;
-
-        public DesktopThread(ExecAvianMojo.DesktopThreadGroup threadGroup, String mainClass) {
-            super(threadGroup, "DesktopLaunch");
-            this.mainClass = mainClass;
-        }
-
-        @Override
-        public void run() {
-            try {
-                Class<?> bootClass = Thread.currentThread().getContextClassLoader().loadClass(mainClass);
-                bootClass.getMethod("main", String[].class).invoke(null, (Object) new String[]{});
-            } catch (Throwable throwable) {
-                BaseUtils.throwException(throwable instanceof InvocationTargetException ? throwable.getCause() : throwable);
-            }
-        }
-
-        public void setFileClassLoader(File file) {
-            URL fileUrl = null;
-            try {
-                fileUrl = file.toURI().toURL();
-            } catch (MalformedURLException e) {
-                BaseUtils.throwException(e);
-            }
-            setContextClassLoader(new java.net.URLClassLoader(new URL[]{fileUrl}));
-        }
+        Commander cmd = new Commander(getProject().getProperties().getProperty("cm.launch.avian.exec"));
+        cmd.setCurrentDir(getProject().getFile().getParentFile());
+        cmd.exec();
+        cmd.waitFor();
+        if (cmd.exitValue() != 0)
+            throw new RuntimeException("Exit code: " + cmd.exitValue());
     }
 }
