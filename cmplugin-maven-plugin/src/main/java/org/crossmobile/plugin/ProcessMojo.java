@@ -58,6 +58,7 @@ public class ProcessMojo extends GenericPluginMojo {
 
         PluginAssembler.assembleFiles(reg, new File(getProject().getBuild().getDirectory()), getRootDependency(true),
                 embedlibs, new File(getProject().getBuild().getSourceDirectory()), getVendorSource(), getVendorBin(),
+                getProject().getFile().getParentFile(),
                 this::resolveArtifact, getCachedDir(), packages,
                 !skipSwing, !skipAvian, !skipIos, !skipAndroid, !skipUwp, !skipRvm,
                 VStudioLocation, javah, targets, PluginRegistryFile.forPlugin(mavenProject)

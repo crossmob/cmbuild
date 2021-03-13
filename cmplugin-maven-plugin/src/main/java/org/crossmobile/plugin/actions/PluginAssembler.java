@@ -50,7 +50,7 @@ public class PluginAssembler {
     private static final byte SOURCE_TYPE = OBJ_STYLE;
 
     public static void assembleFiles(Registry reg, File target, DependencyItem root,
-                                     String[] embedlibs, File srcDir, File vendorSrc, File vendorBin,
+                                     String[] embedlibs, File srcDir, File vendorSrc, File vendorBin, File projectLocation,
                                      Function<ArtifactInfo, File> resolver,
                                      File cachedir, Packages[] packs,
                                      boolean buildSwing, boolean buildAvian, boolean buildIos, boolean buildAndroid, boolean buildUwp, boolean buildRvm,
@@ -88,7 +88,7 @@ public class PluginAssembler {
                 time("Create native bindings", () -> {
                     File classpath = new File(target, "classes");
                     File srcOut = new File(srcDir.getParentFile(), "jni");
-                    NativeBindings.createNativeBinding(reg.natives(), classpath, srcOut, target, javahLocation, targets);
+                    NativeBindings.createNativeBinding(reg.natives(), classpath, srcOut, target, javahLocation, targets, projectLocation);
                 });
         });
 

@@ -67,7 +67,7 @@ public class NativeBindings {
         throw new RuntimeException("Unable to locate gcc compiler");
     }
 
-    public static void createNativeBinding(NativeMethodRegistry reg, File classpath, File srcOut, File targetDir, File javahLocation, Collection<Target> targets) {
+    public static void createNativeBinding(NativeMethodRegistry reg, File classpath, File srcOut, File targetDir, File javahLocation, Collection<Target> targets, File projectLocation) {
         if (!reg.hasNatives())
             return;
         javahLocation = guessJavah(javahLocation);
@@ -81,8 +81,8 @@ public class NativeBindings {
                 "-cp", classpath.getAbsolutePath());
         reg.stream().forEach(c -> cmd.addArguments(c.getName()));
         StringBuilder out = new StringBuilder();
-        cmd.setOutListener(out::append);
-        cmd.setErrListener(out::append);
+        cmd.setOutListener(str -> out.append(str).append('\n'));
+        cmd.setErrListener(str -> out.append(str).append('\n'));
         cmd.exec();
         cmd.waitFor();
         if (cmd.exitValue() != 0) {
@@ -108,11 +108,11 @@ public class NativeBindings {
             }
             // Compile for all required targets
             for (Target target : targets)
-                compileForArch(target.asserted(), cFiles, hLocation, javaIncludeDir, targetDir);
+                compileForArch(target.asserted(), cFiles, hLocation, javaIncludeDir, targetDir, projectLocation);
         }
     }
 
-    private static void compileForArch(Target target, Collection<File> cFiles, File hLocation, File javaIncludeDir, File targetDir) {
+    private static void compileForArch(Target target, Collection<File> cFiles, File hLocation, File javaIncludeDir, File targetDir, File projectLocation) {
         String cc = guessCCompiler(target).getAbsolutePath();
         File oDir = NativeBindings.oDir.apply(targetDir, target);
 
@@ -131,8 +131,9 @@ public class NativeBindings {
             cmd.addArguments(target.getCcflags());
             cmd.addArguments("-c", cFile.getAbsolutePath(), "-o", oFile.getAbsolutePath());
             StringBuilder out = new StringBuilder();
-            cmd.setOutListener(out::append);
-            cmd.setErrListener(out::append);
+            cmd.setOutListener(str -> out.append(str).append('\n'));
+            cmd.setErrListener(str -> out.append(str).append('\n'));
+            cmd.setCurrentDir(projectLocation);
             cmd.exec();
             cmd.waitFor();
             if (cmd.exitValue() != 0) {
