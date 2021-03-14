@@ -21,6 +21,8 @@ public class ExecAvianMojo extends ExecGenericMojo {
             return;
         Commander cmd = new Commander(getProject().getProperties().getProperty("cm.launch.avian.exec"));
         cmd.setCurrentDir(getProject().getFile().getParentFile());
+        cmd.setOutListener(System.out::println);
+        cmd.setErrListener(System.err::println);
         cmd.exec();
         cmd.waitFor();
         if (cmd.exitValue() != 0)
