@@ -125,7 +125,8 @@ public class NativeBindings {
                     "-I" + hLocation.getAbsolutePath(),
                     "-I" + javaIncludeDir.getAbsolutePath(),
                     "-I" + osIncludeDir.getAbsolutePath(),
-                    "-D_JNI_IMPLEMENTATION_");
+                    "-D_JNI_IMPLEMENTATION_",
+                    "-fPIC");
             if (!containsOptimizationFlags(target.getCcflags()))
                 cmd.addArgument("-Os");
             cmd.addArguments(target.getCcflags());
