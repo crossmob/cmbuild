@@ -174,10 +174,10 @@ public class NativeBindings {
         srcFile = new File(baseDir, baseName + ".cp");
         if (srcFile.isFile())
             return srcFile;
-        srcFile = new File(baseDir, baseName + ".cpp");
+        srcFile = new File(baseDir, baseName + ".c");
         if (srcFile.isFile())
             return srcFile;
-        srcFile = new File(baseDir, baseName + ".c");
+        srcFile = new File(baseDir, baseName + ".cpp");
         if (srcFile.isFile())
             return srcFile;
         // No file found -- construct one
