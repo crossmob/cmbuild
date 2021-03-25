@@ -37,9 +37,9 @@ public class MaterialsManager {
             else if (name.endsWith(".strings")) {
                 LocalizedType localized = LocalizedType.getLocalized(file, materialsDir);
                 if (output != null)     // need to copy localized files
-                    FileUtils.write(output, parseStrings(file, localized, meta.get(localized == null || localized.isBase ? null : localized.tableName)));
+                    FileUtils.write(output, parseStrings(file, localized, meta == null ? null : meta.get(localized == null || localized.isBase ? null : localized.tableName)));
                 else if (localized != null && !localized.isBase)    // only display info about localized files, no copy needed
-                    parseStrings(file, localized, meta.get(localized.tableName));
+                    parseStrings(file, localized, meta == null ? null : meta.get(localized.tableName));
             } else if (output != null)  // parse the rest of files only if copy needed
                 if (name.endsWith(".stringsdict"))
                     FileUtils.write(output, parseStringsDict(file));

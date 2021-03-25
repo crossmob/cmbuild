@@ -10,6 +10,7 @@ import org.crossmobile.bridge.system.BaseUtils;
 import org.crossmobile.build.AnnotationConfig;
 import org.crossmobile.build.exec.android.AdbUtils;
 import org.crossmobile.build.ib.helper.XIBList;
+import org.crossmobile.build.ib.i18n.IBParserMeta;
 import org.crossmobile.build.tools.*;
 import org.crossmobile.build.tools.images.IconBuilder;
 import org.crossmobile.build.tools.images.IconBuilder.IconType;
@@ -72,11 +73,13 @@ public class ResourcesPipeline implements Runnable {
 
         File ibobjects = new File(generated, IBOBJECTS);
         Collection<File> xibs = IBObjectsCreator.getXibFiles(env.getMaterialsDir(), ibobjects);
+        IBParserMeta meta = null;   // We need this reference for parseMaterials later on
         if (xibs != null) {
             XIBList xibList = IBObjectsCreator.parse(env.getMaterialsDir(), xibs, ann);
-            MaterialsManager.parseMaterials(xibList.getMeta(), env.getMaterialsDir(), new File(env.getBuilddir(), APP));
             IBObjectsCreator.createJavaSource(xibList, ibobjects, new File(cacheBase, IBOBJECTS));
+            meta = xibList.getMeta();
         }
+        MaterialsManager.parseMaterials(meta, env.getMaterialsDir(), new File(env.getBuilddir(), APP));
 
         IconBuilder.copyIcons(IconBuilder.getDefaultHound(env.getBasedir()), new File(env.getBuilddir(), SYS), IconType.DESKTOP);
         new PropertiesCreator(env.getProperties(),
@@ -104,11 +107,13 @@ public class ResourcesPipeline implements Runnable {
 
         File ibobjects = new File(generated, IBOBJECTS);
         Collection<File> xibs = IBObjectsCreator.getXibFiles(env.getMaterialsDir(), ibobjects);
+        IBParserMeta meta = null;   // We need this reference for parseMaterials later on
         if (xibs != null) {
             XIBList xibList = IBObjectsCreator.parse(env.getMaterialsDir(), xibs, ann);
-            MaterialsManager.parseMaterials(xibList.getMeta(), env.getMaterialsDir(), andrAsset);
             IBObjectsCreator.createJavaSource(xibList, ibobjects, new File(cacheBase, IBOBJECTS));
+            meta = xibList.getMeta();
         }
+        MaterialsManager.parseMaterials(meta, env.getMaterialsDir(), andrAsset);
 
         MaterialsManager.copyAndroidSys(asList(env.root().getRuntimeDependencies(true), DependencyItem::getFile), andrAsset, andrRes);
 
