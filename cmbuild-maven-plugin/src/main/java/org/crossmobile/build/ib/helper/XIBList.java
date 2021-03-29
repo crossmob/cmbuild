@@ -9,6 +9,7 @@ package org.crossmobile.build.ib.helper;
 import org.crossmobile.build.ib.Element;
 import org.crossmobile.build.ib.Elements;
 import org.crossmobile.build.ib.i18n.IBParserMeta;
+import org.crossmobile.build.utils.Config;
 import org.crossmobile.build.utils.Templates;
 
 public class XIBList extends Element {
@@ -27,7 +28,7 @@ public class XIBList extends Element {
     public String toCode() {
         StringBuilder out = new StringBuilder();
         out.append(Templates.AUTOGEN_TEMPLATE);
-        out.append("package org.crossmobile.sys;").append(NEWLINE);
+        out.append("package " + Config.DYNAMIC_CONTENT_PACKAGE + ";").append(NEWLINE);
         out.append(NEWLINE);
         out.append("import crossmobile.ios.uikit.*;").append(NEWLINE);
         out.append("import crossmobile.ios.foundation.*;").append(NEWLINE);

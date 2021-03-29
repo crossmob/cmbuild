@@ -26,8 +26,12 @@ public class Config {
     public final static String GENERATED_CMSOURCES = "generated-sources" + File.separator + "main";
     public final static String APP = CLASSES + File.separator + "org" + File.separator + "crossmobile" + File.separator + MATERIALS_TAG + File.separator + "app";
     public final static String SYS = CLASSES + File.separator + "org" + File.separator + "crossmobile" + File.separator + MATERIALS_TAG + File.separator + "sys";
-    public final static String PLUGIN_LAUNCHER = "org" + File.separator + "crossmobile" + File.separator + "sys" + File.separator + "PluginsLauncherList.java";
-    public final static String IBOBJECTS = "org" + File.separator + "crossmobile" + File.separator + "sys" + File.separator + "IBObjects.java";
+
+    public final static String DYNAMIC_CONTENT_PACKAGE = "org.crossmobile.bind.system.init";
+    public final static String PLUGIN_LAUNCHER_CLASS = DYNAMIC_CONTENT_PACKAGE + ".PluginsLauncherList";
+    public final static String PLUGIN_LAUNCHER_FILE = PLUGIN_LAUNCHER_CLASS.replace('.', File.separatorChar) + ".java";
+    public final static String IBOBJECTS_CLASS = DYNAMIC_CONTENT_PACKAGE + ".IBObjects";
+    public final static String IBOBJECTS_FILE = IBOBJECTS_CLASS.replace('.', File.separatorChar) + ".java";
     // Android
     public final static String ANDROID_APP = "app";
     public final static String ANDROID_MANIFEST = ANDROID_APP + File.separator + "AndroidManifest.xml";

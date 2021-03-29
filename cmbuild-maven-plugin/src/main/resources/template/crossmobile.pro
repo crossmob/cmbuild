@@ -41,7 +41,7 @@
 -dontwarn org.crossmobile.**
 -dontnote org.crossmobile.**
 
--keep public class org.crossmobile.sys.** { public *; }
+-keep public class org.crossmobile.bind.system.init.** { public *; }
 -keep public class org.crossmobile.bridge.CrossMobilePlugin { public *; }
 -keep public class org.crossmobile.build.StoryBoardBinder { public *; }
 -keep public class * implements org.crossmobile.bridge.CrossMobilePlugin { public *; }

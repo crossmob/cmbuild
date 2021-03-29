@@ -13,7 +13,7 @@ import org.crossmobile.utils.PluginMetaData;
 
 import java.io.File;
 
-import static org.crossmobile.build.utils.Config.PLUGIN_LAUNCHER;
+import static org.crossmobile.build.utils.Config.PLUGIN_LAUNCHER_FILE;
 import static org.crossmobile.build.utils.Templates.*;
 import static org.crossmobile.utils.TextUtils.plural;
 
@@ -25,8 +25,8 @@ public class PluginsLauncher {
 
     public PluginsLauncher(Iterable<PluginMetaData> metaData, File generated, File cache) {
         this.metadata = metaData;
-        this.generated = new File(generated, PLUGIN_LAUNCHER);
-        this.cache = new File(cache, PLUGIN_LAUNCHER);
+        this.generated = new File(generated, PLUGIN_LAUNCHER_FILE);
+        this.cache = new File(cache, PLUGIN_LAUNCHER_FILE);
     }
 
     public void execute() {

@@ -71,12 +71,12 @@ public class ResourcesPipeline implements Runnable {
         File info = new File(app, "Info.plist");
         File cacheBase = new File(env.getBuilddir(), PROJECT_CACHES);
 
-        File ibobjects = new File(generated, IBOBJECTS);
+        File ibobjects = new File(generated, IBOBJECTS_FILE);
         Collection<File> xibs = IBObjectsCreator.getXibFiles(env.getMaterialsDir(), ibobjects);
         IBParserMeta meta = null;   // We need this reference for parseMaterials later on
         if (xibs != null) {
             XIBList xibList = IBObjectsCreator.parse(env.getMaterialsDir(), xibs, ann);
-            IBObjectsCreator.createJavaSource(xibList, ibobjects, new File(cacheBase, IBOBJECTS));
+            IBObjectsCreator.createJavaSource(xibList, ibobjects, new File(cacheBase, IBOBJECTS_FILE));
             meta = xibList.getMeta();
         }
         MaterialsManager.parseMaterials(meta, env.getMaterialsDir(), new File(env.getBuilddir(), APP));
@@ -105,12 +105,12 @@ public class ResourcesPipeline implements Runnable {
                 env.root());
         AndroidProjectCreator.execute(env);
 
-        File ibobjects = new File(generated, IBOBJECTS);
+        File ibobjects = new File(generated, IBOBJECTS_FILE);
         Collection<File> xibs = IBObjectsCreator.getXibFiles(env.getMaterialsDir(), ibobjects);
         IBParserMeta meta = null;   // We need this reference for parseMaterials later on
         if (xibs != null) {
             XIBList xibList = IBObjectsCreator.parse(env.getMaterialsDir(), xibs, ann);
-            IBObjectsCreator.createJavaSource(xibList, ibobjects, new File(cacheBase, IBOBJECTS));
+            IBObjectsCreator.createJavaSource(xibList, ibobjects, new File(cacheBase, IBOBJECTS_FILE));
             meta = xibList.getMeta();
         }
         MaterialsManager.parseMaterials(meta, env.getMaterialsDir(), andrAsset);

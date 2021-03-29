@@ -36,7 +36,7 @@ public class Templates {
 
     public static final String PLUGININTIALIZER_TEMPLATE
             = AUTOGEN_TEMPLATE
-            + "package org.crossmobile.sys;\n"
+            + "package " + Config.DYNAMIC_CONTENT_PACKAGE + ";\n"
             + "\n"
             + "public class PluginsLauncherList {\n"
             + "\n"
