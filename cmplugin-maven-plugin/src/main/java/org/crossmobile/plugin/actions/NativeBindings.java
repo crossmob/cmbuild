@@ -60,11 +60,11 @@ public class NativeBindings {
         if (given != null && given.getCc() != null && given.getCc().isFile())
             return given.getCc();
         for (String path : new String[]{"/usr/bin", "/opt/bin", "/usr/local/bin"}) {
-            File gcc = new File(path, "clang");
-            if (gcc.isFile())
-                return gcc;
+            File clang = new File(path, "clang");
+            if (clang.isFile())
+                return clang;
         }
-        throw new RuntimeException("Unable to locate gcc compiler");
+        throw new RuntimeException("Unable to locate clang compiler");
     }
 
     public static void createNativeBinding(NativeMethodRegistry reg, File classpath, File srcOut, File targetDir, File javahLocation, Collection<Target> targets, File projectLocation) {
