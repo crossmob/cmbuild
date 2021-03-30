@@ -9,10 +9,12 @@ package org.crossmobile.build;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.settings.Settings;
 import org.crossmobile.bridge.system.BaseUtils;
 import org.crossmobile.utils.Commander;
 import org.crossmobile.utils.FileUtils;
 import org.crossmobile.utils.Log;
+import org.crossmobile.utils.launcher.TargetArch;
 
 import java.io.*;
 import java.util.Collection;
@@ -34,33 +36,37 @@ import static org.crossmobile.utils.ParamsCommon.MAIN_CLASS;
 public class LinkAvianMojo extends ExecGenericMojo {
     private static final Collection<String> DUPLICATE_BLACKLIST = new HashSet<>(Collections.singletonList("META-INF/MANIFEST.MF"));
 
+    @SuppressWarnings("unused")
+    @Parameter(defaultValue = "${settings}", readonly = true)
+    private Settings settings;
+
     @Parameter
     private File avianLocation;
+
+    private static final String currentOs = "linux-x86_64";
 
     @Override
     public void exec() {
         if (avianLocation == null)
             avianLocation = new File(new File(System.getProperty("user.home")), format(".cache%scrossmobile%savian%s%s", separator, separator, separator, "0.1"));
-
-        File target = new File(getProject().getBuild().getDirectory());
-
+        TargetArch targetArch = TargetArch.getFromProfiles(settings.getActiveProfiles());
+        File targetDir = new File(getProject().getBuild().getDirectory());
         String mainClass = getProject().getProperties().getProperty(MAIN_CLASS.tag().name);
         File baseJar = new File(getProject().getProperties().getProperty("cm.launch.avian"));
-
         try {
-            File exec = compileAvian(mainClass, getProject().getArtifactId(), avianLocation, baseJar, target, "linux", "x86_64");
+            File exec = compileAvian(mainClass, getProject().getArtifactId(), avianLocation, baseJar, targetDir, targetArch);
             getProject().getProperties().setProperty("cm.launch.avian.exec", exec.getAbsolutePath());
         } catch (IOException e) {
             BaseUtils.throwException(e);
         }
     }
 
-    public static File compileAvian(String mainClass, String appName, File coreLibraryDir, File appJar, File targetDir, String os, String arch) throws IOException {
+    public static File compileAvian(String mainClass, String appName, File coreLibraryDir, File appJar, File targetDir, TargetArch targetArch) throws IOException {
         File commonDir = new File(coreLibraryDir, "common");
         File hostFilesDir = new File(coreLibraryDir, "common" + File.separator + "bin" + File.separator + "linux-x86_64");
-        File targetPlatformFilesDir = new File(coreLibraryDir, os + "-" + arch);
+        File targetPlatformFilesDir = new File(coreLibraryDir, targetArch.getOs() + "-" + targetArch.getArch());
         File avianFilesDir = new File(targetDir, "avian-files");
-        File targetFile = new File(targetDir, appName + "." + os + "-" + arch);
+        File targetFile = new File(targetDir, appName + "." + targetArch.getOs() + "-" + targetArch.getArch());
 
         File bootJar = new File(avianFilesDir, "boot.jar").getAbsoluteFile();
         File[] jarFiles = new File[]{
@@ -77,7 +83,7 @@ public class LinkAvianMojo extends ExecGenericMojo {
 
         // Create .o resource files
         for (String binary : new String[]{"mainclass", "boot.jar"})
-            binaryToObject(new File(hostFilesDir, "binaryToObject"), avianFilesDir, binary, os, arch);
+            binaryToObject(new File(hostFilesDir, "binaryToObject"), avianFilesDir, binary, targetArch);
 
         File libAvian = new File(targetPlatformFilesDir, "libavian.zip");
         if (!FileUtils.unzip(libAvian, avianFilesDir))
@@ -139,9 +145,9 @@ public class LinkAvianMojo extends ExecGenericMojo {
         }
     }
 
-    private static void binaryToObject(File binaryToObject, File buildDir, String binary, String os, String arch) {
+    private static void binaryToObject(File binaryToObject, File buildDir, String binary, TargetArch targetArch) {
         String symbol = binary.replace('.', '_');
-        Commander cmd = new Commander(binaryToObject.getAbsolutePath(), binary, binary + ".o", "_binary_" + symbol + "_start", "_binary_" + symbol + "_end", os, arch);
+        Commander cmd = new Commander(binaryToObject.getAbsolutePath(), binary, binary + ".o", "_binary_" + symbol + "_start", "_binary_" + symbol + "_end", targetArch.getOs(), targetArch.getArch());
         cmd.setCurrentDir(buildDir);
         execCmd(cmd);
     }
@@ -161,10 +167,6 @@ public class LinkAvianMojo extends ExecGenericMojo {
         execCmd(cmd);
     }
 
-    private static FilenameFilter thatEndsWith(String ends) {
-        return (f, name) -> name.endsWith(ends);
-    }
-
     private static void execCmd(Commander cmd) {
         StringBuilder out = new StringBuilder();
         cmd.setOutListener(str -> out.append(str).append('\n'));
@@ -176,8 +178,8 @@ public class LinkAvianMojo extends ExecGenericMojo {
             Log.error(out.toString());
             throwException(new IOException("Unable to link application."));
         } else {
-            Log.debug(cmd.toString());
-            Log.debug(out.toString());
+            Log.info(cmd.toString());
+            Log.info(out.toString());
         }
     }
 }
