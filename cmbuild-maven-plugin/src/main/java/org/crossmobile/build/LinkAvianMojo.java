@@ -178,8 +178,8 @@ public class LinkAvianMojo extends ExecGenericMojo {
             Log.error(out.toString());
             throwException(new IOException("Unable to link application."));
         } else {
-            Log.info(cmd.toString());
-            Log.info(out.toString());
+            Log.debug(cmd.toString());
+            Log.debug(out.toString());
         }
     }
 }
