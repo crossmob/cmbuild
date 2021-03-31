@@ -7,23 +7,57 @@
 package org.crossmobile.plugin.structs;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
 public class Target {
-    private final static Collection<String> validOS = Arrays.asList("linux", "windows", "macosx", "ios", "freebsd");
-    private final static Collection<String> validArch = Arrays.asList("i386", "x86_64", "arm", "arm64");
+    public enum ValidTarget {
+        LINUX_X86_64("linux", "x86_64", "gnu"),
+        LINUX_ARM("linux", "arm", "armhf", "arm", "gnueabihf"),
+        LINUX_ARM64("linux", "arm64", "arm64", "aarch64", "gnu");
+
+        private final String os;
+        private final String arch;
+        private final String dockerArch;
+        private final String tripleArch;
+        private final String osType;
+
+        ValidTarget(String os, String arch, String osType) {
+            this(os, arch, arch, arch, osType);
+        }
+
+        ValidTarget(String os, String arch, String dockerArch, String tripleArch, String osType) {
+            this.os = os;
+            this.arch = arch;
+            this.dockerArch = dockerArch;
+            this.tripleArch = tripleArch;
+            this.osType = osType;
+        }
+
+        public String getTriple() {
+            return tripleArch + "-" + os + "-" + osType;
+        }
+
+        public String getDockerName() {
+            return os + "-" + dockerArch;
+        }
+
+        public boolean usesCrossCompilerPrefix() {
+            return !tripleArch.equals("x86_64");
+        }
+    }
 
     private String os;
     private String arch;
     private File cc;
+    private List<String> includes;
     private List<String> ccflags;
     private List<String> lflags;
     private List<File> libraries;
 
+    // Needed by maven
     public Target() {
     }
 
@@ -45,15 +79,19 @@ public class Target {
     }
 
     public List<String> getCcflags() {
-        return ccflags;
+        return new ArrayList<>(ccflags);
     }
 
     public List<File> getLibraries() {
-        return libraries;
+        return new ArrayList<>(libraries);
     }
 
     public List<String> getLflags() {
-        return lflags;
+        return new ArrayList<>(lflags);
+    }
+
+    public List<String> getIncludes() {
+        return new ArrayList<>(includes);
     }
 
     public String getName() {
@@ -73,21 +111,18 @@ public class Target {
         }
     }
 
-    public Target asserted() {
+    public ValidTarget asValidTarget() {
         Objects.requireNonNull(os, "Operating System not defined for " + toString());
         Objects.requireNonNull(arch, "Arch not defined for " + toString());
-        if (!validOS.contains(os))
-            throw new RuntimeException("Illegal Operating System for " + toString() + ", should be one of " + validOS);
-        if (!validArch.contains(arch))
-            throw new RuntimeException("Illegal Architecture for " + toString() + ", should be one of " + validArch);
-        return this;
+        for (ValidTarget target : ValidTarget.values())
+            if (target.arch.equals(arch) && target.os.equals(os))
+                return target;
+        throw new RuntimeException("Illegal combination of operating system/architecture: " + toString());
     }
 
     @Override
     public String toString() {
-        return "Target{" +
-                "os='" + os + '\'' +
-                ", arch='" + arch + '\'' +
-                '}';
+        return "os='" + os + '\'' +
+                ", arch='" + arch + '\'';
     }
 }

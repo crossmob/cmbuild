@@ -9,12 +9,14 @@ package org.crossmobile.plugin.actions;
 import org.crossmobile.plugin.reg.NativeMethodRegistry;
 import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.plugin.structs.Target;
+import org.crossmobile.plugin.structs.Target.ValidTarget;
 import org.crossmobile.utils.Commander;
 import org.crossmobile.utils.FileUtils;
 import org.crossmobile.utils.Log;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.BiFunction;
@@ -54,17 +56,6 @@ public class NativeBindings {
                 return javah;
         }
         throw new RuntimeException("Unable to locate javah using JAVA_HOME " + javaHome.getAbsolutePath());
-    }
-
-    private static File guessCCompiler(Target given) {
-        if (given != null && given.getCc() != null && given.getCc().isFile())
-            return given.getCc();
-        for (String path : new String[]{"/usr/bin", "/opt/bin", "/usr/local/bin"}) {
-            File clang = new File(path, "clang");
-            if (clang.isFile())
-                return clang;
-        }
-        throw new RuntimeException("Unable to locate clang compiler");
     }
 
     public static void createNativeBinding(NativeMethodRegistry reg, File classpath, File srcOut, File targetDir, File javahLocation, Collection<Target> targets, File projectLocation) {
@@ -108,29 +99,51 @@ public class NativeBindings {
             }
             // Compile for all required targets
             for (Target target : targets)
-                compileForArch(target.asserted(), cFiles, hLocation, javaIncludeDir, targetDir, projectLocation);
+                compileForArch(target, cFiles, hLocation, javaIncludeDir, targetDir, projectLocation);
         }
     }
 
     private static void compileForArch(Target target, Collection<File> cFiles, File hLocation, File javaIncludeDir, File targetDir, File projectLocation) {
-        String cc = guessCCompiler(target).getAbsolutePath();
+        ValidTarget vt = target.asValidTarget();
         File oDir = NativeBindings.oDir.apply(targetDir, target);
 
         // Compile JNI files to target architecture */
         File osIncludeDir = new File(javaIncludeDir, target.getOs());
+
+        List<String> incDirs = target.getIncludes();
+        incDirs.add(hLocation.getAbsolutePath());
+        incDirs.add(javaIncludeDir.getAbsolutePath());
+        incDirs.add(osIncludeDir.getAbsolutePath());
+
+        List<String> includes = new ArrayList<>();
+        List<String> volumes = new ArrayList<>();
+        int idx = 1;
+        for (String incl : incDirs) {
+            volumes.add("-v");
+            volumes.add(getAbs(projectLocation, incl) + ":/include/dir" + idx);
+            includes.add("-I/include/dir" + idx);
+            idx++;
+        }
+
         cFiles.stream().parallel().forEach(cFile -> {
             // Run CC
             File oFile = new File(oDir, removeExtension(cFile.getName()) + ".o");
-            Commander cmd = new Commander(cc,
-                    "-I" + hLocation.getAbsolutePath(),
-                    "-I" + javaIncludeDir.getAbsolutePath(),
-                    "-I" + osIncludeDir.getAbsolutePath(),
+
+            Commander cmd = new Commander("docker", "run", "--rm");
+            cmd.addArguments(volumes);
+            cmd.addArguments("-v", getAbs(cFile.getParentFile()) + ":/src",
+                    "-v", getAbs(oFile.getParentFile()) + ":/out",
+                    "aroma/dep-builder-" + vt.getDockerName(),
+                    (vt.usesCrossCompilerPrefix() ? vt.getTriple() + "-" : "") + "gcc",
+                    "-L" + "/usr/lib/" + vt.getTriple(),
                     "-D_JNI_IMPLEMENTATION_",
-                    "-fPIC");
+                    "-fPIC",
+                    "-I/src");
+            cmd.addArguments(includes);
             if (!containsOptimizationFlags(target.getCcflags()))
                 cmd.addArgument("-Os");
             cmd.addArguments(target.getCcflags());
-            cmd.addArguments("-c", cFile.getAbsolutePath(), "-o", oFile.getAbsolutePath());
+            cmd.addArguments("-c", "/src/" + cFile.getName(), "-o", "/out/" + oFile.getName());
             StringBuilder out = new StringBuilder();
             cmd.setOutListener(str -> out.append(str).append('\n'));
             cmd.setErrListener(str -> out.append(str).append('\n'));
