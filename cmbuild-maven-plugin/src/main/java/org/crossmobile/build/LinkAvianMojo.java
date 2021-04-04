@@ -62,9 +62,12 @@ public class LinkAvianMojo extends ExecGenericMojo {
     }
 
     public static File compileAvian(String mainClass, String appName, File coreLibraryDir, File appJar, File targetDir, TargetArch targetArch) throws IOException {
-        File commonDir = new File(coreLibraryDir, "common");
-        File hostFilesDir = new File(coreLibraryDir, "common" + File.separator + "bin" + File.separator + "linux-x86_64");
+        File commonDir = new File(coreLibraryDir, "all");
+        File binaryToObjectPath = new File(commonDir, currentOs + separator + "binaryToObject");
+
         File targetPlatformFilesDir = new File(coreLibraryDir, targetArch.getOs() + "-" + targetArch.getArch());
+        File ldPath = new File(targetPlatformFilesDir, currentOs + separator + "ld");
+
         File avianFilesDir = new File(targetDir, "avian-files");
         File targetFile = new File(targetDir, appName + "." + targetArch.getOs() + "-" + targetArch.getArch());
 
@@ -83,13 +86,13 @@ public class LinkAvianMojo extends ExecGenericMojo {
 
         // Create .o resource files
         for (String binary : new String[]{"mainclass", "boot.jar"})
-            binaryToObject(new File(hostFilesDir, "binaryToObject"), avianFilesDir, binary, targetArch);
+            binaryToObject(binaryToObjectPath, avianFilesDir, binary, targetArch);
 
         File libAvian = new File(targetPlatformFilesDir, "libavian.zip");
         if (!FileUtils.unzip(libAvian, avianFilesDir))
             throw new IOException("Unable to unzip file " + libAvian.getAbsolutePath());
 
-        linkApplication(avianFilesDir, targetPlatformFilesDir, targetFile);
+        linkApplication(ldPath, avianFilesDir, targetPlatformFilesDir, targetFile);
         // Strip application
         execCmd(new Commander("strip", "--strip-all", targetFile.getAbsolutePath()));
 
@@ -152,8 +155,15 @@ public class LinkAvianMojo extends ExecGenericMojo {
         execCmd(cmd);
     }
 
-    private static void linkApplication(File oFilesDir, File libraryFilesDir, File targetFile) {
-        Commander cmd = new Commander("g++", "-rdynamic");
+    private static void linkApplication(File ld, File oFilesDir, File libraryFilesDir, File targetFile) {
+        Commander cmd = new Commander(ld.getAbsolutePath(),
+                "-export-dynamic",
+                "-pie",
+                "-dynamic-linker", "/lib64/ld-linux-x86-64.so.2",
+                "-m", "elf_x86_64",
+                "-z", "now",
+                "--as-needed",
+                "-L" + libraryFilesDir.getAbsolutePath());
 
         BiConsumer<String, File> action = (relativePath, file) -> {
             if (file.getName().endsWith(".a") || file.getName().endsWith(".o")) cmd.addArgument(file.getAbsolutePath());
@@ -161,7 +171,7 @@ public class LinkAvianMojo extends ExecGenericMojo {
         FileUtils.forAllFiles(oFilesDir, action);
         FileUtils.forAllFiles(libraryFilesDir, action);
 
-        cmd.addArguments("-ldl", "-lfontconfig", "-lpthread", "-lz");
+        cmd.addArguments("-ldl", "-lfontconfig", "-lpthread", "-lz", "-lstdc++", "-lm", "-lc", "-lgcc_s");
         cmd.addArguments("-o", targetFile.getAbsolutePath());
         cmd.setCurrentDir(oFilesDir);
         execCmd(cmd);
