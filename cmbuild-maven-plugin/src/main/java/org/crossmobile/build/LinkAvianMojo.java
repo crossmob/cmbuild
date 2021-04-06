@@ -93,8 +93,6 @@ public class LinkAvianMojo extends ExecGenericMojo {
             throw new IOException("Unable to unzip file " + libAvian.getAbsolutePath());
 
         linkApplication(ldPath, avianFilesDir, targetPlatformFilesDir, targetFile, targetArch);
-        // Strip application
-        execCmd(new Commander("strip", "--strip-all", targetFile.getAbsolutePath()));
 
         Log.info("Successfully created avian executable " + targetFile);
         return targetFile;
