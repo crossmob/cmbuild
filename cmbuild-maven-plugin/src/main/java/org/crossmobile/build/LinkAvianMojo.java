@@ -157,13 +157,18 @@ public class LinkAvianMojo extends ExecGenericMojo {
 
     private static void linkApplication(File ld, File oFilesDir, File libraryFilesDir, File targetFile) {
         Commander cmd = new Commander(ld.getAbsolutePath(),
-                "-export-dynamic",
-                "-pie",
-                "-dynamic-linker", "/lib64/ld-linux-x86-64.so.2",
-                "-m", "elf_x86_64",
-                "-z", "now",
-                "--as-needed",
-                "-L" + libraryFilesDir.getAbsolutePath());
+        "--eh-frame-hdr",
+        "-m", "elf_x86_64",
+        "--hash-style", "gnu",
+        "--as-needed",
+        "-export-dynamic", 
+        "-dynamic-linker", "/lib64/ld-linux-x86-64.so.2",
+        "-pie",
+        "-z", "now",
+        "-z", "relro",
+        "-s",
+        "-L/usr/lib/x86_64-linux-gnu",
+        "-L" + libraryFilesDir.getAbsolutePath());
 
         BiConsumer<String, File> action = (relativePath, file) -> {
             if (file.getName().endsWith(".a") || file.getName().endsWith(".o")) cmd.addArgument(file.getAbsolutePath());
