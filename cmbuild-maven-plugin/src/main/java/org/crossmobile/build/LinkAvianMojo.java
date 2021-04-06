@@ -79,7 +79,7 @@ public class LinkAvianMojo extends ExecGenericMojo {
 
         FileUtils.delete(avianFilesDir);
         FileUtils.mkdirs(avianFilesDir);
-        mergeJars(bootJar, avianFilesDir, jarFiles);
+        mergeJars(bootJar, avianFilesDir, targetArch, jarFiles);
 
         // Create mainClass name resource
         FileUtils.write(new File(avianFilesDir, "mainclass"), mainClass + '\0');
@@ -92,7 +92,7 @@ public class LinkAvianMojo extends ExecGenericMojo {
         if (!FileUtils.unzip(libAvian, avianFilesDir))
             throw new IOException("Unable to unzip file " + libAvian.getAbsolutePath());
 
-        linkApplication(ldPath, avianFilesDir, targetPlatformFilesDir, targetFile);
+        linkApplication(ldPath, avianFilesDir, targetPlatformFilesDir, targetFile, targetArch);
         // Strip application
         execCmd(new Commander("strip", "--strip-all", targetFile.getAbsolutePath()));
 
@@ -100,34 +100,37 @@ public class LinkAvianMojo extends ExecGenericMojo {
         return targetFile;
     }
 
-    private static void mergeJars(File target, File oFiles, File... jarPaths) throws IOException {
+    private static void mergeJars(File target, File oFiles, TargetArch targetArch, File... jarPaths) throws IOException {
         JarOutputStream output = new JarOutputStream(new FileOutputStream(target));
         output.setLevel(Deflater.NO_COMPRESSION);
         Collection<String> allFiles = new HashSet<>();
         for (File jarfile : jarPaths) {
             JarFile jarFile = new JarFile(jarfile);
-            copyEntries(jarFile, output, oFiles, allFiles);
+            copyEntries(jarFile, output, oFiles, targetArch, allFiles);
         }
         output.close();
     }
 
-    private static void copyEntries(JarFile sourceJar, JarOutputStream output, File oFiles, Collection<String> allFiles) throws IOException {
+    private static void copyEntries(JarFile sourceJar, JarOutputStream output, File oFiles, TargetArch targetArch, Collection<String> allFiles) throws IOException {
         Enumeration<JarEntry> sourceEntries = sourceJar.entries();
+        String nativeFilesFolder = "native/" + targetArch.getOs() + "-" + targetArch.getArch() + "/";
         while (sourceEntries.hasMoreElements()) {
             JarEntry sourceEntry = sourceEntries.nextElement();
             String sourceName = sourceEntry.getName();
             if (!allFiles.contains(sourceName)) {
                 if (sourceName.endsWith(".o")) {
-                    InputStream is = sourceJar.getInputStream(sourceEntry);
-                    int slash = sourceName.lastIndexOf('/');
-                    String filename = sourceName.substring(slash + 1);
-                    OutputStream out = new FileOutputStream(new File(oFiles, filename));
-                    byte[] buf = new byte[1024];
-                    int len;
-                    while ((len = (is.read(buf))) >= 0)
-                        if (len > 0)
-                            out.write(buf, 0, len);
-                    out.close();
+                    if (sourceName.startsWith(nativeFilesFolder)) {
+                        InputStream is = sourceJar.getInputStream(sourceEntry);
+                        int slash = sourceName.lastIndexOf('/');
+                        String filename = sourceName.substring(slash + 1);
+                        OutputStream out = new FileOutputStream(new File(oFiles, filename));
+                        byte[] buf = new byte[1024];
+                        int len;
+                        while ((len = (is.read(buf))) >= 0)
+                            if (len > 0)
+                                out.write(buf, 0, len);
+                        out.close();
+                    }
                 } else {
                     JarEntry targetEntry = new JarEntry(sourceName);
                     output.putNextEntry(targetEntry);
@@ -155,20 +158,19 @@ public class LinkAvianMojo extends ExecGenericMojo {
         execCmd(cmd);
     }
 
-    private static void linkApplication(File ld, File oFilesDir, File libraryFilesDir, File targetFile) {
+    private static void linkApplication(File ld, File oFilesDir, File libraryFilesDir, File targetFile, TargetArch targetArch) {
         Commander cmd = new Commander(ld.getAbsolutePath(),
-        "--eh-frame-hdr",
-        "-m", "elf_x86_64",
-        "--hash-style", "gnu",
-        "--as-needed",
-        "-export-dynamic", 
-        "-dynamic-linker", "/lib64/ld-linux-x86-64.so.2",
-        "-pie",
-        "-z", "now",
-        "-z", "relro",
-        "-s",
-        "-L/usr/lib/x86_64-linux-gnu",
-        "-L" + libraryFilesDir.getAbsolutePath());
+                "--eh-frame-hdr",
+                "-m", targetArch.getEmulation(),
+                "--hash-style", "gnu",
+                "--as-needed",
+                "-export-dynamic",
+                "-dynamic-linker", targetArch.getLinker(),
+                "-pie",
+                "-z", "now",
+                "-z", "relro",
+                "-s",
+                "-L" + libraryFilesDir.getAbsolutePath());
 
         BiConsumer<String, File> action = (relativePath, file) -> {
             if (file.getName().endsWith(".a") || file.getName().endsWith(".o")) cmd.addArgument(file.getAbsolutePath());
