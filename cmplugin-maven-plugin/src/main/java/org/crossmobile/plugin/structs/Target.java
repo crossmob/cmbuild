@@ -15,23 +15,21 @@ import java.util.function.Function;
 public class Target {
     public enum ValidTarget {
         LINUX_X86_64("linux", "x86_64", "gnu"),
-        LINUX_ARM("linux", "arm", "armhf", "arm", "gnueabihf"),
-        LINUX_ARM64("linux", "arm64", "arm64", "aarch64", "gnu");
+        LINUX_ARM("linux", "arm", "arm", "gnueabihf"),
+        LINUX_ARM64("linux", "arm64", "aarch64", "gnu");
 
         private final String os;
         private final String arch;
-        private final String dockerArch;
         private final String tripleArch;
         private final String osType;
 
         ValidTarget(String os, String arch, String osType) {
-            this(os, arch, arch, arch, osType);
+            this(os, arch, arch, osType);
         }
 
-        ValidTarget(String os, String arch, String dockerArch, String tripleArch, String osType) {
+        ValidTarget(String os, String arch, String tripleArch, String osType) {
             this.os = os;
             this.arch = arch;
-            this.dockerArch = dockerArch;
             this.tripleArch = tripleArch;
             this.osType = osType;
         }
@@ -41,7 +39,7 @@ public class Target {
         }
 
         public String getDockerName() {
-            return os + "-" + dockerArch;
+            return os + "-" + arch;
         }
 
         public boolean usesCrossCompilerPrefix() {
