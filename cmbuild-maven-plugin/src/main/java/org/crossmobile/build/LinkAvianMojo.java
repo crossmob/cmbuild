@@ -93,8 +93,6 @@ public class LinkAvianMojo extends ExecGenericMojo {
             throw new IOException("Unable to unzip file " + libAvian.getAbsolutePath());
 
         linkApplication(ldPath, avianFilesDir, targetPlatformFilesDir, targetFile, targetArch);
-        // Strip application
-        execCmd(new Commander("strip", "--strip-all", targetFile.getAbsolutePath()));
 
         Log.info("Successfully created avian executable " + targetFile);
         return targetFile;
@@ -178,8 +176,9 @@ public class LinkAvianMojo extends ExecGenericMojo {
         FileUtils.forAllFiles(oFilesDir, action);
         FileUtils.forAllFiles(libraryFilesDir, action);
 
-        cmd.addArguments("-ldl", "-lfontconfig", "-lpthread", "-lz", "-lstdc++", "-lm", "-lc", "-lgcc_s");
+        cmd.addArguments("-ldl", "-lfontconfig", "-lpthread", "-lz", "-lstdc++", "-lm", "-lc", "-lgcc_s", "-lgcc", "-lld");
         cmd.addArguments("-o", targetFile.getAbsolutePath());
+        cmd.addArgument(libraryFilesDir.getAbsolutePath()+"/libc_nonshared.a");
         cmd.setCurrentDir(oFilesDir);
         execCmd(cmd);
     }
