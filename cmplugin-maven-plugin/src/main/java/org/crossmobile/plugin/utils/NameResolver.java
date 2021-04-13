@@ -39,12 +39,12 @@ public class NameResolver {
         if (!searchForDuplicateNativeCode(nobj))
             return false;
 
-        String typeName = guessTypeName(nobj);
+        String typeName = guessTypeName(nobj).toLowerCase();
         for (NSelector selector : nobj.getSelectors()) {
             if (selector.isConstructor() || selector.isGetter() || selector.isSetter() || selector.isInherited())
                 continue;
             List<String> nameParts = getNameParts(selector);
-            if (nameParts.get(0).startsWith(typeName))
+            if (nameParts.get(0).toLowerCase().startsWith(typeName))
                 // in Delegates, the first argument is usually the name of the source object - remove this name if possible
                 if (nameParts.get(0).length() == typeName.length())
                     if (selector.getMethodType() == MethodType.SELECTOR)
@@ -82,7 +82,7 @@ public class NameResolver {
                     }
                 }
             }
-            if (dirty == true && toAdd.isEmpty()) {
+            if (dirty && toAdd.isEmpty()) {
                 // No changes
                 Log.error("Naming loop detected when trying to guess naming scheme for class " + getClassNameFull(nobj.getType()) + " .");
                 break;
@@ -105,7 +105,7 @@ public class NameResolver {
                 Log.error("Unable to match name of method " + execSignature(entry.origin.getJavaExecutable()) + " with native code `" + entry.origin.getOriginalCode() + "` ; another method name should be provided");
                 correct = false;
             } else if (!existingName.equals(calculatedName) && !isMethodInherited(entry.origin)) {
-                // Check mathing name of other selectors
+                // Check matching name of other selectors
                 if (existingName.toLowerCase().equals(calculatedName.toLowerCase()))
                     Log.error("Name of method `" + execSignature(entry.origin.getJavaExecutable()) + "` has wrong casing, expected `" + calculatedName + "`, compared to native code `" + entry.origin.getOriginalCode() + "`");
                 else
@@ -138,10 +138,9 @@ public class NameResolver {
 
         private NameEntry(String methodName, List<String> fullList, NSelector origin) {
             this.origin = origin;
-            String basename = (methodName.length() > 1 && methodName.substring(0, 2).toUpperCase().equals(methodName.substring(0, 2)))
+            this.methodName = methodName.length() > 1 && methodName.substring(0, 2).toUpperCase().equals(methodName.substring(0, 2))
                     ? methodName
                     : decapitalize(methodName);
-            this.methodName = basename;
             this.rest = fullList.subList(1, fullList.size());
         }
 

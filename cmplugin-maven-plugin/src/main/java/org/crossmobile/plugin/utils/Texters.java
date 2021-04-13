@@ -23,6 +23,7 @@ import java.util.*;
 import static org.crossmobile.utils.CollectionUtils.forEach;
 import static org.crossmobile.utils.NamingUtils.*;
 import static org.crossmobile.utils.TextUtils.capitalize;
+import static org.crossmobile.utils.TextUtils.snakeToCamel;
 
 public class Texters {
 
@@ -119,13 +120,15 @@ public class Texters {
 
     public static List<String> getNameParts(NSelector sel) {
         List<String> parts = new ArrayList<>();
-        parts.add(sel.getName());
-        for (NParam param : sel.getParams())
+        parts.add(snakeToCamel(sel.getName()));
+        for (NParam param : sel.getParams()) {
+            String paramName = snakeToCamel(param.getName());
             if (!param.getName().isEmpty())
                 if (param.isTransferName())
-                    parts.set(parts.size() - 1, parts.get(parts.size() - 1) + capitalize(param.getName()));
+                    parts.set(parts.size() - 1, parts.get(parts.size() - 1) + capitalize(paramName));
                 else
-                    parts.add(param.getName());
+                    parts.add(paramName);
+        }
         return parts;
     }
 

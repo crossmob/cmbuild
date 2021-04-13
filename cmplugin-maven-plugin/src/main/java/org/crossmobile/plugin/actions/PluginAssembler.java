@@ -85,7 +85,7 @@ public class PluginAssembler {
                     p -> (buildIos ? reg.getClassCollection().getIOsNativeClasses() : reg.getClassCollection().getUWPNativeClasses()).forEach(p::parse)));
 
             if (buildAvian)
-                time("Create native bindings", () -> {
+                time("Create JNI bindings", () -> {
                     File classpath = new File(target, "classes");
                     File srcOut = new File(srcDir.getParentFile(), "jni");
                     NativeBindings.createNativeBinding(reg.natives(), classpath, srcOut, target, javahLocation, targets, projectLocation);
