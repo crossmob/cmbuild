@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 import static java.io.File.separator;
 import static java.util.Objects.requireNonNull;
 import static org.crossmobile.bridge.system.BaseUtils.throwException;
-import static org.crossmobile.plugin.actions.PluginAssembler.avianBase;
+import static org.crossmobile.plugin.actions.PluginAssembler.aromaBase;
 import static org.crossmobile.utils.FileUtils.*;
 import static org.crossmobile.utils.SystemDependent.Execs.JAVAH;
 
@@ -235,7 +235,7 @@ public class NativeBindings {
             File inDir = oDir.apply(targetDir, target);
             reg.natives().stream().forEach(c -> {
                 File inFile = new File(inDir, getBaseName(c) + ".o");
-                File outFile = new File(avianBase.apply(targetDir, reg.plugins().getPlugin(c.getName())),
+                File outFile = new File(aromaBase.apply(targetDir, reg.plugins().getPlugin(c.getName())),
                         "native" + separator + target.getName() + separator + inFile.getName());
                 copy(inFile, outFile);
             });

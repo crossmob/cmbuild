@@ -32,8 +32,8 @@ import static java.lang.String.format;
 import static org.crossmobile.bridge.system.BaseUtils.throwException;
 import static org.crossmobile.utils.ParamsCommon.MAIN_CLASS;
 
-@Mojo(name = "linkavian", defaultPhase = LifecyclePhase.PACKAGE)
-public class LinkAvianMojo extends ExecGenericMojo {
+@Mojo(name = "linkaroma", defaultPhase = LifecyclePhase.PACKAGE)
+public class LinkAromaMojo extends ExecGenericMojo {
     private static final Collection<String> DUPLICATE_BLACKLIST = new HashSet<>(Collections.singletonList("META-INF/MANIFEST.MF"));
 
     @SuppressWarnings("unused")
@@ -41,60 +41,60 @@ public class LinkAvianMojo extends ExecGenericMojo {
     private Settings settings;
 
     @Parameter
-    private File avianLocation;
+    private File aromaLocation;
 
     private static final String currentOs = "linux-x86_64";
 
     @Override
     public void exec() {
-        if (avianLocation == null)
-            avianLocation = new File(new File(System.getProperty("user.home")), format(".cache%scrossmobile%savian%s%s", separator, separator, separator, "0.1"));
+        if (aromaLocation == null)
+            aromaLocation = new File(new File(System.getProperty("user.home")), format(".cache%scrossmobile%saroma%s%s", separator, separator, separator, "0.1"));
         TargetArch targetArch = TargetArch.getFromProfiles(settings.getActiveProfiles());
         File targetDir = new File(getProject().getBuild().getDirectory());
         String mainClass = getProject().getProperties().getProperty(MAIN_CLASS.tag().name);
-        File baseJar = new File(getProject().getProperties().getProperty("cm.launch.avian"));
+        File baseJar = new File(getProject().getProperties().getProperty("cm.launch.aroma"));
         try {
-            File exec = compileAvian(mainClass, getProject().getArtifactId(), avianLocation, baseJar, targetDir, targetArch);
-            getProject().getProperties().setProperty("cm.launch.avian.exec", exec.getAbsolutePath());
+            File exec = compileAroma(mainClass, getProject().getArtifactId(), aromaLocation, baseJar, targetDir, targetArch);
+            getProject().getProperties().setProperty("cm.launch.aroma.exec", exec.getAbsolutePath());
         } catch (IOException e) {
             BaseUtils.throwException(e);
         }
     }
 
-    public static File compileAvian(String mainClass, String appName, File coreLibraryDir, File appJar, File targetDir, TargetArch targetArch) throws IOException {
+    public static File compileAroma(String mainClass, String appName, File coreLibraryDir, File appJar, File targetDir, TargetArch targetArch) throws IOException {
         File commonDir = new File(coreLibraryDir, "all");
         File binaryToObjectPath = new File(commonDir, currentOs + separator + "binaryToObject");
 
         File targetPlatformFilesDir = new File(coreLibraryDir, targetArch.getOs() + "-" + targetArch.getArch());
         File ldPath = new File(targetPlatformFilesDir, currentOs + separator + "ld");
 
-        File avianFilesDir = new File(targetDir, "avian-files");
+        File aromaFilesDir = new File(targetDir, "aroma-files");
         File targetFile = new File(targetDir, appName + "." + targetArch.getOs() + "-" + targetArch.getArch());
 
-        File bootJar = new File(avianFilesDir, "boot.jar").getAbsoluteFile();
+        File bootJar = new File(aromaFilesDir, "boot.jar").getAbsoluteFile();
         File[] jarFiles = new File[]{
                 appJar,
                 new File(commonDir, "classpath.jar"),
         };
 
-        FileUtils.delete(avianFilesDir);
-        FileUtils.mkdirs(avianFilesDir);
-        mergeJars(bootJar, avianFilesDir, targetArch, jarFiles);
+        FileUtils.delete(aromaFilesDir);
+        FileUtils.mkdirs(aromaFilesDir);
+        mergeJars(bootJar, aromaFilesDir, targetArch, jarFiles);
 
         // Create mainClass name resource
-        FileUtils.write(new File(avianFilesDir, "mainclass"), mainClass + '\0');
+        FileUtils.write(new File(aromaFilesDir, "mainclass"), mainClass + '\0');
 
         // Create .o resource files
         for (String binary : new String[]{"mainclass", "boot.jar"})
-            binaryToObject(binaryToObjectPath, avianFilesDir, binary, targetArch);
+            binaryToObject(binaryToObjectPath, aromaFilesDir, binary, targetArch);
 
         File libAvian = new File(targetPlatformFilesDir, "libavian.zip");
-        if (!FileUtils.unzip(libAvian, avianFilesDir))
+        if (!FileUtils.unzip(libAvian, aromaFilesDir))
             throw new IOException("Unable to unzip file " + libAvian.getAbsolutePath());
 
-        linkApplication(ldPath, avianFilesDir, targetPlatformFilesDir, targetFile, targetArch);
+        linkApplication(ldPath, aromaFilesDir, targetPlatformFilesDir, targetFile, targetArch);
 
-        Log.info("Successfully created avian executable " + targetFile);
+        Log.info("Successfully created Aroma executable " + targetFile);
         return targetFile;
     }
 

@@ -48,8 +48,8 @@ public class ResourcesPipeline implements Runnable {
             case SWING:
                 resourcesSwing();
                 break;
-            case AVIAN:
-                resourcesAvian();
+            case AROMA:
+                resourcesArome();
                 break;
         }
     }
@@ -58,7 +58,7 @@ public class ResourcesPipeline implements Runnable {
         resourcesIOS();
     }
 
-    private void resourcesAvian() {
+    private void resourcesArome() {
         resourcesSwing();
     }
 

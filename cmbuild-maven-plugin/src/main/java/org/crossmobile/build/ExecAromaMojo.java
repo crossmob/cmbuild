@@ -10,8 +10,8 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.crossmobile.utils.Commander;
 
-@Mojo(name = "execavian", defaultPhase = LifecyclePhase.INSTALL)
-public class ExecAvianMojo extends ExecGenericMojo {
+@Mojo(name = "execaroma", defaultPhase = LifecyclePhase.INSTALL)
+public class ExecAromaMojo extends ExecGenericMojo {
 
     private static final int DaemonTimeout = 3000;
 
@@ -19,7 +19,7 @@ public class ExecAvianMojo extends ExecGenericMojo {
     public void exec() {
         if (!isRunnable())
             return;
-        Commander cmd = new Commander(getProject().getProperties().getProperty("cm.launch.avian.exec"));
+        Commander cmd = new Commander(getProject().getProperties().getProperty("cm.launch.aroma.exec"));
         cmd.setCurrentDir(getProject().getFile().getParentFile());
         cmd.setOutListener(System.out::println);
         cmd.setErrListener(System.err::println);
