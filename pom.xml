@@ -18,5 +18,6 @@
         <module>cmplugin-maven-plugin</module>
         <module>cmbuild-android-extra</module>
         <module>cmbuild-annproc</module>
+        <module>cmbuild-aroma</module>
     </modules>
 </project>
