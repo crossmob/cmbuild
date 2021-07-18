@@ -30,7 +30,7 @@ import static java.util.Objects.requireNonNull;
 import static org.crossmobile.bridge.system.BaseUtils.throwException;
 import static org.crossmobile.plugin.actions.PluginAssembler.aromaBase;
 import static org.crossmobile.utils.FileUtils.*;
-import static org.crossmobile.utils.SystemDependent.Execs.JAVAH;
+import static org.crossmobile.utils.SystemDependent.getJavahExec;
 
 public class NativeBindings {
 
@@ -40,34 +40,15 @@ public class NativeBindings {
     static BiFunction<File, Target, File> oDir = (targetDir, target) -> mkdirs(new File(targetDir, "jni" + separator + "build" + separator + target.getName()));
     static Function<File, File> javaIncludeDir = (targetDir) -> mkdirs(new File(targetDir, "jni" + separator + "include"));
 
-    private static File guessJavah(File given) {
-        if (given != null && given.isFile())
-            return given;
-        File javaHome = new File(System.getProperty("java.home"));
-        if (!javaHome.isDirectory())
-            throw new RuntimeException("Unable to find JAVA_HOME under '" + javaHome.getAbsolutePath() + "'");
-
-        File javah = new File(javaHome, "bin" + separator + JAVAH.filename());
-        if (javah.isFile())
-            return javah;
-        if (javaHome.getName().equals("jre")) {
-            javah = new File(javaHome.getParent(), "bin" + separator + JAVAH.filename());
-            if (javah.isFile())
-                return javah;
-        }
-        throw new RuntimeException("Unable to locate javah using JAVA_HOME " + javaHome.getAbsolutePath());
-    }
-
-    public static void createNativeBinding(NativeMethodRegistry reg, File classpath, File srcOut, File targetDir, File javahLocation, Collection<Target> targets, File projectLocation) {
+    public static void createNativeBinding(NativeMethodRegistry reg, File classpath, File srcOut, File targetDir, File givenJavahLocation, Collection<Target> targets, File projectLocation) {
         if (!reg.hasNatives())
             return;
-        javahLocation = guessJavah(javahLocation);
 
         File hLocation = mkdirs(new File(srcOut, "include"));
         File cLocation = mkdirs(new File(srcOut, "src"));
 
         // Run javah command
-        Commander cmd = new Commander(javahLocation.getAbsolutePath(),
+        Commander cmd = new Commander(getJavahExec(givenJavahLocation),
                 "-d", hLocation.getAbsolutePath(),
                 "-cp", classpath.getAbsolutePath());
         reg.stream().forEach(c -> cmd.addArguments(c.getName()));

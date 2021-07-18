@@ -7,33 +7,15 @@
 package org.crossmobile.plugin.actions;
 
 import javassist.*;
-import javassist.bytecode.AnnotationsAttribute;
-import javassist.bytecode.ClassFile;
-import javassist.bytecode.ConstPool;
-import javassist.bytecode.annotation.Annotation;
-import javassist.bytecode.annotation.ClassMemberValue;
-import org.crossmobile.bridge.ann.CMClass;
-import org.crossmobile.bridge.ann.CMEnum;
 import org.crossmobile.bridge.ann.CMGetter;
-import org.crossmobile.bridge.ann.CMReference;
 import org.crossmobile.bridge.system.BaseUtils;
-import org.crossmobile.plugin.reg.ObjectRegistry;
 import org.crossmobile.plugin.reg.Registry;
-import org.crossmobile.plugin.reg.TargetRegistry;
-import org.crossmobile.plugin.utils.ClassCollection;
-import org.crossmobile.utils.FileUtils;
+import org.crossmobile.plugin.utils.ClassWriter;
 import org.crossmobile.utils.Log;
 import org.crossmobile.utils.TextUtils;
-import org.robovm.objc.annotation.UIAppearanceSelector;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Method;
-import java.net.URL;
-import java.util.*;
-
-import static java.util.Arrays.stream;
-import static java.util.Comparator.comparing;
 
 @SuppressWarnings("StaticNonFinalUsedInInitialization")
 public class CreateBeanAPI {
@@ -69,10 +51,8 @@ public class CreateBeanAPI {
                         changed = true;
                     }
                 }
-                if (changed) {
-                    s.writeFile(basedir.getAbsolutePath());
-                    s.defrost();
-                }
+                if (changed)
+                    ClassWriter.saveClass(s, basedir.getAbsolutePath());
             }
         } catch (ClassNotFoundException | IOException | NotFoundException | CannotCompileException ex) {
             BaseUtils.throwException(ex);

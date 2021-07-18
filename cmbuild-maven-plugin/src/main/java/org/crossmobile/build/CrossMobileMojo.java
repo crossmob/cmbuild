@@ -26,7 +26,7 @@ import static org.crossmobile.build.utils.Config.GENERATED_CMSOURCES;
 import static org.crossmobile.utils.ParamsCommon.*;
 import static org.crossmobile.utils.PluginMetaData.CURRENT_PLUGIN_REGISTRY;
 
-public abstract class CrossMobileMojo extends GenericMojo {
+abstract class CrossMobileMojo extends GenericMojo {
     @SuppressWarnings("unused")
     @Parameter(defaultValue = "${settings}", readonly = true)
     private Settings settings;

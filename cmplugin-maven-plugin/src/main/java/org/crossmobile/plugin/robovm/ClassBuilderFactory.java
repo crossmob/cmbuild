@@ -9,6 +9,7 @@ package org.crossmobile.plugin.robovm;
 import javassist.*;
 import org.crossmobile.plugin.model.NObject;
 import org.crossmobile.plugin.reg.Registry;
+import org.crossmobile.plugin.utils.ClassWriter;
 import org.crossmobile.plugin.utils.WaterPark;
 
 import java.io.File;
@@ -17,7 +18,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.crossmobile.plugin.bro.JavaTransformer.*;
-import static org.crossmobile.plugin.bro.JavaTransformer.RT_BRO;
 
 public class ClassBuilderFactory {
     private final Map<NObject, ClassBuilder> objects = new HashMap<>();
@@ -107,7 +107,7 @@ public class ClassBuilderFactory {
         CtClass nestedClass = cclass.makeNestedClass(cclass.getSimpleName() + "Ptr", true);
         nestedClass.setSuperclass(wp.classPool().getCtClass(RT_PTR));
         if (path != null)
-            nestedClass.writeFile(path);
+            ClassWriter.saveClass(nestedClass, path);
     }
 
     public ClassBuilder getClass(NObject obj) throws IOException, CannotCompileException, NotFoundException, ClassNotFoundException {
@@ -130,7 +130,7 @@ public class ClassBuilderFactory {
 
     public void write() throws CannotCompileException, IOException {
         for (ClassBuilder value : objects.values())
-            value.getCclass().writeFile(fileDest.getAbsolutePath());
+            ClassWriter.saveClass(value.getCclass(), fileDest.getAbsolutePath());
     }
 
     public WaterPark waterpark() {

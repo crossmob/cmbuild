@@ -18,6 +18,7 @@ import org.crossmobile.bridge.ann.CMSelector;
 import org.crossmobile.bridge.ann.CMSetter;
 import org.crossmobile.bridge.system.BaseUtils;
 import org.crossmobile.plugin.reg.ObjectRegistry;
+import org.crossmobile.plugin.utils.ClassWriter;
 import org.crossmobile.utils.FileUtils;
 import org.crossmobile.utils.Log;
 import org.robovm.objc.annotation.UIAppearanceSelector;
@@ -25,7 +26,10 @@ import org.robovm.objc.block.VoidBlock1;
 
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
@@ -124,14 +128,11 @@ public class AppearanceInjections {
                     addAppearancePropertyMethod(appearanceC, baseC, fromM, paramName);
                 }
             if (appearanceC != baseAppearanceC) {
-                appearanceC.writeFile(rootClassPath);
-                appearanceC.defrost();
+                ClassWriter.saveClass(appearanceC, rootClassPath);
                 appearanceContainers.put(baseC, appearanceC);
             }
-
             createContainerBaseMethods(appearanceC, baseC);
-            baseC.writeFile(rootClassPath);
-            baseC.defrost();
+            ClassWriter.saveClass(baseC, rootClassPath);
         } catch (Throwable err) {
             Log.error(err);
             BaseUtils.throwException(err);
@@ -189,7 +190,7 @@ public class AppearanceInjections {
 
     private CtClass addAppearancePropertyMethod(CtClass appearanceC, CtClass baseC, CtMethod fromM, String paramName) throws Exception {
         CtClass paramClass = createParamClass(appearanceC, baseC, fromM, paramName);
-        paramClass.writeFile(rootClassPath);
+        ClassWriter.saveClass(paramClass, rootClassPath);
 
         CtMethod toM = CtNewMethod.make(fromM.getReturnType(), fromM.getName(), fromM.getParameterTypes(), null, null, appearanceC);
         toM.setBody("org.crossmobile.bind.graphics.AppearanceRegistry.registerValue(this, \"" + paramName + "\", new " + paramClass.getName() + "($1));");
@@ -233,8 +234,7 @@ public class AppearanceInjections {
     }
 
     private AttributeInfo getAttribute(Class<? extends java.lang.annotation.Annotation> annotationClass, CtClass container, AnnMetaData... metaData) {
-        ClassFile classFile = container.getClassFile();
-        ConstPool constpool = classFile.getConstPool();
+        ConstPool constpool = container.getClassFile().getConstPool();
         AnnotationsAttribute attr = new AnnotationsAttribute(constpool, AnnotationsAttribute.visibleTag);
         attr.addAnnotation(getAnnotation(annotationClass, constpool, metaData));
         return attr;

@@ -15,6 +15,7 @@ import javassist.bytecode.annotation.Annotation;
 import org.crossmobile.bridge.ann.CMLibTarget;
 import org.crossmobile.bridge.system.BaseUtils;
 import org.crossmobile.plugin.reg.Registry;
+import org.crossmobile.plugin.utils.ClassWriter;
 
 import javax.annotation.processing.SupportedAnnotationTypes;
 import java.io.File;
@@ -92,7 +93,7 @@ public class CreateSkeleton {
 //                    else
 //                        removeAttrs((AnnotationsAttribute) f.getFieldInfo().getAttribute(AnnotationsAttribute.visibleTag));
             }
-            s.writeFile(resolver.apply(reg.plugins().getPlugin(name)).getAbsolutePath());
+            ClassWriter.saveClass(s, resolver.apply(reg.plugins().getPlugin(name)).getAbsolutePath());
             return true;
         } catch (IOException | NotFoundException | CannotCompileException ex) {
             BaseUtils.throwException(ex);

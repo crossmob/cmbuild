@@ -10,7 +10,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.settings.Settings;
 import org.crossmobile.utils.Log;
 
-public abstract class ExecGenericMojo extends GenericMojo {
+abstract class ExecGenericMojo extends GenericMojo {
 
     @Parameter(defaultValue = "${settings}", readonly = true)
     protected Settings settings;
