@@ -28,8 +28,10 @@ import static org.crossmobile.plugin.utils.Texters.annName;
 import static org.crossmobile.plugin.utils.Texters.typesafeClassName;
 import static org.crossmobile.utils.GenericsUtils.getTypeArgument;
 import static org.crossmobile.utils.NamingUtils.*;
-import static org.crossmobile.utils.ReflectionUtils.*;
-import static org.crossmobile.utils.TextUtils.*;
+import static org.crossmobile.utils.ReflectionUtils.getLambdaMethod;
+import static org.crossmobile.utils.ReflectionUtils.getTypeOfParameter;
+import static org.crossmobile.utils.TextUtils.capitalize;
+import static org.crossmobile.utils.TextUtils.plural;
 
 public class ElementParser {
 
@@ -202,7 +204,7 @@ public class ElementParser {
                     mParams = wparam;
                     mMods.remove(0);
                 } else {
-                    selector.getParams().get(0).setJavaParameter(createParam(null, Modifier.PRIVATE, createMethod(exec.getDeclaringClass(), selector.getName() + "_gen", new Class[]{exec.getDeclaringClass()}, void.class), 0));
+                    selector.getParams().get(0).setJavaParameter(new JParameter(exec.getDeclaringClass()));
                     sParams.remove(0);
                 }
                 selector.getParams().get(0).setStaticMapping(staticMapping);

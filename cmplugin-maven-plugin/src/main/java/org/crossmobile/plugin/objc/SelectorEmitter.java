@@ -17,12 +17,11 @@ import org.crossmobile.plugin.utils.Streamer;
 import java.io.IOException;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Modifier;
-import java.lang.reflect.Parameter;
 
-import static org.crossmobile.plugin.utils.Collectors.getParameter;
 import static org.crossmobile.plugin.utils.Texters.*;
-import static org.crossmobile.utils.CollectionUtils.*;
-import static org.crossmobile.utils.NamingUtils.*;
+import static org.crossmobile.utils.CollectionUtils.forEach;
+import static org.crossmobile.utils.NamingUtils.getClassNameSimple;
+import static org.crossmobile.utils.NamingUtils.toObjC;
 
 public class SelectorEmitter {
 
@@ -194,11 +193,17 @@ public class SelectorEmitter {
     protected void emitDefinition(Streamer out) throws IOException {
         Executable ex = selector.getJavaExecutable();
         out.append(Modifier.isStatic(ex.getModifiers()) ? "+" : "-").append(" (");
-        out.append(selector.getReturnType().getNativeType().equals("instancetype") ? "instancetype" : toObjCType(selector.getReturnType().getType()));
+        out.append(selector.getReturnType().getCanonicalNativeType());
         out.append(") ").append(methodObjCName(ex));
-        if (ex.getParameterCount() > 0)
-            for (Parameter p : ex.getParameters())
-                out.append(":(").append(toObjCType(p.getType())).append(")").append(" ").append(getParameter(selector, p).getVarname()).append(" ");
+        for (NParam p : selector.getParams()) {
+            JParameter jParam = p.getJavaParameter();
+            /* Ignore this parameter if:
+                a) No java parameter exists, usually because this parameter is deducted in Java, e.g. array size parameters
+                b) There's some static mapping on the native size
+             */
+            if (jParam != null && p.getStaticMapping() != StaticMappingType.NATIVE)
+                out.append(":(").append(toObjCType(jParam.getType())).append(")").append(" ").append(p.getVarname()).append(" ");
+        }
     }
 
     protected void emitOpenBracket(Streamer out) throws IOException {

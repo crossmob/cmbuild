@@ -9,6 +9,8 @@ package org.crossmobile.plugin.model;
 import java.util.Collection;
 import java.util.HashSet;
 
+import static org.crossmobile.plugin.utils.Texters.toObjCType;
+
 public class NType {
 
     private final Collection<NType> genericTypes = new HashSet<>();
@@ -35,6 +37,10 @@ public class NType {
 
     public String getNativeType() {
         return nativeType;
+    }
+
+    public String getCanonicalNativeType() {
+        return "instancetype".equals(nativeType) ? nativeType : toObjCType(type);
     }
 
     public String getSafeNativeType() {

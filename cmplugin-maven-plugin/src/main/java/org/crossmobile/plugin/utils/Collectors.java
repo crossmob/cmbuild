@@ -13,7 +13,6 @@ import org.crossmobile.utils.Log;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -34,15 +33,6 @@ public class Collectors {
         for (NParam param : params)
             classes.add(param.getNType().getType());
         return classes;
-    }
-
-    public static NParam getParameter(NSelector sel, Parameter p) {
-        if (p == null)
-            return null;
-        for (NParam param : sel.getParams())
-            if (p.equals(param.getJavaParameter()))
-                return param;
-        return null;
     }
 
     public static List<Method> getAbstractMethods(Class<?> c) {

@@ -25,7 +25,7 @@ public class NParam {
      * used
      */
     private NParamAffiliation affiliation;
-    private Parameter java;
+    private JParameter java;
     private StaticMappingType staticMapping = StaticMappingType.NONE;
 
     public void setName(String name) {
@@ -69,10 +69,14 @@ public class NParam {
     }
 
     public void setJavaParameter(Parameter java) {
+        this.java = new JParameter(java);
+    }
+
+    public void setJavaParameter(JParameter java) {
         this.java = java;
     }
 
-    public Parameter getJavaParameter() {
+    public JParameter getJavaParameter() {
         return java;
     }
 

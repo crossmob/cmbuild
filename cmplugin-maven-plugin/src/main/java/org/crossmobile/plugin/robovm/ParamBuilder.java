@@ -36,23 +36,22 @@ import java.lang.reflect.Method;
 public class ParamBuilder {
 
     public static RParam createParam(NParam nParam, NType type, Class<?> parameter, NSelector selector, WaterPark wp) {
-        if(nParam != null && !nParam.getStaticMapping().equals(StaticMappingType.NATIVE) && nParam.getJavaParameter() != null && nParam.getJavaParameter().getDeclaredAnnotation(CMRef.class)!=null)
-            return new StructRParam(nParam, parameter, type , nParam.getJavaParameter().getDeclaredAnnotation(CMRef.class).value());
+        if (nParam != null && !nParam.getStaticMapping().equals(StaticMappingType.NATIVE) && nParam.getJavaParameter() != null && nParam.getJavaParameter().getDeclaredAnnotation(CMRef.class) != null)
+            return new StructRParam(nParam, parameter, type, nParam.getJavaParameter().getDeclaredAnnotation(CMRef.class).value());
         else if (type.getNativeType().equals("id") && type.getType().equals(parameter))
             return new IdRParam(nParam, parameter, type);
-        else if (type.getType().isArray() && type.getType().equals(parameter) && type.getType().getComponentType()!=null && type.getType().getComponentType().isPrimitive())
+        else if (type.getType().isArray() && type.getType().equals(parameter) && type.getType().getComponentType() != null && type.getType().getComponentType().isPrimitive())
             return new PrimArrayRParam(nParam, parameter, type);
         else if (type.getType().isArray() && type.getType().equals(parameter))
             return new ArrayRParam(nParam, parameter, type);
         else if (type.getType().isArray() && String[].class.equals(parameter))
             return new StringArrayRParam(nParam, parameter, type);
-        else if (Method.class.equals(parameter)){
+        else if (Method.class.equals(parameter)) {
             //ignore for now
             Log.error("No RParam available for Ntype : " + type.getType() + " , with parameter : " + parameter + " and native type : " + type.getNativeType() + ", for selector : " + selector.getObjCSignature() + ", in class : " + selector.getJavaExecutable().getDeclaringClass().getName());
-        }
-        else if (type.getType().equals(parameter))
+        } else if (type.getType().equals(parameter))
             return new NativeRParam(nParam, parameter, type);
-        else if (type.isPrimitive() && objectified(type.getType()).equals(parameter) && wp.contains(parameter.getName()) )
+        else if (type.isPrimitive() && objectified(type.getType()).equals(parameter) && wp.contains(parameter.getName()))
             return new NativeRParam(nParam, parameter, type);
         else if (type.getType().equals(CustomTypeClasses.Instance.class) && (parameter == null || parameter.equals(selector.getJavaExecutable().getDeclaringClass())))
             return new InstanceRParam(nParam, selector.getJavaExecutable().getDeclaringClass(), type);
@@ -60,8 +59,8 @@ public class ParamBuilder {
             return new StaticRefRParam(nParam, parameter, type);
         else if (parameter != null && parameter.equals(StrongReference.class))
             return new StrongRParam(nParam, parameter, type, wp);
-        // This "parameter.getCanonicalName().equals("crossmobile.ios.foundation.NSObject")" is not a misstype
-        // calling NSObject.class throws exception because it cannot find NativeObject (which is not in classpool anyway)
+            // This "parameter.getCanonicalName().equals("crossmobile.ios.foundation.NSObject")" is not a misstype
+            // calling NSObject.class throws exception because it cannot find NativeObject (which is not in classpool anyway)
         else if ((parameter == null || parameter.getCanonicalName().equals("crossmobile.ios.foundation.NSObject")) && type.getNativeType().equals("id"))
             return new IdRParam(nParam, selector.getJavaExecutable().getDeclaringClass(), type);
         else if (type.getType().equals(char[].class) && parameter.equals(String.class))
@@ -74,12 +73,12 @@ public class ParamBuilder {
             return new ClassRParam(nParam, parameter, type);
         else if (type.getNativeType().endsWith("Ref") && type.getType().isAssignableFrom(parameter))
             return new RefRParam(nParam, parameter, type);
-            else
+        else
             Log.error("No RParam available for Ntype : " + type.getType() + " , with parameter : " + parameter + " and native type : " + type.getNativeType() + ", for selector : " + selector.getObjCSignature() + ", in class : " + selector.getJavaExecutable().getDeclaringClass().getName());
         return null;
     }
 
-    private static Object objectified(Class<?>type) {
+    private static Object objectified(Class<?> type) {
         if (type.equals(int.class))
             return Integer.class;
         if (type.equals(long.class))
