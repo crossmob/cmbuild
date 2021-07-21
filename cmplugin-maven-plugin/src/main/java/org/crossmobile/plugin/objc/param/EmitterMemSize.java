@@ -15,7 +15,7 @@ class EmitterMemSize extends Emitter {
     EmitterMemSize(NParam param, boolean forward) {
         super(param.getName(), param.getVarname(), param.getNType(), false, forward);
         String varname = param.getAffiliation().getParameter().getVarname();
-        if (param.getAffiliation().getParameter().getJavaParameter().getType().equals(String.class))
+        if (param.getAffiliation().getParameter().getJavaType().equals(String.class))
             init = "[" + varname + " length]";
         else
             init = "(" + varname + " == JAVA_NULL ? 0 : " + varname + "->length)";

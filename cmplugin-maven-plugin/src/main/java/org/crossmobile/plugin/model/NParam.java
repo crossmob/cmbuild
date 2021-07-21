@@ -8,6 +8,7 @@ package org.crossmobile.plugin.model;
 
 import org.crossmobile.bridge.ann.AssociationType;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Parameter;
 import java.util.Objects;
 
@@ -72,12 +73,16 @@ public class NParam {
         this.java = new JParameter(java);
     }
 
-    public void setJavaParameter(JParameter java) {
-        this.java = java;
+    public void setJavaParameter(Class<?> type, Annotation... declaredAnnotations) {
+        this.java = new JParameter(type, declaredAnnotations);
     }
 
-    public JParameter getJavaParameter() {
-        return java;
+    public Class<?> getJavaType() {
+        return java == null ? null : java.getType();
+    }
+
+    public <T extends Annotation> T getJavaDeclaredAnnotation(Class<T> annotation) {
+        return java == null ? null : java.getDeclaredAnnotation(annotation);
     }
 
     public void setStaticMapping(StaticMappingType staticMapping) {
@@ -118,4 +123,34 @@ public class NParam {
         return name + ":" + varname;
     }
 
+    private static final class JParameter {
+        private final Class<?> type;
+        private final Annotation[] declaredAnnotations;
+
+        private JParameter(Class<?> type, Annotation... declaredAnnotations) {
+            this.type = type;
+            this.declaredAnnotations = declaredAnnotations;
+        }
+
+        private JParameter(Parameter param) {
+            type = param.getType();
+            declaredAnnotations = param.getDeclaredAnnotations();
+        }
+
+        private Class<?> getType() {
+            return type;
+        }
+
+        private <T extends Annotation> T getDeclaredAnnotation(Class<T> annotationClass) {
+            return getAnnotation(annotationClass);
+        }
+
+        private <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
+            if (declaredAnnotations != null)
+                for (Annotation ann : declaredAnnotations)
+                    if (annotationClass.isAssignableFrom(ann.getClass()))
+                        return annotationClass.cast(ann);
+            return null;
+        }
+    }
 }

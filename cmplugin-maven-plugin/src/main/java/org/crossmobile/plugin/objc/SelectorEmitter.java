@@ -196,13 +196,13 @@ public class SelectorEmitter {
         out.append(selector.getReturnType().getCanonicalNativeType());
         out.append(") ").append(methodObjCName(ex));
         for (NParam p : selector.getParams()) {
-            JParameter jParam = p.getJavaParameter();
+            Class<?> jParam = p.getJavaType();
             /* Ignore this parameter if:
                 a) No java parameter exists, usually because this parameter is deducted in Java, e.g. array size parameters
                 b) There's some static mapping on the native size
              */
             if (jParam != null && p.getStaticMapping() != StaticMappingType.NATIVE)
-                out.append(":(").append(toObjCType(jParam.getType())).append(")").append(" ").append(p.getVarname()).append(" ");
+                out.append(":(").append(toObjCType(jParam)).append(")").append(" ").append(p.getVarname()).append(" ");
         }
     }
 

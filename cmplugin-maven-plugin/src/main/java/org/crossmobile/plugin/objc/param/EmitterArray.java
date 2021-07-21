@@ -18,7 +18,7 @@ class EmitterArray extends Emitter {
     private final String sizeResolver;
 
     EmitterArray(NParam param, boolean forward) {
-        this(param.getName(), param.getVarname(), param.getNType(), param.getJavaParameter().getType(), forward);
+        this(param.getName(), param.getVarname(), param.getNType(), param.getJavaType(), forward);
     }
 
     EmitterArray(String paramName, String varName, NType type, Class javaType, boolean forward) {

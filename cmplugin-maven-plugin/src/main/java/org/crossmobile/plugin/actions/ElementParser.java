@@ -204,7 +204,7 @@ public class ElementParser {
                     mParams = wparam;
                     mMods.remove(0);
                 } else {
-                    selector.getParams().get(0).setJavaParameter(new JParameter(exec.getDeclaringClass()));
+                    selector.getParams().get(0).setJavaParameter(exec.getDeclaringClass());
                     sParams.remove(0);
                 }
                 selector.getParams().get(0).setStaticMapping(staticMapping);

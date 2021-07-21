@@ -96,7 +96,7 @@ public class NSelector extends NParsable implements Comparable<NSelector> {
         Set<String> deps = new HashSet<>();
         addType(deps, javaReturn, returnType.getType(), forceBoxed);
         for (NParam param : params) {
-            addType(deps, param.getJavaParameter() == null ? param.getNType().getType() : param.getJavaParameter().getType(), param.getNType().getType(), forceBoxed);
+            addType(deps, param.getJavaType() == null ? param.getNType().getType() : param.getJavaType(), param.getNType().getType(), forceBoxed);
             if (param.getNType().getBlock() != null)
                 deps.addAll(param.getNType().getBlock().getDependencies(true));
         }

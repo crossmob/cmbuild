@@ -12,21 +12,7 @@ import org.crossmobile.plugin.model.NParam;
 import org.crossmobile.plugin.model.NSelector;
 import org.crossmobile.plugin.model.NType;
 import org.crossmobile.plugin.model.StaticMappingType;
-import org.crossmobile.plugin.robovm.models.parameters.ArrayRParam;
-import org.crossmobile.plugin.robovm.models.parameters.PrimArrayRParam;
-import org.crossmobile.plugin.robovm.models.parameters.ClassRParam;
-import org.crossmobile.plugin.robovm.models.parameters.IdRParam;
-import org.crossmobile.plugin.robovm.models.parameters.InstanceRParam;
-import org.crossmobile.plugin.robovm.models.parameters.LengthRParam;
-import org.crossmobile.plugin.robovm.models.parameters.NativeRParam;
-import org.crossmobile.plugin.robovm.models.parameters.PointerRParam;
-import org.crossmobile.plugin.robovm.models.parameters.RParam;
-import org.crossmobile.plugin.robovm.models.parameters.RefRParam;
-import org.crossmobile.plugin.robovm.models.parameters.StaticRefRParam;
-import org.crossmobile.plugin.robovm.models.parameters.StringArrayRParam;
-import org.crossmobile.plugin.robovm.models.parameters.StringRParam;
-import org.crossmobile.plugin.robovm.models.parameters.StrongRParam;
-import org.crossmobile.plugin.robovm.models.parameters.StructRParam;
+import org.crossmobile.plugin.robovm.models.parameters.*;
 import org.crossmobile.plugin.utils.WaterPark;
 import org.crossmobile.utils.CustomTypeClasses;
 import org.crossmobile.utils.Log;
@@ -36,8 +22,8 @@ import java.lang.reflect.Method;
 public class ParamBuilder {
 
     public static RParam createParam(NParam nParam, NType type, Class<?> parameter, NSelector selector, WaterPark wp) {
-        if (nParam != null && !nParam.getStaticMapping().equals(StaticMappingType.NATIVE) && nParam.getJavaParameter() != null && nParam.getJavaParameter().getDeclaredAnnotation(CMRef.class) != null)
-            return new StructRParam(nParam, parameter, type, nParam.getJavaParameter().getDeclaredAnnotation(CMRef.class).value());
+        if (nParam != null && !nParam.getStaticMapping().equals(StaticMappingType.NATIVE) && nParam.getJavaType() != null && nParam.getJavaDeclaredAnnotation(CMRef.class) != null)
+            return new StructRParam(nParam, parameter, type, nParam.getJavaDeclaredAnnotation(CMRef.class).value());
         else if (type.getNativeType().equals("id") && type.getType().equals(parameter))
             return new IdRParam(nParam, parameter, type);
         else if (type.getType().isArray() && type.getType().equals(parameter) && type.getType().getComponentType() != null && type.getType().getComponentType().isPrimitive())

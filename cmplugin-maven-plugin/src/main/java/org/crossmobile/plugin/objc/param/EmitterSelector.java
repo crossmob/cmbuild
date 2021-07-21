@@ -20,8 +20,8 @@ class EmitterSelector extends Emitter {
     EmitterSelector(NParam param, boolean forward) {
         super(param.getName(), param.getVarname(), param.getNType(), false, forward);
         Class baseClass = param.getAffiliation() != null
-                ? param.getAffiliation().getParameter().getJavaParameter().getType()
-                : param.getJavaParameter().getType();
+                ? param.getAffiliation().getParameter().getJavaType()
+                : param.getJavaType();
         Method m = ReflectionUtils.getLambdaMethod(baseClass);
         StringBuilder sel = new StringBuilder();
         sel.append(methodObjCName(m));

@@ -21,7 +21,7 @@ class EmitterPrimitive extends Emitter {
     private final String boxedName;
 
     EmitterPrimitive(NParam param, boolean forward) {
-        this(param.getName(), param.getVarname(), param.getNType(), !param.getJavaParameter().getType().isPrimitive(), forward);
+        this(param.getName(), param.getVarname(), param.getNType(), !param.getJavaType().isPrimitive(), forward);
     }
 
     EmitterPrimitive(String paramName, String varName, NType type, boolean boxed, boolean forward) {

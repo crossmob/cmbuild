@@ -54,15 +54,15 @@ public class ParamEmitter {
             return new EmitterPrimitive(param, forward);
         else if (isCBased(type.getType())) // C-types could be reference! so it should be considered before references check
             return new EmitterCType(param, false, forward);
-        else if (type.getType().equals(char[].class) && param.getJavaParameter().getType().equals(String.class))
+        else if (type.getType().equals(char[].class) && param.getJavaType().equals(String.class))
             return new EmitterStringToChar(param, forward);
         else if (type.getVarargType() != null)
             return new EmitterVarArgs(param, forward);
-        else if (param.getJavaParameter().getType().isArray())
+        else if (param.getJavaType().isArray())
             return new EmitterArray(param, forward);
         else if (type.getBlock() != null || isBlockTarget(type.getType()))
             return new EmitterBlock(param, reg, forward);
-        else if (param.getJavaParameter().getType().equals(StrongReference.class))
+        else if (param.getJavaType().equals(StrongReference.class))
             return new EmitterStrongReference(param, forward);
         else if (isSelector(type.getType())) {
             EmitterSelector emitter = new EmitterSelector(param, forward);
@@ -74,7 +74,7 @@ public class ParamEmitter {
             return emitter;
         } else if (isObjCBased(type.getType()) || isJavaWrapped(type.getType()))
             return new EmitterObject(param, sel, reg, forward);
-        else if (isStructReference(type.getType(), param.getJavaParameter().getType()))
+        else if (isStructReference(type.getType(), param.getJavaType()))
             return new EmitterStructReference(param, forward);
         else {
             System.out.println("Unknown emitter for " + getClassNameFull(type.getType()) + " in selector `" + sel.getOriginalCode() + "` in class " + getClassNameFull(sel.getContainer().getType()));
