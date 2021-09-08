@@ -30,10 +30,13 @@ public class GradleLauncher {
 
     private static final boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase().contains("windows");
 
-    public static boolean runGradle(File currentDir, boolean release) {
+    public static boolean runGradle(File currentDir, boolean release, boolean asApk) {
         if (!isInstalled())
             downloadGradle(getGradleHome());
-        Commander gradle = new Commander(getGradleBin(), release ? "assembleRelease" : "assembleDebug");
+        Commander gradle = new Commander(getGradleBin(),
+                asApk ? (release ? "assembleRelease" : "assembleDebug")
+                        : (release ? "bundleRelease" : "bundleDebug")
+        );
         gradle.setCurrentDir(currentDir);
         gradle.setOutListener(Log::info);
         gradle.setErrListener((Consumer<String>) Log::error);

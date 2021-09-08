@@ -23,21 +23,24 @@ import static org.crossmobile.utils.ParamsCommon.DEBUG_PROFILE;
 
 @Mojo(name = "execandroid", defaultPhase = LifecyclePhase.PACKAGE, requiresDependencyResolution = ResolutionScope.COMPILE)
 public class ExecAndroidMojo extends ExecGenericMojo {
-    private static final String APK_PREFIX = File.separator + "target" + File.separator + "app" + File.separator + "build" + File.separator + "outputs" + File.separator + "apk" + File.separator;
+    private static final String APK_PREFIX1 = File.separator + "target" + File.separator + "app" + File.separator + "build" + File.separator + "outputs" + File.separator + "apk" + File.separator;
+    private static final String AAB_PREFIX = File.separator + "target" + File.separator + "app" + File.separator + "build" + File.separator + "outputs" + File.separator + "bundle" + File.separator;
 
     @Override
     public void exec() {
         File basedir = getProject().getBasedir();
         String bundleID = getProject().getGroupId() + "." + getProject().getArtifactId();
         boolean release = settings.getActiveProfiles().contains("release");
+        boolean asApk = !settings.getActiveProfiles().contains("androidappbundle");
         String debugProfile = Opt.of(getSession().getUserProperties().getProperty(DEBUG_PROFILE.tag().name)).getOrElse(DEBUG_PROFILE.tag().deflt);
+        String type = asApk ? "APK" : "Android App Bundle";
 
         ExceptionUtils.callNoException(() -> UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()));
 
-        Log.info("Rebuild APK");
-        if (!GradleLauncher.runGradle(basedir, release))
+        Log.info("Rebuilding " + type);
+        if (!GradleLauncher.runGradle(basedir, release, asApk))
             exitWithError("");
-        String apkFile = Opt.of(getApkFile(basedir, release)).ifMissing(() -> exitWithError("Unable to locate APK")).get();
+        String apkFile = Opt.of(getApkFile(basedir, release, asApk)).ifMissing(() -> exitWithError("Unable to locate " + type)).get();
         if (!isRunnable())
             return;
 
@@ -74,11 +77,13 @@ public class ExecAndroidMojo extends ExecGenericMojo {
     }
 
     // Android SDK is peculiar. The name of the APK is based on the name of the current folder.
-    private static String getApkFile(File basedir, boolean release) {
-        String apkName = basedir.getName();
+    private static String getApkFile(File basedir, boolean release, boolean apk) {
+        String baseName = basedir.getName();
         String rel_deb = release ? "release" : "debug";
-        File oldLocation = new File(basedir + APK_PREFIX + apkName + "-" + rel_deb + ".apk");
-        File newLocation = new File(basedir + APK_PREFIX + rel_deb + File.separator + apkName + "-" + rel_deb + ".apk");
+        String ext = apk ? "apk" : "aab";
+        String prefix = apk ? APK_PREFIX1 : AAB_PREFIX;
+        File oldLocation = new File(basedir + prefix + baseName + "-" + rel_deb + "." + ext);
+        File newLocation = new File(basedir + prefix + rel_deb + File.separator + baseName + "-" + rel_deb + "." + ext);
         return newLocation.isFile() ? newLocation.getAbsolutePath() : (oldLocation.isFile() ? oldLocation.getAbsolutePath() : null);
     }
 }
