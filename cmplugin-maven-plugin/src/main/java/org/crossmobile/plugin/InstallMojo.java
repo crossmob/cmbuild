@@ -26,13 +26,13 @@ public class InstallMojo extends GenericPluginMojo {
     @Override
     public void exec(Registry reg) {
         skipUwp |= !SystemDependent.canMakeUwp();
-        if (skipSwing && skipAroma && skipIos && skipAndroid && skipUwp) {
+        if (skipSwing && skipIos && skipAndroid && skipUwp) {
             Log.info("Skipping all targets");
             return;
         }
         PluginAssembler.installFiles(reg, new File(getProject().getBuild().getDirectory()), getRootDependency(true), this::installAndKeepJar,
                 getVendorSource(), getVendorBin(), getCachedDir(),
-                !skipSwing, !skipAroma, !skipIos, !skipAndroid, !skipUwp, !skipRvm, !skipCore, report
+                !skipSwing, !skipIos, !skipAndroid, !skipUwp, !skipRvm, !skipCore, report
         );
     }
 

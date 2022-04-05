@@ -46,7 +46,7 @@ public class ProcessMojo extends GenericPluginMojo {
     @Override
     public void exec(Registry reg) {
         skipUwp |= !SystemDependent.canMakeUwp();
-        if (skipSwing && skipAroma && skipIos && skipAndroid && skipUwp) {
+        if (skipSwing && skipIos && skipAndroid && skipUwp) {
             Log.info("Skipping all targets");
             return;
         }
@@ -60,7 +60,7 @@ public class ProcessMojo extends GenericPluginMojo {
                 embedlibs, new File(getProject().getBuild().getSourceDirectory()), getVendorSource(), getVendorBin(),
                 getProject().getFile().getParentFile(),
                 this::resolveArtifact, getCachedDir(), packages,
-                !skipSwing, !skipAroma, !skipIos, !skipAndroid, !skipUwp, !skipRvm,
+                !skipSwing, !skipIos, !skipAndroid, !skipUwp, !skipRvm,
                 VStudioLocation, javah, targets, PluginRegistryFile.forPlugin(mavenProject)
         );
     }

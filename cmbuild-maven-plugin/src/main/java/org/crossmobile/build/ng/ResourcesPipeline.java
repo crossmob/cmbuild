@@ -48,18 +48,11 @@ public class ResourcesPipeline implements Runnable {
             case SWING:
                 resourcesSwing();
                 break;
-            case AROMA:
-                resourcesAroma();
-                break;
         }
     }
 
     private void resourcesUWP() {
         resourcesIOS();
-    }
-
-    private void resourcesAroma() {
-        resourcesSwing();
     }
 
     private void resourcesSwing() {

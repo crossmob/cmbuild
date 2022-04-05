@@ -25,9 +25,6 @@ public abstract class GenericPluginMojo extends GenericMojo {
     protected boolean skipSwing;
 
     @Parameter(defaultValue = "false", readonly = true)
-    protected boolean skipAroma;
-
-    @Parameter(defaultValue = "false", readonly = true)
     protected boolean skipIos;
 
     @Parameter(defaultValue = "false", readonly = true)

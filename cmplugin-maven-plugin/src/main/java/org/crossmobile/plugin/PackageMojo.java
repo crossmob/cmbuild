@@ -25,7 +25,7 @@ public class PackageMojo extends GenericPluginMojo {
     @Override
     public void exec(Registry reg) {
         skipUwp |= !SystemDependent.canMakeUwp();
-        if (skipSwing && skipAroma && skipIos && skipAndroid && skipUwp) {
+        if (skipSwing && skipIos && skipAndroid && skipUwp) {
             Log.info("Skipping all targets");
             return;
         }
@@ -36,7 +36,7 @@ public class PackageMojo extends GenericPluginMojo {
             getPluginDescriptor().getClassRealm().addURL(toURL(dep.getFile()));
 
         PluginAssembler.packageFiles(reg, new File(getProject().getBuild().getDirectory()), new File(getProject().getBuild().getSourceDirectory()),
-                !skipSwing, !skipAroma, !skipIos, !skipAndroid, !skipUwp, !skipRvm
+                !skipSwing, !skipIos, !skipAndroid, !skipUwp, !skipRvm
         );
     }
 }

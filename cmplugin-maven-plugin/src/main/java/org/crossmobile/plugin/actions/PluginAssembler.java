@@ -41,7 +41,6 @@ public class PluginAssembler {
     public static final BiFunction<File, String, File> compileBase = (target, plugin) -> new File(target, BUNDLES + separator + plugin + separator + "compile");
     public static final BiFunction<File, String, File> sourcesBase = (target, plugin) -> new File(target, BUNDLES + separator + plugin + separator + "sources");
     public static final BiFunction<File, String, File> swingBase = (target, plugin) -> new File(target, BUNDLES + separator + plugin + separator + "swing");
-    public static final BiFunction<File, String, File> aromaBase = (target, plugin) -> new File(target, BUNDLES + separator + plugin + separator + "aroma");
     public static final BiFunction<File, String, File> androidBase = (target, plugin) -> new File(target, BUNDLES + separator + plugin + separator + "android");
     public static final BiFunction<File, String, File> iosBase = (target, plugin) -> new File(target, BUNDLES + separator + plugin + separator + "ios");
     public static final BiFunction<File, String, File> uwpBase = (target, plugin) -> new File(target, BUNDLES + separator + plugin + separator + "uwp");
@@ -53,7 +52,7 @@ public class PluginAssembler {
                                      String[] embedlibs, File srcDir, File vendorSrc, File vendorBin, File projectLocation,
                                      Function<ArtifactInfo, File> resolver,
                                      File cachedir, Packages[] packs,
-                                     boolean buildSwing, boolean buildArome, boolean buildIos, boolean buildAndroid, boolean buildUwp, boolean buildRvm,
+                                     boolean buildSwing, boolean buildIos, boolean buildAndroid, boolean buildUwp, boolean buildRvm,
                                      File VStudioLocation, File javahLocation, Collection<Target> targets,
                                      PluginRegistryFile pluginRegistry) {
         File runtime = new File(target, "runtime");
@@ -84,15 +83,9 @@ public class PluginAssembler {
             time("Gather iOS native API", () -> with(new Parser(reg),
                     p -> (buildIos ? reg.getClassCollection().getIOsNativeClasses() : reg.getClassCollection().getUWPNativeClasses()).forEach(p::parse)));
 
-            if (buildArome)
-                time("Create JNI bindings", () -> {
-                    File classpath = new File(target, "classes");
-                    File srcOut = new File(srcDir.getParentFile(), "jni");
-                    NativeBindings.createNativeBinding(reg.natives(), classpath, srcOut, target, javahLocation, targets, projectLocation);
-                });
         });
 
-        if (buildIos || buildSwing || buildArome || buildUwp || buildAndroid)
+        if (buildIos || buildSwing || buildUwp || buildAndroid)
             time("Extract embedded jars", () -> {
                 for (File f : registry.getAppjars().toArray(new File[0]))
                     explodeClasspath(f, runtime);
@@ -113,8 +106,6 @@ public class PluginAssembler {
                 mkdirs(sourcesBase.apply(target, plugin));
                 if (buildSwing)
                     mkdirs(swingBase.apply(target, plugin));
-                if (buildArome)
-                    mkdirs(aromaBase.apply(target, plugin));
                 if (buildAndroid)
                     mkdirs(androidBase.apply(target, plugin));
                 if (buildIos)
@@ -132,22 +123,18 @@ public class PluginAssembler {
                 hm += skel.stripClass(cls, plugin -> compileBase.apply(target, plugin), reg, SOURCE_TYPE) ? 1 : 0;
             // Still might need to add extra resource files
             CreateBundles.bundleFilesAndReport(runtime, plugin -> compileBase.apply(target, plugin), CreateBundles.getNoClassResolver(reg), BaseTarget.COMPILE);
-            if (buildArome)
-                NativeBindings.createArchive(target, reg, targets);
             Log.debug(hm + " class" + plural(hm, "es") + " stripped");
         });
     }
 
     public static void packageFiles(Registry reg, File target, File srcDir,
-                                    boolean buildSwing, boolean buildAroma, boolean buildIos, boolean buildAndroid, boolean buildUwp, boolean buildRvm) {
+                                    boolean buildSwing, boolean buildIos, boolean buildAndroid, boolean buildUwp, boolean buildRvm) {
         File runtime = new File(target, "runtime");
         File runtime_rvm = new File(target, "runtime_rvm");
 
         time("Create distributions of artifacts", () -> {
             if (buildSwing)
                 CreateBundles.bundleFiles(runtime, plugin -> swingBase.apply(target, plugin), CreateBundles.classResolver(reg), BaseTarget.SWING);
-            if (buildAroma)
-                CreateBundles.bundleFiles(runtime, plugin -> aromaBase.apply(target, plugin), CreateBundles.classResolver(reg), BaseTarget.AROMA);
             if (buildRvm)
                 CreateBundles.bundleFiles(runtime_rvm, plugin -> rvmBase.apply(target, plugin), CreateBundles.classResolver(reg), BaseTarget.IOS);
             if (buildUwp)
@@ -169,14 +156,14 @@ public class PluginAssembler {
     public static void installFiles(Registry reg, File target, DependencyItem root,
                                     Consumer<ArtifactInfo> installer,
                                     File vendorSrc, File vendorBin, File cachedir,
-                                    boolean buildSwing, boolean buildAroma, boolean buildIos, boolean buildAndroid, boolean buildUwp, boolean buildRvm, boolean buildCore,
+                                    boolean buildSwing, boolean buildIos, boolean buildAndroid, boolean buildUwp, boolean buildRvm, boolean buildCore,
                                     File report
     ) {
         time("Install artifacts", () -> {
             StringWriter writer = report == null ? null : new StringWriter();
             for (String plugin : reg.plugins().plugins())
                 CreateArtifacts.installPlugin(installer, plugin, target, root, cachedir, vendorSrc, vendorBin, reg.reverse(),
-                        buildSwing, buildAroma, buildIos, buildUwp, buildAndroid, buildRvm, buildCore, writer, reg);
+                        buildSwing, buildIos, buildUwp, buildAndroid, buildRvm, buildCore, writer, reg);
             CreateArtifacts.installJavadoc(installer, root, reg);
             report.getParentFile().mkdirs();
             if (writer != null)
