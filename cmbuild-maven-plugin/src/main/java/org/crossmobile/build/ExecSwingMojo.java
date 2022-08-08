@@ -12,13 +12,16 @@ import org.crossmobile.bridge.system.BaseUtils;
 import org.crossmobile.utils.Log;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Properties;
 
+import static org.crossmobile.utils.ParamsCommon.CM_SCALE_FACTOR;
 import static org.crossmobile.utils.ParamsCommon.MAIN_CLASS;
 
 @Mojo(name = "execswing", defaultPhase = LifecyclePhase.INSTALL)
@@ -31,6 +34,16 @@ public class ExecSwingMojo extends ExecGenericMojo {
         if (!isRunnable())
             return;
 
+        // Load local properties
+        Properties localProperties = new Properties();
+        File localFile = new File(getProject().getBasedir(), "local.properties");
+        if (localFile.isFile()) {
+            try {
+                localProperties.load(new FileReader(localFile));
+            } catch (IOException ignored) {
+            }
+        }
+
         File baseJar = new File(getProject().getProperties().getProperty("cm.launch.swing"));
         if (!baseJar.isFile())
             BaseUtils.throwException(new IOException("Unable to locate JAR file " + baseJar.getAbsolutePath()));
@@ -38,6 +51,8 @@ public class ExecSwingMojo extends ExecGenericMojo {
         String mainClass = getProject().getProperties().getProperty(MAIN_CLASS.tag().name);
         if (mainClass == null)
             throw new NullPointerException("Unable to find main class, using property 'main.class'");
+
+        System.getProperties().setProperty("user.arg.scale", localProperties.getProperty(CM_SCALE_FACTOR.tag().name, "1"));
 
         DesktopThreadGroup threadGroup = new DesktopThreadGroup();
         DesktopThread baseThread = new DesktopThread(threadGroup, mainClass);
