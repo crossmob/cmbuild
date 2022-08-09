@@ -245,6 +245,8 @@ public class AdbUtils {
         File emulator = new File(sdk, "emulator" + File.separator + EMULATOR.filename());
         if (!emulator.isFile())
             emulator = new File(sdk, "tools" + File.separator + EMULATOR.filename());
+        if (!emulator.isFile())
+            emulator = new File(sdk, "cmdline-tools" + File.separator + EMULATOR.filename());
         return emulator.isFile() ? emulator : null;
     }
 }
