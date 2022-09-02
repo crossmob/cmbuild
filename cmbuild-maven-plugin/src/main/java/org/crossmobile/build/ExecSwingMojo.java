@@ -6,10 +6,12 @@
 
 package org.crossmobile.build;
 
+import com.panayotis.appenh.EnhancerManager;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.crossmobile.bridge.system.BaseUtils;
 import org.crossmobile.utils.Log;
+import org.crossmobile.utils.UIUtils;
 
 import java.io.File;
 import java.io.FileReader;
@@ -52,7 +54,8 @@ public class ExecSwingMojo extends ExecGenericMojo {
         if (mainClass == null)
             throw new NullPointerException("Unable to find main class, using property 'main.class'");
 
-        System.getProperties().setProperty("user.arg.scale", localProperties.getProperty(CM_SCALE_FACTOR.tag().name, "1"));
+        String scale = String.valueOf(UIUtils.getScaleBasedOnDPI(EnhancerManager.getDefault().getDPI()));
+        System.getProperties().setProperty("user.arg.scale", localProperties.getProperty(CM_SCALE_FACTOR.tag().name, scale));
 
         DesktopThreadGroup threadGroup = new DesktopThreadGroup();
         DesktopThread baseThread = new DesktopThread(threadGroup, mainClass);
