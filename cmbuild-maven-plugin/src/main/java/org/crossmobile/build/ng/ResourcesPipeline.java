@@ -20,6 +20,7 @@ import org.crossmobile.utils.images.ImageHound;
 import org.crossmobile.utils.plugin.DependencyItem;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.util.Collection;
 
@@ -85,6 +86,9 @@ public class ResourcesPipeline implements Runnable {
 
     private void resourcesAndroid() {
         CMBuildEnvironment env = environment();
+        File localProperties = new File(env.getBasedir(), "local.properties");
+        if (!localProperties.isFile())
+            BaseUtils.throwException(new IOException("In order to build an Android project, the 'local.properties' file should be present at location '" + localProperties.getAbsolutePath() + "'. This file is missing."));
         if (env.isRun())
             AdbUtils.launch(env.getProperties().getProperty("sdk.dir")); // Early launching of ADB devices if run is requested
 
@@ -126,7 +130,6 @@ public class ResourcesPipeline implements Runnable {
 
         write(new File(env.getBuilddir(), ANDROID_FONTLIST), FontExtractor.getFontDataAsResource(FontExtractor.findFonts(env.getMaterialsDir())));
         GradleManager.createAndUpdate(env);
-        LocalPropertiesManager.createIfNotExist(env.getBasedir());
     }
 
     private void resourcesIOS() {

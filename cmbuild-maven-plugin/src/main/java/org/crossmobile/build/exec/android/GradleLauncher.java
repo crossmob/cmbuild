@@ -40,6 +40,7 @@ public class GradleLauncher {
         gradle.setCurrentDir(currentDir);
         gradle.setOutListener(Log::info);
         gradle.setErrListener((Consumer<String>) Log::error);
+        Log.info("Executing: " + gradle);
         gradle.exec();
         gradle.waitFor();
         return gradle.exitValue() == 0;
