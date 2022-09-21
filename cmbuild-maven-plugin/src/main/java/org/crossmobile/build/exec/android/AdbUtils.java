@@ -43,7 +43,7 @@ public class AdbUtils {
     }
 
     private AdbUtils(String sdk) {
-        File sdkDir = sdk == null ? null : new File(sdk);
+        File sdkDir = sdk == null || sdk.trim().isEmpty() ? null : new File(sdk);
         if (sdkDir == null || !sdkDir.isDirectory()) {
             Log.error("SDK location not found, please use the configuration wizard to select the desired Android SDK");
             if (sdkDir != null)

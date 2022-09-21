@@ -20,6 +20,7 @@ import org.crossmobile.utils.launcher.Flavour;
 import org.crossmobile.utils.plugin.DependencyItem;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.util.*;
 
 import static org.crossmobile.build.utils.Config.GENERATED_CMSOURCES;
@@ -51,7 +52,7 @@ abstract class CrossMobileMojo extends GenericMojo {
         Flavour flavour = Flavour.getFlavour(settings.getActiveProfiles());
 
         ParamSet set = getParamSet(dependencies);   // also removed invalid artifacts - needs dependencies to be populated
-        Properties props = loadProperties(set);
+        Properties props = loadProperties(set, getProject().getBasedir());
         CMBuildEnvironment.create(basedir, getBuildDir(),
                 flavour,
                 props,
@@ -72,13 +73,19 @@ abstract class CrossMobileMojo extends GenericMojo {
 
     protected abstract Runnable initCoreWorker();
 
-    private Properties loadProperties(ParamSet paramset) {
+    private Properties loadProperties(ParamSet paramset, File basedir) {
         Properties prop = paramset.getDefaults();
         prop.putAll(getProject().getProperties());
         prop.put(DISPLAY_NAME.tag().name, getProject().getName());
         prop.put(ARTIFACT_ID.tag().name, getProject().getArtifactId());
         prop.put(GROUP_ID.tag().name, getProject().getGroupId());
         prop.put(BUNDLE_VERSION.tag().name, getProject().getVersion());
+        try {
+            File localProperties = new File(basedir, "local.properties");
+            if (localProperties.isFile())
+                prop.load(new FileInputStream(localProperties));
+        } catch (Exception ignored) {
+        }
         return prop;
     }
 
