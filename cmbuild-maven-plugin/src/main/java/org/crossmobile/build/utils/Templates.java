@@ -152,7 +152,7 @@ public class Templates {
             + "                android:resource=\"@xml/base_path\">\n"
             + "                </meta-data>\n"
             + "        </provider>\n"
-            + "        <activity android:launchMode=\"singleTask\" android:name=\"" + BUNDLEID_ANCHOR + "." + CURRENT_ACTIVITY + "\" android:configChanges=\"keyboardHidden|orientation|screenSize\" android:screenOrientation=\"portrait\">\n"
+            + "        <activity android:launchMode=\"singleTask\" android:name=\"" + BUNDLEID_ANCHOR + "." + CURRENT_ACTIVITY + "\" android:configChanges=\"keyboardHidden|orientation|screenSize\" android:screenOrientation=\"portrait\" android:exported=\"true\">\n"
             + "            <intent-filter>\n"
             + "                <action android:name=\"android.intent.action.MAIN\"/>\n"
             + "                <category android:name=\"android.intent.category.LAUNCHER\"/>\n"
