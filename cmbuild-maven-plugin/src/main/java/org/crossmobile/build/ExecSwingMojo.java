@@ -62,6 +62,7 @@ public class ExecSwingMojo extends ExecGenericMojo {
         baseThread.setFileClassLoader(baseJar);
         baseThread.start();
         threadGroup.waitFor();
+        baseThread.checkForErrors();
         threadGroup.kill();
     }
 
@@ -131,6 +132,7 @@ public class ExecSwingMojo extends ExecGenericMojo {
 
     private static final class DesktopThread extends Thread {
         private final String mainClass;
+        private Throwable error = null;
 
         public DesktopThread(DesktopThreadGroup threadGroup, String mainClass) {
             super(threadGroup, "DesktopLaunch");
@@ -143,7 +145,8 @@ public class ExecSwingMojo extends ExecGenericMojo {
                 Class<?> bootClass = Thread.currentThread().getContextClassLoader().loadClass(mainClass);
                 bootClass.getMethod("main", String[].class).invoke(null, (Object) new String[]{});
             } catch (Throwable throwable) {
-                BaseUtils.throwException(throwable instanceof InvocationTargetException ? throwable.getCause() : throwable);
+                Log.error(throwable);
+                error = throwable instanceof InvocationTargetException ? throwable.getCause() : throwable;
             }
         }
 
@@ -155,6 +158,11 @@ public class ExecSwingMojo extends ExecGenericMojo {
                 BaseUtils.throwException(e);
             }
             setContextClassLoader(new java.net.URLClassLoader(new URL[]{fileUrl}));
+        }
+
+        public void checkForErrors() {
+            if (error != null)
+                BaseUtils.throwException(error);
         }
     }
 }
