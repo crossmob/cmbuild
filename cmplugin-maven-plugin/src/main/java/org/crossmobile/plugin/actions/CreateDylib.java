@@ -11,8 +11,6 @@ import com.dd.plist.NSString;
 import com.dd.plist.PropertyListParser;
 import org.crossmobile.bridge.system.BaseUtils;
 import org.crossmobile.build.ArtifactInfo;
-import org.crossmobile.build.utils.PlistUtils.*;
-import org.crossmobile.plugin.objc.ReverseImportRegistry;
 import org.crossmobile.plugin.reg.Plugin;
 import org.crossmobile.plugin.reg.Registry;
 import org.crossmobile.utils.Commander;
@@ -22,6 +20,7 @@ import org.crossmobile.utils.XcodeTarget;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -161,8 +160,7 @@ public class CreateDylib extends CreateLib {
                 arg.add("-derivedDataPath");
                 arg.add(".");
             }
-            if (!exec(projRoot, arg))
-                throw new RuntimeException("Unable to compile plugin " + plugin.getName() + " (" + t.name() + ")");
+            exec(projRoot, arg, "Unable to compile plugin " + plugin.getName() + " (" + t.name() + ")");
         }
         String buildLoc = plugin.hasPods() ? "Build" + separator + "Products" : "build";
         File iosNat = new File(projRoot, buildLoc + separator + "Release-iphonesimulator" + separator + libname);
@@ -174,13 +172,27 @@ public class CreateDylib extends CreateLib {
         if (!iosNat.exists() && !iosSim.exists())
             throw new RuntimeException("Unable to find any link libraries");
         lib.getParentFile().mkdirs();
-        if (!exec(projRoot, Arrays.asList("lipo", "-create", "-output", lib.getAbsolutePath(),
-                iosSim.exists() ? iosSim.getAbsolutePath() : null,
-                iosNat.exists() ? iosNat.getAbsolutePath() : null)))
-            throw new RuntimeException("Unable to link plugin " + plugin);
+        if (iosSim.exists()) {
+            File iosTemp = new File(iosSim.getParentFile(), "trimmed-" + iosSim.getName());
+            iosTemp.delete();
+            // workaround to remove arm architecture for simulator, until the library will be converted to a framework
+            exec(projRoot, Arrays.asList("lipo", "-remove", "arm64", iosSim.getAbsolutePath(),
+                            "-output", iosTemp.getAbsolutePath())
+                    , "Unable to trim arm64 from simulator");
+            try {
+                iosSim.delete();
+                Files.move(iosTemp.toPath(), iosSim.toPath());
+            } catch (IOException e) {
+                BaseUtils.throwException(e);
+            }
+        }
+        exec(projRoot, Arrays.asList("lipo", "-create", "-output", lib.getAbsolutePath(),
+                        iosSim.exists() ? iosSim.getAbsolutePath() : null,
+                        iosNat.exists() ? iosNat.getAbsolutePath() : null),
+                "Unable to link plugin " + plugin);
     }
 
-    private static boolean exec(File cdir, List<String> args) {
+    private static void exec(File cdir, List<String> args, String messageOnError) {
         Commander cmd = new Commander(args);
         cmd.setCurrentDir(cdir);
         cmd.setOutListener(Log::debug);
@@ -188,8 +200,9 @@ public class CreateDylib extends CreateLib {
         Log.debug("Executing: " + cmd.toString());
         cmd.exec();
         cmd.waitFor();
-        return cmd.exitValue() == 0;
+        if (cmd.exitValue() != 0) {
+            Log.error("Error while executing: " + String.join(" ", args));
+            throw new RuntimeException((messageOnError));
+        }
     }
-
-
 }
