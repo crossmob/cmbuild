@@ -24,7 +24,7 @@ import static org.crossmobile.bridge.system.BaseUtils.listFiles;
 
 @SuppressWarnings("ResultOfMethodCallIgnored")
 public class GradleLauncher {
-    private static final String GRADLE_VERSION = "6.5.1";
+    private static final String GRADLE_VERSION = "8.2";
     @SuppressWarnings("FieldCanBeLocal")
     private static final long TOTAL_SIZE = 102_204_844;
 

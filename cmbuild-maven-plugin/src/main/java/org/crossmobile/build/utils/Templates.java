@@ -139,16 +139,18 @@ public class Templates {
                     + "\t<string>PROPERTY_LAUNCH_STORYBOARD</string>\n";
 
     public static final String ANDROID_MANIFEST = ""
-            + "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
-            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\" android:versionCode=\"" + VERSIONCODE_ANCHOR + "\" android:versionName=\"" + VERSION_ANCHOR + "\" package=\"" + BUNDLEID_ANCHOR + "\">\n"
+            + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+            "       android:versionCode=\"" + VERSIONCODE_ANCHOR + "\"\n" +
+            "       android:versionName=\"" + VERSION_ANCHOR + "\">\n"
             + "    <application android:hardwareAccelerated=\"true\" android:name=\"" + BUNDLEID_ANCHOR + "." + CURRENT_APPLICATION + "\" android:icon=\"@mipmap/" + ANDROID_ICON + "\"  android:label=\"" + DISPLAYNAME_ANCHOR + "\" android:theme=\"@style/Theme.NoBackground.Fullscreen\" " + DEBUGGABLE_ANCHOR + ">\n"
             + "        <provider\n"
-            + "            android:name=\"org.crossmobile.backend.android.CMFileProvider\"\n"
+            + "            android:name=\"androidx.core.content.FileProvider\"\n"
             + "            android:authorities=\"" + BUNDLEID_ANCHOR + ".fileprovider\"\n"
             + "            android:exported=\"false\"\n"
             + "            android:grantUriPermissions=\"true\">\n"
             + "            <meta-data\n"
-            + "                android:name=\"android.support.FILE_PROVIDER_PATHS\"\n"
+            + "                android:name=\"androidx.core.content.FileProvider\"\n"
             + "                android:resource=\"@xml/base_path\">\n"
             + "                </meta-data>\n"
             + "        </provider>\n"
@@ -170,7 +172,7 @@ public class Templates {
             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
             + "<paths xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
             + "    <external-path name=\"cm_files\" path=\"Android/data/" + BUNDLEID_ANCHOR + "\" />\n"
-            + "    <external-path name=\"dl_files\" path=\"Download\"/>\n"
+            + "    <files-path name=\"web_download_files\" path=\"web_download/\" />\n"
             + "</paths>";
 
     public static final String CROSSMOBILE_GRADLE = ""
