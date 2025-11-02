@@ -24,9 +24,9 @@ import static org.crossmobile.bridge.system.BaseUtils.listFiles;
 
 @SuppressWarnings("ResultOfMethodCallIgnored")
 public class GradleLauncher {
-    private static final String GRADLE_VERSION = "8.2";
+    private static final String GRADLE_VERSION = "8.14.2";
     @SuppressWarnings("FieldCanBeLocal")
-    private static final long TOTAL_SIZE = 102_204_844;
+    private static final long TOTAL_SIZE = 120_000_000; // Approximate size for Gradle 8.14.2
 
     private static final boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase().contains("windows");
 

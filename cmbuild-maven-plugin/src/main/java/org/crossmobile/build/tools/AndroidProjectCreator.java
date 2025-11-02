@@ -89,21 +89,37 @@ public class AndroidProjectCreator {
             String value = tk.nextToken().trim();
             if (!value.isEmpty()) {
                 permissions.add(value);
-                if (value.endsWith(".BLUETOOTH"))
+                // Handle Bluetooth permissions for API 31+
+                if (value.endsWith(".BLUETOOTH")) {
                     permissions.add("android.permission.BLUETOOTH_ADMIN");
+                    permissions.add("android.permission.BLUETOOTH_CONNECT");
+                    permissions.add("android.permission.BLUETOOTH_SCAN");
+                }
             }
         }
         for (PluginMetaData info : infos)
             permissions.addAll(info.getPermissions());
 
         StringBuilder output = new StringBuilder();
-        for (String perm : permissions)
-            output.append("    <uses-permission android:name=\"").append(perm).append("\"/>\n");
+        for (String perm : permissions) {
+            // Ensure permission has android.permission. prefix if it's not a custom permission
+            String fullPerm = perm;
+            if (!perm.contains(".") || (!perm.startsWith("android.") && !perm.startsWith("com."))) {
+                fullPerm = "android.permission." + perm;
+            }
 
-        String foundPermissions = output.toString();
-        if (!foundPermissions.contains("WRITE_EXTERNAL_STORAGE"))
-            foundPermissions += "    <uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\" android:maxSdkVersion=\"18\"/>\n";
+            // Add maxSdkVersion for permissions that became obsolete
+            if (fullPerm.equals("android.permission.WRITE_EXTERNAL_STORAGE") ||
+                fullPerm.equals("android.permission.READ_EXTERNAL_STORAGE")) {
+                output.append("    <uses-permission android:name=\"").append(fullPerm).append("\" android:maxSdkVersion=\"32\"/>\n");
+            } else if (fullPerm.equals("android.permission.BLUETOOTH") ||
+                       fullPerm.equals("android.permission.BLUETOOTH_ADMIN")) {
+                output.append("    <uses-permission android:name=\"").append(fullPerm).append("\" android:maxSdkVersion=\"30\"/>\n");
+            } else {
+                output.append("    <uses-permission android:name=\"").append(fullPerm).append("\"/>\n");
+            }
+        }
 
-        return foundPermissions;
+        return output.toString();
     }
 }
