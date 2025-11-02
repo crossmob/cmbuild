@@ -96,7 +96,7 @@ public class Target {
         return os + "-" + arch;
     }
 
-    static final Function<String, String> IOSLibName = l -> "lib" + l + ".a";
+    static final Function<String, String> IOSLibName = l -> l + ".xcframework";
     static final Function<String, String> UWPLibName = l -> l + ".dll";
 
     public String getLibName(String baseName) {
@@ -105,7 +105,7 @@ public class Target {
                 return baseName + ".dll";
             default:
             case "ios":
-                return "lib" + baseName + ".a";
+                return baseName + ".xcframework";
         }
     }
 

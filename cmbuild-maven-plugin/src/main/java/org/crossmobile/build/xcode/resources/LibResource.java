@@ -36,9 +36,11 @@ public class LibResource extends AnyResource {
             this.inSDK = false;
         } else {
             this.name = name;
-            path = name.toLowerCase().endsWith(".framework")
-                    ? "System/Library/Frameworks/" + this.name
-                    : "usr/lib/" + this.name;
+            String lname = name.toLowerCase();
+            if (lname.endsWith(".framework") || lname.endsWith(".xcframework"))
+                path = "System/Library/Frameworks/" + this.name;
+            else
+                path = "usr/lib/" + this.name;
             this.inSDK = true;
         }
         this.filetype = getFileType();
@@ -48,6 +50,8 @@ public class LibResource extends AnyResource {
         String lcase = name.toLowerCase();
         if (lcase.endsWith(".framework"))
             return "wrapper.framework";
+        else if (lcase.endsWith(".xcframework"))
+            return "wrapper.xcframework";
         else if (lcase.endsWith(".dylib"))
             return "\"compiled.mach-o.dylib\"";
         else if (lcase.endsWith(".o"))

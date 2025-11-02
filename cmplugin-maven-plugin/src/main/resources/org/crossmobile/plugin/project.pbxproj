@@ -6,20 +6,8 @@
 	objectVersion = 46;
 	objects = {
 
-/* Begin PBXCopyFilesBuildPhase section */
-		F622AEC81D718BC500FAE41E /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "include/$(PRODUCT_NAME)";
-			dstSubfolderSpec = 16;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
-
 /* Begin PBXFileReference section */
-		F622AECA1D718BC500FAE41E /* libCMPLUGIN.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libCMPLUGIN.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		F622AECA1D718BC500FAE41E /* CMPLUGIN.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CMPLUGIN.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -41,14 +29,14 @@
 			);
 			sourceTree = "<group>";
 		};
-		F622AECB1D718BC500FAE41E /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				F622AECA1D718BC500FAE41E /* libCMPLUGIN.a */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
+	F622AECB1D718BC500FAE41E /* Products */ = {
+		isa = PBXGroup;
+		children = (
+			F622AECA1D718BC500FAE41E /* CMPLUGIN.framework */,
+		);
+		name = Products;
+		sourceTree = "<group>";
+	};
 		F622AECC1D718BC500FAE41E /* CMPLUGIN */ = {
 			isa = PBXGroup;
 			children = (
@@ -59,23 +47,22 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		F622AEC91D718BC500FAE41E /* CMPLUGIN */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = F622AED31D718BC500FAE41E /* Build configuration list for PBXNativeTarget "CMPLUGIN" */;
-			buildPhases = (
-				F622AEC61D718BC500FAE41E /* Sources */,
-				F622AEC71D718BC500FAE41E /* Frameworks */,
-				F622AEC81D718BC500FAE41E /* CopyFiles */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = CMPLUGIN;
-			productName = CMPLUGIN;
-			productReference = F622AECA1D718BC500FAE41E /* libCMPLUGIN.a */;
-			productType = "com.apple.product-type.library.static";
-		};
+	F622AEC91D718BC500FAE41E /* CMPLUGIN */ = {
+		isa = PBXNativeTarget;
+		buildConfigurationList = F622AED31D718BC500FAE41E /* Build configuration list for PBXNativeTarget "CMPLUGIN" */;
+		buildPhases = (
+			F622AEC61D718BC500FAE41E /* Sources */,
+			F622AEC71D718BC500FAE41E /* Frameworks */,
+		);
+		buildRules = (
+		);
+		dependencies = (
+		);
+		name = CMPLUGIN;
+		productName = CMPLUGIN;
+		productReference = F622AECA1D718BC500FAE41E /* CMPLUGIN.framework */;
+		productType = "com.apple.product-type.framework";
+	};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -204,32 +191,60 @@
 			};
 			name = Release;
 		};
-		F622AED41D718BC500FAE41E /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BITCODE_GENERATION_MODE = marker;
-				CLANG_ENABLE_MODULES = YES;
-				HEADER_SEARCH_PATHS = ../cmjavalib/cmjavalib;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-			};
-			name = Debug;
+	F622AED41D718BC500FAE41E /* Debug */ = {
+		isa = XCBuildConfiguration;
+		buildSettings = {
+			BITCODE_GENERATION_MODE = marker;
+			CLANG_ENABLE_MODULES = YES;
+			CURRENT_PROJECT_VERSION = 1;
+			DEFINES_MODULE = YES;
+			DYLIB_COMPATIBILITY_VERSION = 1;
+			DYLIB_CURRENT_VERSION = 1;
+			DYLIB_INSTALL_NAME_BASE = "@rpath";
+			HEADER_SEARCH_PATHS = ../cmjavalib/cmjavalib;
+			INFOPLIST_FILE = Info.plist;
+			INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+			LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+			MACH_O_TYPE = mh_dylib;
+			OTHER_LDFLAGS = (
+				"-ObjC",
+				"-undefined",
+				"dynamic_lookup",
+			);
+			PRODUCT_BUNDLE_IDENTIFIER = "org.crossmobile.$(TARGET_NAME)";
+			PRODUCT_NAME = "$(TARGET_NAME)";
+			SKIP_INSTALL = YES;
+			VERSIONING_SYSTEM = "apple-generic";
 		};
-		F622AED51D718BC500FAE41E /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BITCODE_GENERATION_MODE = bitcode;
-				CLANG_ENABLE_MODULES = YES;
-				HEADER_SEARCH_PATHS = ../cmjavalib/cmjavalib;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-			};
-			name = Release;
+		name = Debug;
+	};
+	F622AED51D718BC500FAE41E /* Release */ = {
+		isa = XCBuildConfiguration;
+		buildSettings = {
+			BITCODE_GENERATION_MODE = bitcode;
+			CLANG_ENABLE_MODULES = YES;
+			CURRENT_PROJECT_VERSION = 1;
+			DEFINES_MODULE = YES;
+			DYLIB_COMPATIBILITY_VERSION = 1;
+			DYLIB_CURRENT_VERSION = 1;
+			DYLIB_INSTALL_NAME_BASE = "@rpath";
+			HEADER_SEARCH_PATHS = ../cmjavalib/cmjavalib;
+			INFOPLIST_FILE = Info.plist;
+			INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+			LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+			MACH_O_TYPE = mh_dylib;
+			OTHER_LDFLAGS = (
+				"-ObjC",
+				"-undefined",
+				"dynamic_lookup",
+			);
+			PRODUCT_BUNDLE_IDENTIFIER = "org.crossmobile.$(TARGET_NAME)";
+			PRODUCT_NAME = "$(TARGET_NAME)";
+			SKIP_INSTALL = YES;
+			VERSIONING_SYSTEM = "apple-generic";
 		};
+		name = Release;
+	};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */

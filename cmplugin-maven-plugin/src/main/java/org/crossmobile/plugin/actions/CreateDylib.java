@@ -33,6 +33,7 @@ import static java.util.Collections.singletonList;
 import static org.crossmobile.bridge.system.BaseUtils.listFiles;
 import static org.crossmobile.build.utils.PlistUtils.*;
 import static org.crossmobile.utils.CollectionUtils.asList;
+import static org.crossmobile.utils.FileUtils.delete;
 import static org.crossmobile.utils.FileUtils.readResourceSafe;
 import static org.crossmobile.utils.FileUtils.write;
 import static org.crossmobile.utils.TextUtils.plural;
@@ -58,6 +59,23 @@ public class CreateDylib extends CreateLib {
         Log.debug("Creating project " + projDestFile.getParent());
         if (write(projDestFile, project) == null)
             throw new RuntimeException("Unable to store project file");
+            
+        // Create Info.plist for framework
+        File infoPlist = new File(target, "native" + separator + plugin + separator + "Info.plist");
+        String plistContent = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+            "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n" +
+            "<plist version=\"1.0\">\n<dict>\n" +
+            "  <key>CFBundleDevelopmentRegion</key>\n  <string>$(DEVELOPMENT_LANGUAGE)</string>\n" +
+            "  <key>CFBundleExecutable</key>\n  <string>$(EXECUTABLE_NAME)</string>\n" +
+            "  <key>CFBundleIdentifier</key>\n  <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>\n" +
+            "  <key>CFBundleInfoDictionaryVersion</key>\n  <string>6.0</string>\n" +
+            "  <key>CFBundleName</key>\n  <string>$(PRODUCT_NAME)</string>\n" +
+            "  <key>CFBundlePackageType</key>\n  <string>FMWK</string>\n" +
+            "  <key>CFBundleShortVersionString</key>\n  <string>1.0</string>\n" +
+            "  <key>CFBundleVersion</key>\n  <string>$(CURRENT_PROJECT_VERSION)</string>\n" +
+            "</dict>\n</plist>";
+        write(infoPlist, plistContent);
+        
         return projDestFile;
     }
 
@@ -144,6 +162,8 @@ public class CreateDylib extends CreateLib {
     @Override
     protected void compile(File proj, File lib, Plugin plugin, String libname) {
         File projRoot = proj.getParentFile().getParentFile();
+        
+        List<String> archiveArgs = new ArrayList<>();
         for (CTypes t : CTypes.values()) {
             List<String> arg = new ArrayList<>();
             arg.add("xcodebuild");
@@ -161,35 +181,35 @@ public class CreateDylib extends CreateLib {
                 arg.add(".");
             }
             exec(projRoot, arg, "Unable to compile plugin " + plugin.getName() + " (" + t.name() + ")");
-        }
-        String buildLoc = plugin.hasPods() ? "Build" + separator + "Products" : "build";
-        File iosNat = new File(projRoot, buildLoc + separator + "Release-iphonesimulator" + separator + libname);
-        if (!iosNat.exists())
-            Log.error("Unable to locate library " + iosNat.getAbsolutePath());
-        File iosSim = new File(projRoot, buildLoc + separator + "Release-iphoneos" + separator + libname);
-        if (!iosSim.exists())
-            Log.error("Unable to locate library " + iosSim.getAbsolutePath());
-        if (!iosNat.exists() && !iosSim.exists())
-            throw new RuntimeException("Unable to find any link libraries");
-        lib.getParentFile().mkdirs();
-        if (iosSim.exists()) {
-            File iosTemp = new File(iosSim.getParentFile(), "trimmed-" + iosSim.getName());
-            iosTemp.delete();
-            // workaround to remove arm architecture for simulator, until the library will be converted to a framework
-            exec(projRoot, Arrays.asList("lipo", "-remove", "arm64", iosSim.getAbsolutePath(),
-                            "-output", iosTemp.getAbsolutePath())
-                    , "Unable to trim arm64 from simulator");
-            try {
-                iosSim.delete();
-                Files.move(iosTemp.toPath(), iosSim.toPath());
-            } catch (IOException e) {
-                BaseUtils.throwException(e);
+            
+            String buildLoc = plugin.hasPods() ? "Build" + separator + "Products" : "build";
+            String frameworkName = plugin.getName() + ".framework";
+            File builtFramework = new File(projRoot, buildLoc + separator + "Release-" + t.name() + separator + frameworkName);
+            if (builtFramework.exists()) {
+                archiveArgs.add("-framework");
+                archiveArgs.add(builtFramework.getAbsolutePath());
+            } else {
+                Log.error("Unable to locate framework " + builtFramework.getAbsolutePath());
             }
         }
-        exec(projRoot, Arrays.asList("lipo", "-create", "-output", lib.getAbsolutePath(),
-                        iosSim.exists() ? iosSim.getAbsolutePath() : null,
-                        iosNat.exists() ? iosNat.getAbsolutePath() : null),
-                "Unable to link plugin " + plugin);
+        
+        if (archiveArgs.isEmpty())
+            throw new RuntimeException("Unable to find any link libraries");
+            
+        lib.getParentFile().mkdirs();
+        String xcframeworkName = plugin.getName() + ".xcframework";
+        File xcframeworkPath = new File(lib.getParentFile(), xcframeworkName);
+        if (xcframeworkPath.exists())
+            delete(xcframeworkPath);
+            
+        List<String> xcframeworkArgs = new ArrayList<>();
+        xcframeworkArgs.add("xcodebuild");
+        xcframeworkArgs.add("-create-xcframework");
+        xcframeworkArgs.addAll(archiveArgs);
+        xcframeworkArgs.add("-output");
+        xcframeworkArgs.add(xcframeworkPath.getAbsolutePath());
+        
+        exec(projRoot, xcframeworkArgs, "Unable to create XCFramework for plugin " + plugin);
     }
 
     private static void exec(File cdir, List<String> args, String messageOnError) {

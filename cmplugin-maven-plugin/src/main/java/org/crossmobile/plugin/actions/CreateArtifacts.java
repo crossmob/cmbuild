@@ -70,12 +70,20 @@ public class CreateArtifacts {
 
             if (buildIos) {
                 File lib = libLocation.apply(cache, plugin, CreateLib.iOSTarget);
-                if (copy(lib, new File(iosTarget, NATIVE_PATH + separator + plugin + ".a")) == 0)
+                if (lib.exists() && lib.isDirectory()) {
+                    File destXCFramework = new File(iosTarget, NATIVE_PATH + separator + plugin + ".xcframework");
+                    if (copy(lib, destXCFramework) == 0)
+                        if (pluginData.hasOptionalLibraryBinary())
+                            Log.info("Native library not found but ignored as noted: " + lib.getAbsolutePath());
+                        else
+                            Log.error("Unable to copy native library " + lib.getAbsolutePath());
+                } else {
                     if (pluginData.hasOptionalLibraryBinary())
                         Log.info("Native library not found but ignored as noted: " + lib.getAbsolutePath());
                     else
-                        Log.error("Unable to copy native library " + lib.getAbsolutePath());
-                listFiles(new File(vendorBin, plugin)).stream().filter(extensions(".a"))
+                        Log.error("Unable to locate native library " + lib.getAbsolutePath());
+                }
+                listFiles(new File(vendorBin, plugin)).stream().filter(extensions(".xcframework"))
                         .forEach(f -> copy(f, new File(iosTarget, NATIVE_PATH + separator + f.getName())));
             }
             if (buildUwp) {

@@ -96,14 +96,15 @@ public class ObjCLibrary {
         while (entries.hasMoreElements()) {
             JarEntry entry = entries.nextElement();
             String path = entry.getName();
-            if (!entry.isDirectory() && path.startsWith(NATIVE_PATH_SLASH)) {
-                String name = path.substring(path.lastIndexOf('/') + 1);
-                String lname = name.toLowerCase();
-                if (lname.endsWith(".h") || lname.endsWith(".a") || lname.endsWith(".lib") || lname.endsWith(".dll"))
+            if (path.startsWith(NATIVE_PATH_SLASH)) {
+                String relativePath = path.substring(NATIVE_PATH_SLASH.length());
+                String lpath = path.toLowerCase();
+                
+                if (lpath.endsWith(".h") && !entry.isDirectory()) {
                     try {
+                        String name = relativePath.substring(relativePath.lastIndexOf('/') + 1);
                         InputStream in = file.getInputStream(entry);
-                        boolean isLib = lname.endsWith(".a") || lname.endsWith(".lib") || lname.endsWith(".dll");
-                        File outfile = new File(isLib ? libdest : incdest, (isLib ? "" : pluginname.split("-")[1] + File.separator) + name);
+                        File outfile = new File(incdest, pluginname.split("-")[1] + File.separator + name);
                         if (isNewer(libfile, outfile)) {
                             if (duplicates.contains(outfile))
                                 Log.warning("Overwriting duplicate file " + outfile.getPath() + " in plugin " + file.getName());
@@ -113,13 +114,52 @@ public class ObjCLibrary {
                             if (!FileUtils.copyStream(in, out))
                                 throw new RuntimeException("Unable to copy " + entry.getName());
                         }
-                        if (isLib)
-                            libs.add(basedir + separator + XCODE_BASE + separator + XCODE_EXT_LIB + File.separator + name);
                     } catch (IOException ex) {
                         BaseUtils.throwException(ex);
                     }
-                else
-                    Log.warning("Unknown file type in plugin " + pluginname + ": " + name);
+                } else if (relativePath.endsWith(".xcframework") || relativePath.contains(".xcframework" + separator)) {
+                    String xcframeworkName = relativePath.contains(separator) ? relativePath.substring(0, relativePath.indexOf(separator)) : relativePath;
+                    if (!libs.contains(basedir + separator + XCODE_BASE + separator + XCODE_EXT_LIB + File.separator + xcframeworkName)) {
+                        libs.add(basedir + separator + XCODE_BASE + separator + XCODE_EXT_LIB + File.separator + xcframeworkName);
+                    }
+                    
+                    if (!entry.isDirectory()) {
+                        try {
+                            InputStream in = file.getInputStream(entry);
+                            File outfile = new File(libdest, relativePath);
+                            if (isNewer(libfile, outfile)) {
+                                outfile.getParentFile().mkdirs();
+                                OutputStream out = new FileOutputStream(outfile);
+                                if (!FileUtils.copyStream(in, out))
+                                    throw new RuntimeException("Unable to copy " + entry.getName());
+                            }
+                        } catch (IOException ex) {
+                            BaseUtils.throwException(ex);
+                        }
+                    }
+                } else if (!entry.isDirectory()) {
+                    String lname = relativePath.toLowerCase();
+                    if (lname.endsWith(".a") || lname.endsWith(".lib") || lname.endsWith(".dll")) {
+                        try {
+                            InputStream in = file.getInputStream(entry);
+                            File outfile = new File(libdest, relativePath);
+                            if (isNewer(libfile, outfile)) {
+                                if (duplicates.contains(outfile))
+                                    Log.warning("Overwriting duplicate file " + outfile.getPath() + " in plugin " + file.getName());
+                                duplicates.add(outfile);
+                                outfile.getParentFile().mkdirs();
+                                OutputStream out = new FileOutputStream(outfile);
+                                if (!FileUtils.copyStream(in, out))
+                                    throw new RuntimeException("Unable to copy " + entry.getName());
+                            }
+                            libs.add(basedir + separator + XCODE_BASE + separator + XCODE_EXT_LIB + File.separator + relativePath.substring(relativePath.lastIndexOf('/') + 1));
+                        } catch (IOException ex) {
+                            BaseUtils.throwException(ex);
+                        }
+                    } else if (!lname.endsWith(".plist") && !lname.equals("info.plist") && relativePath.lastIndexOf('/') >= 0) {
+                        Log.warning("Unknown file type in plugin " + pluginname + ": " + relativePath);
+                    }
+                }
             }
         }
     }
